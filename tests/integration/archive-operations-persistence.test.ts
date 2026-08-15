@@ -166,8 +166,10 @@ describe('T-09 PostgreSQL tenant infrastructure', () => {
     expect(found?.snapshot().ubicacionActual?.descripcion).toBe('Archivo clínico');
     expect(found?.snapshot().custodiaActual).toBeNull();
     await expect(repository.findById(ExpedienteId.parse(expedienteA), tenant(1))).resolves.toBeNull();
-    await expect(repository.findByNumero(ExpedienteNumero.parse('PERR810604-10'), tenant(0)))
-      .resolves.toHaveLength(2);
+    for (const numero of ['PERR810604/10', 'PERR810604-10', 'PERR81060410']) {
+      await expect(repository.findByNumero(ExpedienteNumero.parse(numero), tenant(0)))
+        .resolves.toHaveLength(2);
+    }
     await expect(repository.findByNumero(ExpedienteNumero.parse('PERR81060410'), tenant(1)))
       .resolves.toHaveLength(1);
     await expect(repository.findByNumero(ExpedienteNumero.parse('ABCD123456/20'), tenant(0)))
