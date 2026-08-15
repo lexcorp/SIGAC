@@ -1,11 +1,11 @@
 ---
 spec: expediente-workspace
-version: "0.3.20"
+version: "0.3.22"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 requires:
-  - requirements.md (v0.3.20)
-  - design.md (v0.3.20)
+  - requirements.md (v0.3.22)
+  - design.md (v0.3.22)
 decisions_applied:
   - "OQ-EW-001 RESOLVED"
   - "OQ-EW-005 RESOLVED"
@@ -35,6 +35,9 @@ decisions_applied:
   - "HTTP-REQUEST-CONTEXT-DECISION HTTP-EW-001, API-BIGINT-001, API-EW-021 APPROVED"
   - "HTTP-COMMAND-CONTRACT-DECISION API-EW-024..026, API-EW-030 APPROVED"
   - "EXPEDIENT-SEARCH-DECISION SEARCH-EW-001..010 APPROVED"
+  - "EXPEDIENT-AUDIT-AND-COMMAND-UX-DECISION APPROVED"
+  - "OQ-EW-003 RESOLVED"
+  - "LOC-AUTH-001..010 APPROVED; LOCATION-PERMISSION-GAP CLOSED"
 ready_gate: "READY-GATE.md — todos los ítems deben estar marcados antes de iniciar T-01"
 done_gate: "OS-018 — spec + tests + API/migrations + auth/tenant/audit + traceability"
 ---
@@ -59,17 +62,20 @@ Las OQs que eran bloqueantes en v0.2.0 están resueltas. La implementación pued
 | OQ-EW-007 | RESOLVED | DECISION-REGISTER, DDD-009 INV-EXP-003, BR-017 |
 | DEC-EW-STATE-001 | ACCEPTED | DECISION-REGISTER, DDD-012 |
 | OQ-EW-DESIGN-004 | RESOLVED | READ-MODEL-COMPOSITION-DECISION, UC-018, SPEC-009 |
+| OQ-EW-003 | RESOLVED | EXPEDIENT-AUDIT-AND-COMMAND-UX-DECISION, SDD-005, SEC-017 |
 
 OQ no bloqueantes (implementación avanza con decisión provisional):
-OQ-EW-002, OQ-EW-003, OQ-EW-004, OQ-EW-008, OQ-EW-009, OQ-EW-010,
+OQ-EW-002, OQ-EW-004, OQ-EW-008, OQ-EW-009, OQ-EW-010,
 OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
+
+`LOCATION-PERMISSION-GAP` está CLOSED mediante `LOCATION_VIEW`; T-21A puede avanzar.
 
 ---
 
 ## Grupo 0 — Trazabilidad
 
 ### T-00 Completar traceability.md
-- **Descripción:** Verificar que traceability.md v0.3.20 tiene cadenas completas
+- **Descripción:** Verificar que traceability.md v0.3.22 tiene cadenas completas
   para todas las capacidades. Confirmar que GAP-002, GAP-003, GAP-007 están cerrados
   y que no quedan eslabones PENDIENTE en BR, UC o SPEC para las decisiones resueltas.
 - **Criterio de done:** Ningún REQ-EW-* sin cadena completa; matrices actualizadas.
@@ -565,11 +571,11 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
   - MovimientosTab: timeline MovimientoExpediente; incluye DISPATCHED y CUSTODY_ACCEPTED;
     paginado; no mezcla audit.
   - SolicitudesTab, PrestamosTab, IncidenciasTab: listados; scope = solo listado.
-  - AuditoriaTab: sujeto al permiso pendiente OQ-EW-003, fuera de capabilities operativas.
+  - AuditoriaTab: visible sólo con `EXPEDIENT_AUDIT_VIEW`, fuera de capabilities operativas.
 - **Tests requeridos:**
   - ResumenTab: muestra acceptedAt solo si EN_CONSULTA.
   - MovimientosTab: muestra DISPATCHED y CUSTODY_ACCEPTED; no muestra login/config.
-  - AuditoriaTab: oculto sin el permiso de auditoría que defina OQ-EW-003.
+  - AuditoriaTab: oculto sin `EXPEDIENT_AUDIT_VIEW`.
   - Cada tab: loading/empty/error states.
 - **Fuente SDB:** APP-003 v0.2.0, INT-008, TQ-009.
 - **Dependencias:** T-14, T-16.
@@ -597,7 +603,7 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
   - Token forjado / tenant forjado en body -> rechazado.
   - VALE_ARCHIVO_SM_1_14 no validada + Archivista -> 403.
   - DIRECCION/COORDINACION_MEDICA emisor sin LOAN_OPEN -> no ejecuta OpenLoan.
-  - AuditoriaTab sin permiso (OQ-EW-003) -> no retorna datos.
+  - AuditoriaTab sin `EXPEDIENT_AUDIT_VIEW` -> no visible y el endpoint deniega acceso.
   - Dispatch sin permiso EXPEDIENT_DISPATCH -> 403.
   - AcceptCustody sin permiso CUSTODY_ACCEPT o por actor no receptor -> 403.
 - **Fuente SDB:** SEC-017, SEC-032, TQ-007, AGENTS.md,
@@ -629,6 +635,33 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
 - **Fuente SDB:** TQ-005, TQ-007, steering/testing.md.
 - **Dependencias:** T-09, T-10.
 
+### T-21A Implementar contratos pre-T-22 — Audit, ubicaciones y command dialogs
+- **Descripción:** Implementar, sin alterar la semántica de tasks completadas:
+  - Permission/configuración `EXPEDIENT_AUDIT_VIEW`; no es capability.
+  - `GetExpedienteAudit` y `ExpedienteAuditQueryPort` tenant-scoped, cursor-based,
+    con comprobación previa de permission y existencia del Expediente.
+  - Adapter PostgreSQL de consulta exclusiva de `audit_log` por
+    `resource_type=EXPEDIENTE` y `resource_id=expedienteId`.
+  - `GET /api/v1/expedientes/{id}/audit`, response sanitizada
+    `{ items, nextCursor }`, sin `changeSummary`, `securityContext` ni total.
+  - `ListUbicaciones` con input `{context}`, `LOCATION_VIEW` antes del query y
+    `UbicacionesQueryPort.findAll(context.tenant)`; GET `/api/v1/ubicaciones` responde
+    `{items}` con shape exacto `id`, `codigo`, `descripcion`, sin paginación.
+  - `DispatchExpedienteDialog` y `AcceptCustodyDialog` con los campos aprobados;
+    `expectedRowVersion` proviene del Workspace como string decimal y no es editable.
+  - Tras success 204, refrescar el Workspace. No enviar actor, tenant, timestamps ni tracing.
+- **Tests requeridos:**
+  - Audit: permission denied, tenant-scoped not-found, página vacía/no vacía,
+    cursor opaco y sanitización estricta.
+  - Ubicaciones: `LOCATION_VIEW`, autorización antes de query, 401/403, vacío 200
+    `{items:[]}`, shape exacto y tenant routing; sin audit identifier nuevo.
+  - Dialogs: apertura sólo por capability, payload editable completo, rowVersion no
+    editable, success 204 + refresh y ausencia de metadata server-side.
+  - API/OpenAPI: ambos endpoints y sus errores canónicos.
+- **Fuente SDB:** SDD-005, UC-018/SPEC-009, SEC-017, SEC-038, DAT-012,
+  API-020, APP-003, EXPEDIENT-AUDIT-AND-COMMAND-UX-DECISION.
+- **Dependencias:** T-09, T-11, T-12, T-17, T-18, T-20, T-21.
+
 ### T-22 Tests E2E Playwright
 - **Descripción:** Escenarios mínimos (TQ-010 v0.2.0 + nuevos):
   1. Archivista busca PERR810604/10 -> workspace abre directamente.
@@ -636,15 +669,18 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
   3. Búsqueda con N=2 -> lista de desambiguación; sin auto-selección.
   4. Búsqueda con N=0 -> estado vacío.
   5. Expediente DISPONIBLE -> badge correcto; EN_BUSQUEDA NO aparece como badge.
-  6. Dispatch -> EstadoOperativo cambia a EN_TRASLADO; acceptedAt null.
-  7. AcceptCustody -> EstadoOperativo cambia a EN_CONSULTA; acceptedAt visible.
+  6. Abrir Dispatch dialog desde capability, capturar payload, recibir 204, refrescar
+     -> EstadoOperativo cambia a EN_TRASLADO; acceptedAt null.
+  7. Abrir AcceptCustody dialog desde capability, capturar payload, recibir 204,
+     refrescar -> EstadoOperativo cambia a EN_CONSULTA; acceptedAt visible.
   8. CommandBar con CONSULTA_PROGRAMADA + Archivista -> ABRIR_PRESTAMO disponible.
   9. CommandBar con VALE_ARCHIVO_SM_1_14 validada + Archivista con LOAN_OPEN -> ABRIR_PRESTAMO disponible; no validada -> ausente.
   10. Conflicto 409 -> banner de conflicto visible; datos preservados.
-  11. Tab Auditoría oculto sin permiso; visible con permiso.
+  11. Sin `EXPEDIENT_AUDIT_VIEW`, tab Auditoría oculto. Con permission, tab visible,
+      consulta GET `/audit` y muestra únicamente registros sanitizados.
   12. Navegación completa por teclado.
 - **Fuente SDB:** TQ-010 v0.2.0, DEL-005, Volume-09 §07.
-- **Dependencias:** T-17, T-18, T-19.
+- **Dependencias:** T-19, T-21A.
 
 ### T-23 Ejecutar pipeline CI y quality gates
 - **Descripción:** Pipeline completo y verificar:
@@ -684,7 +720,8 @@ T-01 (VOs)
 T-19 (auth/tenant tests) <- T-05, T-07, T-08, T-11
 T-20 (audit trail) <- T-05, T-07, T-08, T-11
 T-21 (integration PG) <- T-09, T-10
-T-22 (E2E) <- T-17, T-18, T-19
+T-21A (pre-T-22 audit/location/dialogs) <- T-09, T-11, T-12, T-17, T-18, T-20, T-21
+T-22 (E2E) <- T-19, T-21A
 T-23 (CI pipeline) <- todas
 ```
 
@@ -699,8 +736,10 @@ T-23 (CI pipeline) <- todas
 - T-07 y T-08 implementan los nuevos comandos de despacho y aceptación de custodia
   (OQ-EW-006 RESOLVED).
 - T-09 devuelve array en findByNumero (nunca escalar). OQ-EW-007 RESOLVED.
-- Las OQ no bloqueantes (OQ-EW-002..004, OQ-EW-008..010) tienen decisiones provisionales
+- Las OQ no bloqueantes (OQ-EW-002, OQ-EW-004, OQ-EW-008..010) tienen decisiones provisionales
   documentadas en requirements.md §6; implementar con esas provisiones.
+- OQ-EW-003 está resuelta con `EXPEDIENT_AUDIT_VIEW` y LOCATION-PERMISSION-GAP está
+  cerrado con `LOCATION_VIEW`. T-21A no conserva bloqueos conocidos.
 - Ninguna tarea debe inventar comportamiento fuera del SDB o las decisiones resueltas.
 
 ---
@@ -708,11 +747,10 @@ T-23 (CI pipeline) <- todas
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.20"
+spec_version: "0.3.22"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002
-  - OQ-EW-003
   - OQ-EW-004
   - OQ-EW-008
   - OQ-EW-009

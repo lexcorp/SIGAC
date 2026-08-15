@@ -180,3 +180,11 @@ expone evidencia de Agenda o SM 1-14.
 ## Fuente
 DECISION-REGISTER OQ-EW-001, OQ-EW-006, OQ-EW-007, DEC-EW-STATE-001, DAT-006, DAT-016,
 EXPEDIENT-SEARCH-DECISION SEARCH-EW-001..010.
+
+## API v0.3.21 — Auditoría subordinada
+
+`GET /api/v1/expedientes/{id}/audit` invoca `GetExpedienteAudit`. Requiere
+`EXPEDIENT_AUDIT_VIEW`, verifica primero existencia tenant-scoped y responde
+`{items,nextCursor}` sin total. El cursor es opaco. Items exponen sólo auditId, action,
+result, actorRef, occurredAt, source, requestId y correlationId. No exponen
+changeSummary/securityContext. 401/403/404 conservan la taxonomía no divulgativa.

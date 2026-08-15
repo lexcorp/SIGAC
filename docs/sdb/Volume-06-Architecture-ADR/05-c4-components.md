@@ -88,3 +88,11 @@ Application. Fuente: TENANT-TRANSACTION-AUDIT-DECISION TX-EW-001..012.
 El schema compuesto incluye `audit_log` propiedad de Security / Audit conforme a
 AUD-DB-EW-001..013. Su adapter genera UUID y occurredAt explícitamente, permanece
 append-only y no expone detalles físicos al port AuditWriter.
+
+## Expediente audit and reference-data boundaries v0.3.21
+
+`GetExpedienteAudit` y `ExpedienteAuditQueryPort` viven en Application del Workspace.
+El adapter tenant-scoped consulta storage propiedad de Security/Audit y sólo expone el
+summary sanitizado; Drizzle/PostgreSQL no cruzan el boundary. `ListUbicaciones` es un
+Use Case de Reference Data autorizado por `LOCATION_VIEW`; consume un query port
+tenant-scoped sin exponer Drizzle/PostgreSQL a Application.

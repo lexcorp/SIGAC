@@ -21,3 +21,8 @@ Para la extensión SEARCH-EW-006..008 se verifica GET `/expedientes?numero=` req
 respuesta `{ items: [...] }` 0..N sin `total`/paginación, 400 para ausente/vacío/inválido,
 403 sin `EXPEDIENT_VIEW`, tenant server-side y controller delegado exclusivamente al
 Use Case. OpenAPI no declara unicidad del número.
+
+La extensión pre-T-22 verifica GET `/expedientes/{id}/audit`, cursor opaco,
+`items/nextCursor`, ausencia de total/changeSummary/securityContext y 401/403/404.
+GET `/ubicaciones` exige 401/403 canónicos, responde `{items}` sin paginación y retorna
+200 `{items:[]}` para catálogo vacío. Su OpenAPI se implementa en T-21A.

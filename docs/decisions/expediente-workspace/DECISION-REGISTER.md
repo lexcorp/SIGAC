@@ -128,3 +128,20 @@ resultado es una proyección mínima 0..N; el endpoint retorna `{items}` y el fl
 0 vacío, 1 apertura directa, N>1 selección manual. Audit usa `EXPEDIENTE_SEARCH` con
 success para cero o N resultados. Contrato completo en
 `EXPEDIENT-SEARCH-DECISION.md`.
+
+---
+
+## AUDIT-UX-EW / CMD-UX-EW / LOC-EW — Audit y comandos pre-T-22
+**Estado:** APPROVED
+
+OQ-EW-003 queda RESOLVED con `EXPEDIENT_AUDIT_VIEW`, distinta de
+`EXPEDIENT_VIEW` y fuera de capabilities. Se aprueban `GetExpedienteAudit`, su
+query port tenant-scoped, el read model sanitizado y GET
+`/api/v1/expedientes/{id}/audit`. También quedan definidos los dialogs de Dispatch y
+AcceptCustody y el contrato mínimo de `ListUbicaciones`/GET `/api/v1/ubicaciones`.
+
+La extensión v0.3.22 aprueba `LOCATION_VIEW` exclusivamente para
+`ListUbicaciones`/GET `/api/v1/ubicaciones`, distinta de `EXPEDIENT_VIEW`,
+`EXPEDIENT_AUDIT_VIEW` y `ADMIN_CONFIGURE`. No es capability. Con esta decisión,
+`LOCATION-PERMISSION-GAP` queda CLOSED. Contrato completo en
+`EXPEDIENT-AUDIT-AND-COMMAND-UX-DECISION.md`.

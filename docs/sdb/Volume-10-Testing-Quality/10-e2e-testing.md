@@ -37,3 +37,13 @@ Escenarios base:
   el préstamo se abre con plazo 24 h.
 - El emisor no obtiene `LOAN_OPEN` por emitir el vale.
 - `ORDEN_SUPERIOR` no ofrece `ABRIR_PRESTAMO` en este slice.
+
+### Extensión v0.3.21 — comandos y Auditoría
+
+- búsqueda → selección/apertura → Dispatch dialog → 204 → refresh → EN_TRASLADO;
+- AcceptCustody dialog → 204 → refresh → EN_CONSULTA;
+- payloads proceden de formularios/opciones, nunca hardcoded;
+- `EXPEDIENT_AUDIT_VIEW` muestra tab y registros sanitizados mediante GET `/audit`;
+- sin esa permission el tab no aparece ni dispara request;
+- el resolver E2E proporciona `LOCATION_VIEW`; los diálogos cargan ubicaciones desde el
+  endpoint real y un 403 usa Problem Details sin derivar autorización desde roles.

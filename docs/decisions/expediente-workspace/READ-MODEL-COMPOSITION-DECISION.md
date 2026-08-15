@@ -525,5 +525,12 @@ no crea un `MovimientoExpediente`.
 
 ## OQs
 
-`OQ-EW-DESIGN-004` queda RESOLVED. Permanecen abiertas `OQ-EW-002`, `OQ-EW-003`,
-`OQ-EW-004` y la decisión de retención del timeline (`OQ-EW-010`).
+`OQ-EW-DESIGN-004` queda RESOLVED. Permanecen abiertas `OQ-EW-002`, `OQ-EW-004` y
+la decisión de retención del timeline (`OQ-EW-010`). OQ-EW-003 está RESOLVED desde
+v0.3.21 mediante la decisión específica de Audit/UX.
+
+## Supersession v0.3.21
+
+OQ-EW-003 queda RESOLVED mediante `EXPEDIENT_AUDIT_VIEW` y los contratos de
+`GetExpedienteAudit` definidos en EXPEDIENT-AUDIT-AND-COMMAND-UX-DECISION. Las demás
+OQ listadas conservan su estado.

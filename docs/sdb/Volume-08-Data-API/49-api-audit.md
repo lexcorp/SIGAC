@@ -18,3 +18,8 @@ No mutation endpoints.
 
 Pagination mandatory.
 Sensitive technical fields may be redacted based on role.
+
+Para Expediente Workspace v0.3.21, el contrato específico es
+`GET /api/v1/expedientes/{id}/audit`, respaldado por `GetExpedienteAudit` y protegido
+por `EXPEDIENT_AUDIT_VIEW`. Retorna sólo el summary sanitizado con cursor opaco,
+`items/nextCursor` y sin total. No expone changeSummary ni securityContext.

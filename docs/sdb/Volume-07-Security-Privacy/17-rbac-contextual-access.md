@@ -56,6 +56,17 @@ La búsqueda por número requiere la permission existente `EXPEDIENT_VIEW`; no s
 `EXPEDIENT_SEARCH`. `SearchExpedientesByNumero` recibe `RequestContext` server-side y
 consulta sólo `context.tenant`. Falta de permission produce `PERMISSION_DENIED`/403.
 
+La lectura sanitizada de audit requiere la permission distinta
+`EXPEDIENT_AUDIT_VIEW`. No se deriva de roles, no forma parte de capabilities y no
+amplía `EXPEDIENT_VIEW`. Sin ella la UI queda fail-closed y Application responde
+`PERMISSION_DENIED`. Un Expediente fuera del tenant activo produce
+`EXPEDIENTE_NOT_FOUND` sin disclosure.
+
+La consulta de reference data de ubicaciones requiere `LOCATION_VIEW`. Es distinta de
+`EXPEDIENT_VIEW`, `EXPEDIENT_AUDIT_VIEW` y `ADMIN_CONFIGURE`; se evalúa server-side
+antes de acceder al catálogo y nunca se deriva de roles en frontend. El query usa sólo
+el `TenantContext` ya resuelto y no admite selección cross-tenant.
+
 ## Aplicación a préstamos/salidas (OQ-EW-005)
 - `CONSULTA_PROGRAMADA`: el rol Archivo/Jefatura es suficiente; no se requiere
   verificación de actor emisor adicional.

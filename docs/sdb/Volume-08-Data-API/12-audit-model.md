@@ -94,3 +94,11 @@ Para `GetExpedienteTimeline`, `action = EXPEDIENTE_TIMELINE_VIEW`,
 `resourceType = EXPEDIENTE` y `resourceId = expedienteId`. Resultados: `denied` antes de
 queries si falta permission; `not-found` si el Repository tenant-scoped no encuentra el
 Expediente; `success` para página vacía o no vacía. Este append no crea Movimiento.
+
+## Proyección sanitizada v0.3.21
+
+`ExpedienteAuditQueryPort` filtra `resource_type=EXPEDIENTE` y
+`resource_id=expedienteId` dentro de la tenant database. Devuelve `{items,nextCursor}`
+cursor-based, sin total. Cada item contiene auditId, action, result, actorRef,
+occurredAt, source, requestId y correlationId; no expone change_summary,
+security_context ni metadata física. Requiere `EXPEDIENT_AUDIT_VIEW`.

@@ -22,8 +22,18 @@ No se requiere política conservadora temporal para ninguna de ellas.
 
 `AUTH-GAP-001` a `AUTH-GAP-013` están cerrados para T-04 mediante
 `docs/decisions/expediente-workspace/AUTHORIZATION-DECISION.md`.
-OQ-EW-003 permanece abierta y no bloqueante; el permiso del tab Auditoría queda
-fuera de las capabilities operativas.
+OQ-EW-003 está RESOLVED en v0.3.21 mediante `EXPEDIENT_AUDIT_VIEW`, fuera de las
+capabilities operativas.
+
+## Expediente Workspace v0.3.22 — pre-T-22
+
+OQ-EW-003 queda RESOLVED por la permission `EXPEDIENT_AUDIT_VIEW`, distinta de
+`EXPEDIENT_VIEW` y fuera de capabilities. `GetExpedienteAudit` y su contrato sanitizado
+quedan definidos.
+
+`LOCATION-PERMISSION-GAP` queda CLOSED con `LOCATION_VIEW`, permission exclusiva de
+`ListUbicaciones` / GET `/api/v1/ubicaciones`. No se extiende `EXPEDIENT_VIEW` ni
+`ADMIN_CONFIGURE`, y `LOCATION_VIEW` no es capability.
 
 ## Read model composition de T-05 (2026-08-15)
 
@@ -44,7 +54,7 @@ recibe como input y `AuditWriter` enriquece el `AuditEntry` semántico hasta el
 y ownership de Movimiento en Archive Operations/schema tenant. Permanece abierta
 `OQ-EW-010` sobre retención; T-06 no define ni ejecuta esa política.
 
-También permanecen abiertas `OQ-EW-002`, `OQ-EW-003` y `OQ-EW-004`.
+También permanecen abiertas `OQ-EW-002` y `OQ-EW-004`.
 
 ## DispatchExpediente T-07 (v0.3.12)
 

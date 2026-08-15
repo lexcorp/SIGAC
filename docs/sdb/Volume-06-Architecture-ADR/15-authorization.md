@@ -25,3 +25,11 @@ A user may have LOAN_OPEN, but opening a particular loan may still require an al
 
 ## Enforcement
 Backend guards + application policy checks. Frontend permissions are convenience only.
+
+Para Expediente Workspace, `EXPEDIENT_VIEW` permite Workspace/Timeline y
+`EXPEDIENT_AUDIT_VIEW` permite query/tab Auditoría. La segunda no es capability y la UI
+no la deriva de roles. OQ-EW-003 queda RESOLVED.
+
+`LOCATION_VIEW` autoriza exclusivamente `ListUbicaciones` y GET
+`/api/v1/ubicaciones`. Es distinta de `EXPEDIENT_VIEW`, `EXPEDIENT_AUDIT_VIEW` y
+`ADMIN_CONFIGURE`, no es capability y se evalúa server-side antes del query tenant-scoped.

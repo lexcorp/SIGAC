@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.20"
+version: "0.3.22"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -40,12 +40,14 @@ decisions_applied:
   - "HTTP-REQUEST-CONTEXT-DECISION HTTP-EW-001, API-BIGINT-001, API-EW-021 APPROVED"
   - "HTTP-COMMAND-CONTRACT-DECISION API-EW-024..026, API-EW-030 APPROVED"
   - "EXPEDIENT-SEARCH-DECISION SEARCH-EW-001..010 APPROVED"
+  - "EXPEDIENT-AUDIT-AND-COMMAND-UX-DECISION APPROVED"
+  - "OQ-EW-003 RESOLVED — EXPEDIENT_AUDIT_VIEW"
+  - "LOC-AUTH-001..010 APPROVED; LOCATION-PERMISSION-GAP CLOSED"
 requires:
-  - requirements.md (v0.3.20)
+  - requirements.md (v0.3.22)
 open_questions_blocking: []
 open_questions_non_blocking:
   - OQ-EW-002
-  - OQ-EW-003
   - OQ-EW-004
   - OQ-EW-008
   - OQ-EW-009
@@ -439,7 +441,7 @@ Sin stack trace, sin nombre de DB, sin datos clínicos en errores.
 +------------------------------------------------------+
 | 7. Región persistente de feedback / error            |
 +------------------------------------------------------+
-* Tab Auditoría: permiso pendiente OQ-EW-003; fuera de capabilities operativas
+* Tab Auditoría: requiere EXPEDIENT_AUDIT_VIEW; fuera de capabilities operativas
 ```
 
 ### 5.2 Badges de EstadoOperativo
@@ -485,7 +487,7 @@ Cuando la búsqueda devuelve N > 1:
 | **Solicitudes** | Historial de solicitudes | Según permisos |
 | **Préstamos** | Historial con FuenteHabilitanteSalida visible | Según permisos |
 | **Incidencias** | Abiertas y cerradas | Según permisos |
-| **Auditoría** | audit_log (DAT-012); distinto de Movimientos | Permiso exacto pendiente — OQ-EW-003; fuera de capabilities operativas |
+| **Auditoría** | GetExpedienteAudit sanitizado; distinto de Movimientos | EXPEDIENT_AUDIT_VIEW; fuera de capabilities operativas |
 
 ### 5.6 Privacidad en presentación (INT-009)
 
@@ -512,11 +514,15 @@ apps/web/src/features/expediente-workspace/
       SolicitudesTab.tsx
       PrestamosTab.tsx
       IncidenciasTab.tsx
-      AuditoriaTab.tsx             # permiso pendiente OQ-EW-003; fuera de capabilities
+      AuditoriaTab.tsx             # EXPEDIENT_AUDIT_VIEW; consume audit sanitizado
+    DispatchExpedienteDialog.tsx    # sólo por capability DISPATCH
+    AcceptCustodyDialog.tsx         # sólo por capability ACCEPT_CUSTODY
   hooks/
     useExpediente.ts               # fetch + cache; invalidar en 409
     useExpedienteSearch.ts         # búsqueda 0..N; normaliza separadores
     useExpedienteTimeline.ts       # fetch DAT-011
+    useExpedienteAudit.ts          # cursor opaco; summary sanitizado
+    useUbicaciones.ts              # consume GET /ubicaciones; UI no evalúa LOCATION_VIEW
     useCapabilities.ts             # derivado del read model; no calcula dominio
   api/
     expedienteApi.ts               # funciones tipadas sobre cliente OpenAPI
@@ -528,6 +534,19 @@ apps/web/src/features/expediente-workspace/
 - No contiene lógica de transición de dominio.
 - capabilities viene del API; hooks derivan de él.
 - useExpedienteSearch normaliza separadores antes de enviar; no elige coincidencias.
+
+### 6.1 Extensión pre-T-22 v0.3.22
+
+`GetExpedienteAudit` depende de ExpedienteRepository, ExpedienteAuditQueryPort y
+RequestContext. Autoriza EXPEDIENT_AUDIT_VIEW antes de queries, verifica existencia
+tenant-scoped y retorna `{items,nextCursor}` sin total. El adapter filtra únicamente
+`EXPEDIENTE/expedienteId`; changeSummary/securityContext no cruzan el boundary.
+
+Los diálogos capturan únicamente los campos aprobados. expectedRowVersion procede del
+read model, permanece string decimal/no editable y se reutiliza en el command. Las
+opciones de ubicación proceden de `ListUbicaciones` (`id/codigo/descripcion`), nunca
+de UUID manual. El Use Case autoriza `LOCATION_VIEW` antes de consumir
+`UbicacionesQueryPort.findAll(context.tenant)`; la UI sólo maneja 403 Problem Details.
 
 ---
 
@@ -875,11 +894,10 @@ por `GetExpediente` (READ-MODEL-COMPOSITION-DECISION).
 ## 12. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.20"
+spec_version: "0.3.22"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002
-  - OQ-EW-003
   - OQ-EW-004
   - OQ-EW-008
   - OQ-EW-009

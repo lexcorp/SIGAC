@@ -53,8 +53,8 @@ fail-closed aunque el provider la marque validada.
 ## Tabs
 `Resumen` | `Movimientos` | `Solicitudes` | `Préstamos` | `Incidencias` | `Auditoría*`
 
-`*` El permiso exacto del tab Auditoría permanece bajo OQ-EW-003 y se trata fuera
-del array de capabilities operativas; no bloquea T-04.
+`*` El tab Auditoría requiere `EXPEDIENT_AUDIT_VIEW`, fuera del array de capabilities
+operativas. OQ-EW-003 está RESOLVED.
 
 ## Flujo de búsqueda y desambiguación (OQ-EW-001/007 RESOLVED)
 
@@ -80,3 +80,18 @@ exclusivamente los campos mínimos aprobados por SEARCH-EW-002.
 ## Fuente
 UC-018, SPEC-009, DDD-013, BIZ-007, API-011,
 DECISION-REGISTER OQ-EW-001, OQ-EW-007, DEC-EW-STATE-001.
+
+## Extensión v0.3.21
+
+OQ-EW-003 queda RESOLVED: Auditoría requiere `EXPEDIENT_AUDIT_VIEW`, que no es
+capability. Sin ella queda oculta y no consulta; con ella consume GET `/audit`, muestra
+items sanitizados y mantiene cursor opaco.
+
+`DispatchExpedienteDialog` captura destination mediante selector de Ubicación,
+intendedCustodian type/reference y businessReference type/id opcional.
+`AcceptCustodyDialog` captura receptor type/reference/service nullable,
+ubicacionDestino y businessReference type/id opcional. Ambos usan rowVersion actual no
+editable, omiten metadata server-side, preservan input ante errores y refrescan después
+de 204. No existen catálogos de custodios, tipos ni business references. Las opciones
+dependen de `ListUbicaciones`, cuyo endpoint exige `LOCATION_VIEW`. La UI no evalúa esa
+permission: consume el endpoint y aplica Problem Details vigente ante 403.

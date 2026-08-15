@@ -38,3 +38,9 @@ La extensión posterior a T-12 documenta `GET /api/v1/expedientes?numero={numero
 después de implementar `SearchExpedientesByNumero`. `numero` es requerido y la respuesta
 es `{ items: ExpedienteSearchItem[] }`, cardinalidad 0..N, sin `total` ni paginación.
 El OpenAPI no marca `expedienteNumero` como unique y conserva 400/403 canónicos.
+
+La task pre-T-22 añade, sólo después de implementar los Use Cases,
+`GET /api/v1/expedientes/{id}/audit` y su página sanitizada. Añadirá
+`GET /api/v1/ubicaciones`, autorizado por `LOCATION_VIEW`. Ninguno se documenta
+anticipadamente en el archivo OpenAPI durante las decisiones documentales v0.3.21/0.3.22;
+T-21A es responsable de actualizar el contrato ejecutable.

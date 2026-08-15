@@ -36,6 +36,8 @@ REARCHIVE_CONFIRM
 INCIDENT_OPEN
 INCIDENT_RESOLVE
 EXPEDIENT_VIEW
+EXPEDIENT_AUDIT_VIEW
+LOCATION_VIEW
 REPORT_VIEW
 ADMIN_CONFIGURE
 
@@ -46,3 +48,8 @@ ADMIN_CONFIGURE
 El mapeo canónico Capability -> Permission y la asignación mínima Role -> Permission
 se definen en `docs/decisions/expediente-workspace/AUTHORIZATION-DECISION.md`.
 `EXPEDIENT_VIEW` es una permission de lectura y no una capability operativa.
+`EXPEDIENT_AUDIT_VIEW` autoriza exclusivamente la consulta sanitizada del audit del
+Expediente y el tab Auditoría. Tampoco es capability. OQ-EW-003 queda RESOLVED.
+`LOCATION_VIEW` autoriza exclusivamente la consulta/listado del catálogo operativo de
+ubicaciones mediante `ListUbicaciones`/GET `/api/v1/ubicaciones`. No es capability y no
+se sustituye por `EXPEDIENT_VIEW` ni `ADMIN_CONFIGURE`.

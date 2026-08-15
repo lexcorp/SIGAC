@@ -60,3 +60,8 @@ después del rollback. Tampoco persiste aggregate, Movimiento ni audit success.
 
 Para AcceptCustody se usa `CUSTODY_ACCEPTED/EXPEDIENTE/expedienteId`. Success pertenece
 a la UoW mutante; denied/not-found/conflict/invalid-transition se registran fuera.
+
+`GetExpedienteAudit` expone sólo auditId, action, result, actorRef, occurredAt, source,
+requestId y correlationId. Filtra `resource_type=EXPEDIENTE` y resource_id tenant-scoped;
+no expone changeSummary, securityContext ni metadata interna. Requiere
+`EXPEDIENT_AUDIT_VIEW` y nunca mezcla sus filas con MovimientoExpediente.

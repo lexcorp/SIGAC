@@ -36,3 +36,6 @@ apps/web/src/
 - route-level code splitting;
 - accessible keyboard-first workflows;
 - operations optimized for barcode scanning later.
+- `EXPEDIENT_AUDIT_VIEW` controla Auditoría sin convertirse en capability;
+- Dispatch/AcceptCustody dialogs consumen capabilities y contratos API, no reglas;
+- opciones de Ubicación proceden de `ListUbicaciones`, nunca de UUID manual.

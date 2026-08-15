@@ -82,3 +82,12 @@ Comprobar además que sólo optimistic rowVersion mismatch usa audit `conflict`.
 Para AcceptCustody cubrir receptor efectivo, ubicación por ID, timestamp UoW,
 precondiciones, rowVersion, tenant, Movimiento completo, business reference desde input,
 los cinco resultados de audit y atomicidad. CST-GAP-001/002 están cerrados.
+
+Para `GetExpedienteAudit`, cubrir permission antes de queries, existencia tenant-scoped,
+404 no divulgativo, cursor/limit/TenantContext, página vacía/no vacía y summary exacto
+sin changeSummary/securityContext. Audit y Movimiento permanecen separados.
+`EXPEDIENT_AUDIT_VIEW` nunca aparece en capabilities.
+
+Los tests de `ListUbicaciones` cubren autorización `LOCATION_VIEW` antes del query,
+403 sin permission, propagación exclusiva de `context.tenant`, catálogo vacío `[]` y
+output exacto id/codigo/descripcion. No esperan un audit identifier para esta lectura.

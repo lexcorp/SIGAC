@@ -27,3 +27,11 @@ Capabilities operativas canónicas del Expediente Workspace:
 Para `ABRIR_PRESTAMO`, backend evalúa `0..N` fuentes disponibles y requiere al menos una
 fuente validada `CONSULTA_PROGRAMADA|VALE_ARCHIVO_SM_1_14`. La Command Bar no valida ni
 elige fuentes. `ORDEN_SUPERIOR` no habilita la capability en esta spec.
+
+`DISPATCH` abre `DispatchExpedienteDialog`; `ACCEPT_CUSTODY` abre
+`AcceptCustodyDialog`. Sólo existen cuando llega la capability correspondiente. Los
+diálogos no evalúan roles, permissions, estados ni transiciones.
+
+Sus selectores consumen `ListUbicaciones`/GET `/api/v1/ubicaciones`. `LOCATION_VIEW`
+se evalúa server-side; CommandBar y dialogs no la convierten en capability ni la
+derivan de roles.

@@ -70,7 +70,8 @@ El servicio recibe `ActorContext` y `TenantContext` ya validados y no resuelve t
 | `ADMIN_TECNICO` | `ADMIN_CONFIGURE`; sin `EXPEDIENT_VIEW` automático |
 | `TRASLADO` | Sin `CUSTODY_ACCEPT`; sin `LOAN_OPEN` |
 
-El permiso exacto del tab Auditoría permanece bajo OQ-EW-003 y no bloquea T-04.
+El tab Auditoría queda fuera de este mapping operativo. Desde v0.3.21 requiere la
+permission `EXPEDIENT_AUDIT_VIEW`, aprobada por la decisión específica de Audit/UX.
 
 ## Contexto operativo canónico para capabilities
 
@@ -123,4 +124,18 @@ fuente, y el provider/adapter determina `validada`.
 ## Gaps
 
 Esta decisión cierra `AUTH-GAP-001` a `AUTH-GAP-013` para el scope de T-04.
-OQ-EW-003 permanece abierta y no bloqueante.
+OQ-EW-003 está RESOLVED desde v0.3.21 mediante `EXPEDIENT_AUDIT_VIEW`.
+
+## Supersession v0.3.21
+
+La frase anterior queda superseded por
+`EXPEDIENT-AUDIT-AND-COMMAND-UX-DECISION.md`: OQ-EW-003 está RESOLVED mediante
+`EXPEDIENT_AUDIT_VIEW`. La permission no es capability y no altera la asignación
+operativa aprobada en esta decisión.
+
+## Extensión v0.3.22 — Reference data
+
+`LOCATION_VIEW` autoriza `ListUbicaciones`/GET `/api/v1/ubicaciones`. Es distinta de
+`EXPEDIENT_VIEW`, `EXPEDIENT_AUDIT_VIEW` y `ADMIN_CONFIGURE`, no es capability y no se
+deriva de roles en frontend. Esta extensión no asigna la permission a roles: llega en
+`ActorContext.permissions` desde la autorización server-side canónica.

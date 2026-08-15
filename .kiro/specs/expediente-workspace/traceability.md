@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.20"
+version: "0.3.22"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 traceability_model: "OS-007 / SDD-006"
@@ -34,10 +34,13 @@ decisions_applied:
   - "HTTP-REQUEST-CONTEXT-DECISION HTTP-EW-001, API-BIGINT-001, API-EW-021 APPROVED"
   - "HTTP-COMMAND-CONTRACT-DECISION API-EW-024..026, API-EW-030 APPROVED"
   - "EXPEDIENT-SEARCH-DECISION SEARCH-EW-001..010 APPROVED"
+  - "EXPEDIENT-AUDIT-AND-COMMAND-UX-DECISION APPROVED"
+  - "OQ-EW-003 RESOLVED"
+  - "LOC-AUTH-001..010 APPROVED; LOCATION-PERMISSION-GAP CLOSED"
 requires:
-  - requirements.md (v0.3.20)
-  - design.md (v0.3.20)
-  - tasks.md (v0.3.20)
+  - requirements.md (v0.3.22)
+  - design.md (v0.3.22)
+  - tasks.md (v0.3.22)
 ---
 
 # Expediente Workspace — Traceability
@@ -270,6 +273,34 @@ requires:
 
 ---
 
+### TR-016 — Consulta sanitizada de auditoría del Expediente
+
+| Eslabón | Referencia | Detalle |
+|---------|-----------|---------|
+| **Source / SDB** | SEC-017, SEC-038, DAT-012, EXPEDIENT-AUDIT-AND-COMMAND-UX-DECISION | Audit separado de Movimiento y proyección de lectura sanitizada |
+| **Business Rule** | `EXPEDIENT_AUDIT_VIEW`; fail-closed sin permission | No es capability; `EXPEDIENT_VIEW` no autoriza el tab Auditoría |
+| **Use Case** | GetExpedienteAudit | RequestContext, existencia tenant-scoped y cursor opaco |
+| **REQ** | REQ-EW-013, REQ-EW-018 | Read model sin changeSummary/securityContext |
+| **API** | GET /api/v1/expedientes/{id}/audit | `{ items, nextCursor }`, sin total |
+| **UI** | AuditoriaTab | Oculto sin permission; visible y consultable con permission |
+| **Test** | AC-EW-014; T-21A/T-22 | 403, 404 no divulgativo, sanitización y visibilidad |
+
+---
+
+### TR-017 — Catálogo de ubicaciones y captura de comandos
+
+| Eslabón | Referencia | Detalle |
+|---------|-----------|---------|
+| **Source / SDB** | API-020, APP-003, EXPEDIENT-AUDIT-AND-COMMAND-UX-DECISION | Ubicaciones existentes; dialogs sin payload hardcoded |
+| **Business Rule** | `LOCATION_VIEW`; LOC-AUTH-001..010 | Permission específica, no capability; autorización antes del query |
+| **Use Case** | ListUbicaciones / UbicacionesQueryPort | RequestContext; TenantContext; salida exacta id/codigo/descripcion, sin paginación |
+| **REQ** | REQ-EW-019, REQ-EW-020 | Selector de ubicación y dialogs Dispatch/AcceptCustody |
+| **API** | GET /api/v1/ubicaciones | Pendiente de cierre del gap; no expone campos adicionales |
+| **UI** | DispatchExpedienteDialog, AcceptCustodyDialog | Capability-driven; rowVersion del Workspace, no editable |
+| **Test** | T-21A/T-22 | Payload explícito, 204+refresh y flujo EN_TRASLADO->EN_CONSULTA |
+
+---
+
 ## Matriz de cobertura REQ -> Cadena
 
 | REQ | Cadena(s) | Estado |
@@ -286,11 +317,14 @@ requires:
 | REQ-EW-010 | TR-006 | Cubierto — OQ-EW-005 RESUELTA |
 | REQ-EW-011 | TR-004 | Cubierto — OQ-EW-006 RESUELTA |
 | REQ-EW-012 | TR-005 | Cubierto — OQ-EW-006 RESUELTA |
-| REQ-EW-013 | TR-012 | Cubierto (OQ-EW-003 no bloqueante) |
+| REQ-EW-013 | TR-012, TR-016 | Cubierto — OQ-EW-003 RESUELTA |
 | REQ-EW-014 | TR-013 | Cubierto (OQ-EW-002 no bloqueante) |
 | REQ-EW-015 | TR-011 | Cubierto |
 | REQ-EW-016 | TR-010 | Cubierto |
 | REQ-EW-017 | TR-015 | Cubierto |
+| REQ-EW-018 | TR-004, TR-005, TR-017 | Cubierto documentalmente; implementación T-21A |
+| REQ-EW-019 | TR-016 | Cubierto documentalmente; implementación T-21A |
+| REQ-EW-020 | TR-017 | Cubierto — LOCATION-PERMISSION-GAP CLOSED |
 | NFR-EW-001 | TR-001 | [PENDIENTE SLA en UAT] |
 | NFR-EW-002 | TR-009, TR-006 | Cubierto |
 | NFR-EW-003 | TR-012 | Cubierto |
@@ -320,7 +354,7 @@ requires:
 | AC-EW-011 | Unit CapService + Component | T-04, T-16 | Pendiente |
 | AC-EW-012 | Component + E2E | T-18, T-22 | Pendiente |
 | AC-EW-013 | Integration + E2E | T-19, T-22 | Pendiente |
-| AC-EW-014 | Component + API | T-17, T-19 | Pendiente (OQ-EW-003) |
+| AC-EW-014 | Component + API + E2E | T-21A, T-22 | Pendiente implementación; OQ-EW-003 resuelta |
 | AC-EW-015 | Integration + Component | T-06, T-17, T-20 | Pendiente |
 | AC-EW-016 | Component | T-14 | Pendiente (OQ-EW-002) |
 | AC-EW-017 | Component + E2E | T-16, T-22 | Pendiente |
@@ -341,12 +375,13 @@ requires:
 |----|------------|-----|--------|
 | GAP-001 | Condición exacta de MarkNotLocated -> Incidencia automática | OQ-EW-004 | Abierto; no automático hasta resolución |
 | GAP-004 | Campo de pacienteRef.displayLabel en read model | OQ-EW-002 | Abierto; usar nombre corto operativo provisional |
-| GAP-005 | Permiso exacto del tab Auditoría | OQ-EW-003 | Abierto; fuera de capabilities operativas; no bloquea T-04 |
+| GAP-005 | Permiso exacto del tab Auditoría | OQ-EW-003 | CERRADO — `EXPEDIENT_AUDIT_VIEW`; no es capability |
 | GAP-006 | Schema de MovimientoExpediente (módulo o dedicado) | OQ-DOM-001 | CERRADO — Archive Operations, schema tenant junto con Expediente |
 | GAP-008 | Codificación de ubicaciones temporales | OQ-EW-008 | Abierto; categoría genérica provisional |
 | GAP-009 | SLA de performance (<= 1 s) | NFR-EW-001 | Pendiente UAT con carga real |
 | GAP-010 | Política de retención del timeline | OQ-EW-010 | Abierto; sin límite provisional |
 | AUD-DB-GAP | DDL de audit_log, mapping y migration ownership | DAT-012, TX-EW-011, AUD-DB-EW-001..013 | CERRADO; T-09 ready |
+| LOCATION-PERMISSION-GAP | Permission para `ListUbicaciones` | API-020 / SDD-005 | CERRADO — `LOCATION_VIEW`; distinta de `EXPEDIENT_VIEW` y `ADMIN_CONFIGURE` |
 
 ---
 
@@ -377,17 +412,18 @@ requires:
 | 0.3.18 | 2026-08-15 | HTTP-EW-001, API-BIGINT-001 y API-EW-021 aprobadas: resolver HTTP autenticado, tenant membership/tracing, bigint decimal, scope T-11 y 401/403 formalizados. |
 | 0.3.19 | 2026-08-15 | API-EW-024..026/API-EW-030 aprobadas: command success 204, HTTP validation 400 y módulo API configurable/composition ownership definidos. |
 | 0.3.20 | 2026-08-15 | SEARCH-EW-001..010 aprobadas: Use Case SearchExpedientesByNumero, summary 0..N, audit, endpoint `{items}`, validación, UX y T-12A formalizados. |
+| 0.3.21 | 2026-08-15 | OQ-EW-003 resuelta con `EXPEDIENT_AUDIT_VIEW`; GetExpedienteAudit, read model sanitizado, dialogs de comandos, ListUbicaciones y T-21A formalizados. LOCATION-PERMISSION-GAP queda bloqueante. |
+| 0.3.22 | 2026-08-15 | LOC-AUTH-001..010 aprobadas: `LOCATION_VIEW`, ListUbicaciones/UbicacionesQueryPort, `{items}`, tenant y 401/403/empty definidos. LOCATION-PERMISSION-GAP cerrado. |
 
 ---
 
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.20"
+spec_version: "0.3.22"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002
-  - OQ-EW-003
   - OQ-EW-004
   - OQ-EW-008
   - OQ-EW-009

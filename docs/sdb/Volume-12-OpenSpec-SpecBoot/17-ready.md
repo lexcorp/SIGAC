@@ -4,8 +4,8 @@ Approved spec, permissions, AC, ADR, API/UI deps, blocking OQs resolved.
 
 Para Expediente Workspace T-04, AUTH-GAP-001..013 están cerrados por
 `docs/decisions/expediente-workspace/AUTHORIZATION-DECISION.md`.
-OQ-EW-003 permanece abierta y no bloqueante porque el tab Auditoría queda fuera de
-las capabilities operativas de T-04.
+OQ-EW-003 está RESOLVED en v0.3.21 mediante `EXPEDIENT_AUDIT_VIEW`; el tab Auditoría
+permanece fuera de las capabilities operativas de T-04.
 
 Para T-11, HTTP-EW-001, API-BIGINT-001 y API-EW-021 cierran los contratos de resolver
 HTTP autenticado, tenant membership, tracing, bigint decimal en JSON, scope limitado a
@@ -54,3 +54,10 @@ Para la búsqueda, SEARCH-EW-001..010 define Use Case, summary 0..N, Repository
 tenant-scoped, `EXPEDIENT_VIEW`, audit, endpoint, response `{items}`, validación y UX
 0/1/N. La task T-12A debe implementar en orden Application → API → OpenAPI antes de
 reactivar T-13/T-15. No quedan gaps documentales bloqueantes para esa implementación.
+
+Para pre-T-22, OQ-EW-003 queda RESOLVED por
+EXPEDIENT-AUDIT-AND-COMMAND-UX-DECISION: `EXPEDIENT_AUDIT_VIEW`,
+GetExpedienteAudit/ExpedienteAuditQueryPort/API sanitizada y los dos diálogos quedan
+definidos. v0.3.22 aprueba `LOCATION_VIEW` para `ListUbicaciones`, separada de
+`EXPEDIENT_VIEW`, `EXPEDIENT_AUDIT_VIEW` y `ADMIN_CONFIGURE`.
+LOCATION-PERMISSION-GAP queda CLOSED; T-21A/T-22 no conservan bloqueos conocidos.

@@ -33,6 +33,18 @@ methodology:
 `*` sujeto a tipología/autorización confirmada.
 `C` condicional según contexto.
 
+## Permissions de lectura transversales del slice
+
+| Permission | Acción autorizada | Contrato | Capability |
+|---|---|---|---|
+| `EXPEDIENT_VIEW` | Consultar Expediente/Timeline | GetExpediente / GetExpedienteTimeline | No |
+| `EXPEDIENT_AUDIT_VIEW` | Consultar Audit sanitizado del Expediente | GetExpedienteAudit | No |
+| `LOCATION_VIEW` | Consultar/listar ubicaciones | ListUbicaciones / GET `/api/v1/ubicaciones` | No |
+| `ADMIN_CONFIGURE` | Administración/configuración futura del catálogo | Fuera de este slice | No |
+
+La matriz no asigna `LOCATION_VIEW` por rol. Application consume la permission efectiva
+desde `ActorContext.permissions`; frontend no deriva autorización desde roles.
+
 ## Notas (2026-08-14)
 
 - La autorización de `OpenLoan` depende de `FuenteHabilitanteSalida`, no de un

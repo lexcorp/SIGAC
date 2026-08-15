@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.20"
+version: "0.3.22"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -41,6 +41,9 @@ decisions_applied:
   - "HTTP-REQUEST-CONTEXT-DECISION HTTP-EW-001, API-BIGINT-001, API-EW-021 APPROVED"
   - "HTTP-COMMAND-CONTRACT-DECISION API-EW-024..026, API-EW-030 APPROVED"
   - "EXPEDIENT-SEARCH-DECISION SEARCH-EW-001..010 APPROVED"
+  - "EXPEDIENT-AUDIT-AND-COMMAND-UX-DECISION APPROVED"
+  - "OQ-EW-003 RESOLVED — EXPEDIENT_AUDIT_VIEW"
+  - "LOC-AUTH-001..010 APPROVED; LOCATION-PERMISSION-GAP CLOSED"
 ---
 
 # Expediente Workspace — Requirements
@@ -72,7 +75,7 @@ del aggregate, el rol del usuario y el contexto del negocio.
 | F | Mostrar incidencias abiertas si existen (DDD-017) |
 | G | Mostrar historial de movimientos operativos (DDD-020) |
 | H | Exponer barra de comandos según estado/rol/contexto/FuenteHabilitanteSalida (DS-014) |
-| I | Mostrar tab de Auditoría a roles autorizados (SEC-038, INT-008) |
+| I | Mostrar tab de Auditoría sólo con EXPEDIENT_AUDIT_VIEW (SEC-038, INT-008) |
 | J | Manejar concurrencia optimista y conflictos de estado (DAT-019) |
 | K | Buscar expediente por número con resultado 0..N y desambiguación si N > 1 |
 | L | Registrar despacho (DispatchExpediente) y aceptación de custodia (AcceptCustody) |
@@ -326,11 +329,36 @@ operativos; `EXPEDIENT_VIEW` no es una capability.
 - **Audit:** `CUSTODY_ACCEPTED/EXPEDIENTE/expedienteId`; cinco resultados canónicos.
 
 ### REQ-EW-013 — Tab Auditoría (acceso restringido)
-- **Precondición:** permiso de auditoría pendiente de definición bajo OQ-EW-003;
-  se evalúa fuera de capabilities[] operativas.
-- **Resultado:** Registros de audit_log separados del tab Movimientos.
+- **Precondición:** `EXPEDIENT_AUDIT_VIEW`, evaluada fuera de capabilities[] operativas.
+- **Resultado:** `GetExpedienteAudit` retorna una página cursor-based sanitizada de
+  audit_log, separada del tab Movimientos. Sin permission, tab oculto y sin request.
+- **Contrato:** auditId, action, result, actorRef, occurredAt, source, requestId y
+  correlationId; nunca changeSummary/securityContext.
 - **Fuente SDB:** SEC-038, INT-008.
-- **OQ no-bloqueante:** OQ-EW-003 — roles exactos con acceso.
+- **Decisión:** OQ-EW-003 RESOLVED; `EXPEDIENT_AUDIT_VIEW` no es capability.
+
+### REQ-EW-018 — Diálogos Dispatch y AcceptCustody
+- `DispatchExpedienteDialog` sólo abre con capability `DISPATCH` y captura destination,
+  intendedCustodian type/reference y businessReference type/id opcional.
+- `AcceptCustodyDialog` sólo abre con `ACCEPT_CUSTODY` y captura receptor
+  type/reference/service nullable, ubicacionDestino y businessReference type/id.
+- Ambos usan expectedRowVersion del Workspace, no editable; no aceptan actor, tenant,
+  occurredAt ni tracing; success 204 refresca el Workspace.
+
+### REQ-EW-019 — Auditoría tenant-scoped
+- `GetExpedienteAudit` recibe ExpedienteId, pagination y RequestContext, exige
+  `EXPEDIENT_AUDIT_VIEW`, comprueba existencia tenant-scoped y usa
+  `ExpedienteAuditQueryPort`. Responde `{items,nextCursor}`, sin total y cursor opaco.
+- Falta de permission usa 403; ausencia/cross-tenant usa 404 no divulgativo.
+
+### REQ-EW-020 — Catálogo de ubicaciones para comandos
+- `ListUbicaciones` retorna únicamente id/codigo/descripcion desde `ubicaciones`, sin
+  paginación, mediante GET `/api/v1/ubicaciones`; HTTP envuelve como `{items}`.
+- Input `{context: RequestContext}`; exige `LOCATION_VIEW` antes del query y usa sólo
+  `context.tenant` mediante `UbicacionesQueryPort.findAll`.
+- Sin autenticación: 401; sin permission: 403; catálogo vacío: 200 `{items:[]}`.
+- `LOCATION_VIEW` no es capability y es distinta de `EXPEDIENT_VIEW`,
+  `EXPEDIENT_AUDIT_VIEW` y `ADMIN_CONFIGURE`.
 
 ### REQ-EW-014 — Privacidad en presentación
 - **Resultado:** Solo referencia mínima de paciente para la tarea. Sin datos clínicos.
@@ -616,14 +644,13 @@ And foco siempre visible
 
 ### Bloqueantes para implementación
 
-Ninguna. `AUD-DB-GAP` y las OQs históricamente bloqueantes están cerradas.
+Ninguno. `LOCATION-PERMISSION-GAP` está CLOSED mediante `LOCATION_VIEW`.
 
 ### No bloqueantes (decisión provisional disponible)
 
 | ID | Pregunta | Fuente SDB | Impacto | Decisión provisional |
 |----|----------|------------|---------|----------------------|
 | OQ-EW-002 | Campo mínimo de pacienteRef.displayLabel en header | OQ-SPEC-012, SEC-003 | REQ-EW-014 | Nombre corto operativo hasta resolución |
-| OQ-EW-003 | Permiso exacto del tab Auditoría | OQ-UX-008, SEC-038 | REQ-EW-013 | Fuera de capabilities[] operativas; no bloquea T-04 |
 | OQ-EW-004 | MarkNotLocated abre Incidencia en qué condiciones | OQ-DOM-006, INV-INC-002 | REQ-EW-007 | No automático; acción explícita hasta resolución |
 | OQ-EW-008 | Codificación exacta de ubicaciones temporales | OQ-DOM-009 | REQ-EW-003 | Categoría genérica hasta confirmación de Archivo |
 | OQ-EW-009 | Barcode scanner en MVP | OQ-UX-003 | REQ-EW-002 | Búsqueda manual; scanner en iteración posterior |
@@ -634,11 +661,10 @@ Ninguna. `AUD-DB-GAP` y las OQs históricamente bloqueantes están cerradas.
 ## 7. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.20"
+spec_version: "0.3.22"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002
-  - OQ-EW-003
   - OQ-EW-004
   - OQ-EW-008
   - OQ-EW-009

@@ -190,3 +190,26 @@ En JSON, `rowVersion` y `expectedRowVersion` son strings decimales; Application 
 Dispatch y AcceptCustody son comandos síncronos/transaccionales. En success sus
 endpoints responden 204 sin body; los DomainEvent `ExpedienteDispatched` y
 `CustodyAccepted` no se exponen por HTTP. El cliente puede refrescar GetExpediente.
+
+## Extensión v0.3.21 — GetExpedienteAudit y comandos UI
+
+`GetExpedienteAudit` recibe `{ expedienteId, pagination: { cursor?, limit }, context }`,
+exige `EXPEDIENT_AUDIT_VIEW`, comprueba existencia con `ExpedienteRepository` y consulta
+`ExpedienteAuditQueryPort` usando exclusivamente `context.tenant`. Retorna
+`{items,nextCursor}` cursor-based, sin total. Falta de permission usa
+`PERMISSION_DENIED`; ausencia tenant-scoped usa `EXPEDIENTE_NOT_FOUND`.
+
+Cada item contiene sólo auditId, action, result canónico, actorRef, occurredAt, source,
+requestId y correlationId. No expone changeSummary/securityContext. El endpoint es
+`GET /api/v1/expedientes/{id}/audit`; Audit permanece separado de Movimiento.
+
+Dispatch/AcceptCustody se capturan en diálogos sólo cuando su capability existe.
+`expectedRowVersion` procede del Workspace y no es editable; actor, tenant, timestamps
+y tracing nunca proceden del formulario.
+
+## Extensión v0.3.22 — ListUbicaciones
+
+`ListUbicaciones` recibe `{ context: RequestContext }`, requiere `LOCATION_VIEW` antes
+de consultar y consume `UbicacionesQueryPort.findAll(context.tenant)`. Retorna
+`readonly UbicacionOption[]`, limitado a `id`, `codigo`, `descripcion`. Catálogo vacío
+es success con `[]`; no existe not-found. `LOCATION_VIEW` no es capability.
