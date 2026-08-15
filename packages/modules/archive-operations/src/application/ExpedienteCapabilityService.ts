@@ -60,12 +60,16 @@ export interface ExpedienteCapabilityInput {
   readonly estadoOperativo: EstadoOperativo;
   readonly solicitudActiva: SolicitudActivaContext | null;
   readonly prestamoActivo: PrestamoActivoContext | null;
-  readonly fuenteHabilitanteSalida: FuenteHabilitanteSalidaContext | null;
+  readonly fuentesHabilitantesSalida: readonly FuenteHabilitanteSalidaContext[];
   readonly actor: ActorContext;
   readonly tenant: TenantContext;
 }
 
 const ARCHIVO_ROLES = new Set(['ARCHIVISTA', 'ARCHIVO_JEFE']);
+const FUENTES_QUE_HABILITAN_PRESTAMO: ReadonlySet<FuenteHabilitanteSalida> = new Set([
+  'CONSULTA_PROGRAMADA',
+  'VALE_ARCHIVO_SM_1_14',
+]);
 
 export class ExpedienteCapabilityService {
   calculate(input: ExpedienteCapabilityInput): readonly ExpedienteCapability[] {
@@ -129,7 +133,7 @@ export class ExpedienteCapabilityService {
       input.estadoOperativo === 'DISPONIBLE' &&
         input.prestamoActivo === null &&
         isArchivo &&
-        this.fuentePermiteAbrirPrestamo(input.fuenteHabilitanteSalida),
+        this.existeFuenteParaAbrirPrestamo(input.fuentesHabilitantesSalida),
       actor,
       'LOAN_OPEN',
     );
@@ -167,14 +171,13 @@ export class ExpedienteCapabilityService {
     return capabilities;
   }
 
-  private fuentePermiteAbrirPrestamo(
-    fuente: FuenteHabilitanteSalidaContext | null,
+  private existeFuenteParaAbrirPrestamo(
+    fuentes: readonly FuenteHabilitanteSalidaContext[],
   ): boolean {
-    if (fuente?.tipo === 'CONSULTA_PROGRAMADA') {
-      return true;
-    }
-
-    return fuente?.tipo === 'VALE_ARCHIVO_SM_1_14' && fuente.validada;
+    return fuentes.some(
+      (fuente) =>
+        fuente.validada && FUENTES_QUE_HABILITAN_PRESTAMO.has(fuente.tipo),
+    );
   }
 
   private hasAnyRole(actor: ActorContext, roles: ReadonlySet<string>): boolean {

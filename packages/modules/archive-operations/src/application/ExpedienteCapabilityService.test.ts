@@ -47,7 +47,7 @@ function input(
     estadoOperativo: 'DISPONIBLE',
     solicitudActiva: null,
     prestamoActivo: null,
-    fuenteHabilitanteSalida: null,
+    fuentesHabilitantesSalida: [],
     actor: actor(['ARCHIVISTA'], ARCHIVISTA_PERMISSIONS),
     tenant,
     ...overrides,
@@ -130,14 +130,32 @@ describe('ExpedienteCapabilityService', () => {
   it('ofrece ABRIR_PRESTAMO por CONSULTA_PROGRAMADA a Archivo/Jefatura con LOAN_OPEN', () => {
     const capabilities = service.calculate(
       input({
-        fuenteHabilitanteSalida: {
+        fuentesHabilitantesSalida: [{
           tipo: 'CONSULTA_PROGRAMADA',
           validada: true,
-        },
+        }],
       }),
     );
 
     expect(capabilities).toContain('ABRIR_PRESTAMO');
+  });
+
+  it('no ofrece ABRIR_PRESTAMO con una colección de fuentes vacía', () => {
+    expect(
+      service.calculate(input({ fuentesHabilitantesSalida: [] })),
+    ).not.toContain('ABRIR_PRESTAMO');
+  });
+
+  it('no ofrece ABRIR_PRESTAMO con CONSULTA_PROGRAMADA no validada', () => {
+    expect(
+      service.calculate(
+        input({
+          fuentesHabilitantesSalida: [
+            { tipo: 'CONSULTA_PROGRAMADA', validada: false },
+          ],
+        }),
+      ),
+    ).not.toContain('ABRIR_PRESTAMO');
   });
 
   it('ofrece ABRIR_PRESTAMO por SM 1-14 sólo al ejecutor de Archivo con fuente validada', () => {
@@ -147,12 +165,12 @@ describe('ExpedienteCapabilityService', () => {
     };
 
     expect(
-      service.calculate(input({ fuenteHabilitanteSalida: fuenteValidada })),
+      service.calculate(input({ fuentesHabilitantesSalida: [fuenteValidada] })),
     ).toContain('ABRIR_PRESTAMO');
     expect(
       service.calculate(
         input({
-          fuenteHabilitanteSalida: { ...fuenteValidada, validada: false },
+          fuentesHabilitantesSalida: [{ ...fuenteValidada, validada: false }],
         }),
       ),
     ).not.toContain('ABRIR_PRESTAMO');
@@ -165,10 +183,10 @@ describe('ExpedienteCapabilityService', () => {
         service.calculate(
           input({
             actor: actor([role], ['EXPEDIENT_VIEW', 'LOAN_OPEN']),
-            fuenteHabilitanteSalida: {
+            fuentesHabilitantesSalida: [{
               tipo: 'VALE_ARCHIVO_SM_1_14',
               validada: true,
-            },
+            }],
           }),
         ),
       ).not.toContain('ABRIR_PRESTAMO');
@@ -179,10 +197,38 @@ describe('ExpedienteCapabilityService', () => {
     expect(
       service.calculate(
         input({
-          fuenteHabilitanteSalida: {
+          fuentesHabilitantesSalida: [{
             tipo: 'ORDEN_SUPERIOR',
             validada: true,
-          },
+          }],
+        }),
+      ),
+    ).not.toContain('ABRIR_PRESTAMO');
+  });
+
+  it('ofrece ABRIR_PRESTAMO cuando múltiples fuentes incluyen una permitida y validada', () => {
+    expect(
+      service.calculate(
+        input({
+          fuentesHabilitantesSalida: [
+            { tipo: 'ORDEN_SUPERIOR', validada: true },
+            { tipo: 'CONSULTA_PROGRAMADA', validada: false },
+            { tipo: 'VALE_ARCHIVO_SM_1_14', validada: true },
+          ],
+        }),
+      ),
+    ).toContain('ABRIR_PRESTAMO');
+  });
+
+  it('no ofrece ABRIR_PRESTAMO cuando múltiples fuentes son todas inválidas', () => {
+    expect(
+      service.calculate(
+        input({
+          fuentesHabilitantesSalida: [
+            { tipo: 'ORDEN_SUPERIOR', validada: true },
+            { tipo: 'CONSULTA_PROGRAMADA', validada: false },
+            { tipo: 'VALE_ARCHIVO_SM_1_14', validada: false },
+          ],
         }),
       ),
     ).not.toContain('ABRIR_PRESTAMO');
@@ -193,10 +239,10 @@ describe('ExpedienteCapabilityService', () => {
       service.calculate(
         input({
           prestamoActivo: { estado: 'Activo' },
-          fuenteHabilitanteSalida: {
+          fuentesHabilitantesSalida: [{
             tipo: 'CONSULTA_PROGRAMADA',
             validada: true,
-          },
+          }],
         }),
       ),
     ).not.toContain('ABRIR_PRESTAMO');
