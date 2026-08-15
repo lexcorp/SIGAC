@@ -13,8 +13,14 @@ export interface ActorContext {
   readonly tenantIds: ReadonlySet<string>;
 }
 
+export const REQUEST_SOURCES = ['WEB', 'INTERNAL'] as const;
+
+export type RequestSource = (typeof REQUEST_SOURCES)[number];
+
 export interface RequestContext {
-  readonly tenant: TenantContext;
   readonly actor: ActorContext;
+  readonly tenant: TenantContext;
+  readonly requestId: string;
   readonly correlationId: string;
+  readonly source: RequestSource;
 }

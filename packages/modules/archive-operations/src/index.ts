@@ -3,3 +3,6 @@ export * from './domain/value-objects/index.js';
 export * from './domain/ports/ExpedienteRepository.js';
 export * from './application/GetExpediente.js';
 export * from './application/ExpedienteCapabilityService.js';
+export * from './application/ApplicationError.js';
+export * from './application/AuditWriter.js';
+export * from './application/ExpedienteWorkspaceQueryPorts.js';
