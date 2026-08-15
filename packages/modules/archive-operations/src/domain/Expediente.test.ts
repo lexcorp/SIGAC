@@ -256,6 +256,137 @@ describe('Expediente', () => {
     ).toThrow(/obligatorio/);
   });
 
+  it.each(['Consulta externa', null])(
+    'acepta custodia efectiva con service %s y conserva ubicación',
+    (service) => {
+      const location = Ubicacion.create({
+        id: 'consultorio-10',
+        codigo: 'C-10',
+        descripcion: 'Consultorio 10',
+      });
+      const pending = Custodia.enTraslado({
+        custodianType: 'RECEPTOR_PREVISTO',
+        custodianReference: 'previsto-1',
+      });
+      const occurredAt = new Date('2026-08-15T18:30:00.000Z');
+      const expediente = Expediente.rehydrate(
+        snapshot({
+          estadoOperativo: 'EN_TRASLADO',
+          ubicacionActual: location,
+          custodiaActual: pending,
+          rowVersion: 8n,
+        }),
+      );
+
+      const event = expediente.acceptCustody({
+        receptor: { type: 'RECEPTOR_EFECTIVO', reference: 'efectivo-2', service },
+        ubicacionDestino: location,
+        occurredAt,
+      });
+      const current = expediente.snapshot();
+
+      expect(current.estadoOperativo).toBe('EN_CONSULTA');
+      expect(current.ubicacionActual).toBe(location);
+      expect(current.rowVersion).toBe(9n);
+      expect(current.custodiaActual).toMatchObject({
+        custodianType: 'RECEPTOR_EFECTIVO',
+        custodianReference: 'efectivo-2',
+        service,
+        location: 'consultorio-10',
+      });
+      expect(current.custodiaActual?.acceptedAt).toEqual(occurredAt);
+      expect(event).toEqual({
+        name: 'CustodyAccepted',
+        occurredAt,
+        payload: {
+          expedienteId: current.id,
+          location,
+          intendedCustodian: { type: 'RECEPTOR_PREVISTO', reference: 'previsto-1' },
+          acceptedCustodian: {
+            type: 'RECEPTOR_EFECTIVO',
+            reference: 'efectivo-2',
+            service,
+          },
+        },
+      });
+      expect(event.occurredAt).toBe(occurredAt);
+    },
+  );
+
+  it('rechaza aceptación fuera de EN_TRASLADO', () => {
+    const location = Ubicacion.create({ id: 'consultorio-10', codigo: 'C-10', descripcion: 'C10' });
+    const expediente = Expediente.rehydrate(
+      snapshot({
+        ubicacionActual: location,
+        custodiaActual: Custodia.enTraslado({
+          custodianType: 'RECEPTOR',
+          custodianReference: 'previsto-1',
+        }),
+        estadoOperativo: 'DISPONIBLE',
+      }),
+    );
+
+    expect(() =>
+      expediente.acceptCustody({
+        receptor: { type: 'RECEPTOR', reference: 'efectivo-1', service: null },
+        ubicacionDestino: location,
+        occurredAt: new Date('2026-08-15T18:30:00.000Z'),
+      }),
+    ).toThrow(/custodia pendiente y ubicación coincidente/);
+  });
+
+  it('rechaza ubicación distinta sin realizar transferencia silenciosa', () => {
+    const currentLocation = Ubicacion.create({ id: 'c-10', codigo: 'C-10', descripcion: 'C10' });
+    const otherLocation = Ubicacion.create({ id: 'c-11', codigo: 'C-11', descripcion: 'C11' });
+    const expediente = Expediente.rehydrate(
+      snapshot({
+        estadoOperativo: 'EN_TRASLADO',
+        ubicacionActual: currentLocation,
+        custodiaActual: Custodia.enTraslado({
+          custodianType: 'RECEPTOR',
+          custodianReference: 'previsto-1',
+        }),
+      }),
+    );
+    const before = expediente.snapshot();
+
+    expect(() =>
+      expediente.acceptCustody({
+        receptor: { type: 'RECEPTOR', reference: 'efectivo-1', service: null },
+        ubicacionDestino: otherLocation,
+        occurredAt: new Date('2026-08-15T18:30:00.000Z'),
+      }),
+    ).toThrow(/ubicación coincidente/);
+    expect(expediente.snapshot()).toEqual(before);
+  });
+
+  it.each([
+    { type: '', reference: 'efectivo-1' },
+    { type: 'RECEPTOR', reference: '   ' },
+  ])('rechaza receptor efectivo incompleto: $type/$reference', (receptor) => {
+    const location = Ubicacion.create({ id: 'c-10', codigo: 'C-10', descripcion: 'C10' });
+    const expediente = Expediente.rehydrate(
+      snapshot({
+        estadoOperativo: 'EN_TRASLADO',
+        ubicacionActual: location,
+        custodiaActual: Custodia.enTraslado({
+          custodianType: 'RECEPTOR',
+          custodianReference: 'previsto-1',
+        }),
+      }),
+    );
+    const before = expediente.snapshot();
+
+    expect(() =>
+      expediente.acceptCustody({
+        receptor: { ...receptor, service: null },
+        ubicacionDestino: location,
+        occurredAt: new Date('2026-08-15T18:30:00.000Z'),
+      }),
+    ).toThrow(/obligatorio/);
+    expect(expediente.snapshot()).toEqual(before);
+  });
+
   it('no admite campos clínicos en su contrato público ni los conserva en runtime', () => {
     const expediente = Expediente.rehydrate({
       ...snapshot(),

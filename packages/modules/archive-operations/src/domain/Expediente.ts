@@ -61,6 +61,29 @@ export interface DispatchExpedienteTransitionInput {
   readonly occurredAt: Date;
 }
 
+export interface AcceptedCustodian {
+  readonly type: string;
+  readonly reference: string;
+  readonly service: string | null;
+}
+
+export interface CustodyAcceptedPayload {
+  readonly expedienteId: ExpedienteId;
+  readonly location: Ubicacion;
+  readonly intendedCustodian: IntendedCustodian;
+  readonly acceptedCustodian: AcceptedCustodian;
+}
+
+export type CustodyAccepted = DomainEvent<CustodyAcceptedPayload> & {
+  readonly name: 'CustodyAccepted';
+};
+
+export interface AcceptCustodyTransitionInput {
+  readonly receptor: AcceptedCustodian;
+  readonly ubicacionDestino: Ubicacion;
+  readonly occurredAt: Date;
+}
+
 /** Aggregate root que representa la situación operativa actual de un expediente físico. */
 export class Expediente {
   private constructor(private state: ExpedienteSnapshot) {}
@@ -134,11 +157,61 @@ export class Expediente {
     };
   }
 
+  acceptCustody(input: AcceptCustodyTransitionInput): CustodyAccepted {
+    if (
+      this.state.estadoOperativo !== 'EN_TRASLADO' ||
+      this.state.custodiaActual === null ||
+      this.state.custodiaActual.estaAceptada ||
+      this.state.ubicacionActual === null ||
+      !this.state.ubicacionActual.equals(input.ubicacionDestino)
+    ) {
+      throw new DomainError(
+        'EXPEDIENTE_ACCEPT_CUSTODY_ESTADO_INVALIDO',
+        'AcceptCustody requiere EN_TRASLADO, custodia pendiente y ubicación coincidente.',
+      );
+    }
+
+    Expediente.assertRequiredText(input.receptor.type, 'receptor.type');
+    Expediente.assertRequiredText(input.receptor.reference, 'receptor.reference');
+
+    const intendedCustodian = Object.freeze({
+      type: this.state.custodiaActual.custodianType,
+      reference: this.state.custodiaActual.custodianReference,
+    });
+    const acceptedCustodian = Object.freeze({ ...input.receptor });
+    const custodiaActual = CustodiaValue.aceptada({
+      custodianType: input.receptor.type,
+      custodianReference: input.receptor.reference,
+      service: input.receptor.service,
+      location: input.ubicacionDestino.id,
+      acceptedAt: input.occurredAt,
+    });
+
+    this.state = {
+      ...this.state,
+      estadoOperativo: 'EN_CONSULTA',
+      ubicacionActual: input.ubicacionDestino,
+      custodiaActual,
+      rowVersion: this.state.rowVersion + 1n,
+    };
+
+    return {
+      name: 'CustodyAccepted',
+      occurredAt: input.occurredAt,
+      payload: {
+        expedienteId: this.state.id,
+        location: input.ubicacionDestino,
+        intendedCustodian,
+        acceptedCustodian,
+      },
+    };
+  }
+
   private static assertRequiredText(value: string, field: string): void {
     if (value.trim().length === 0) {
       throw new DomainError(
         'CUSTODIO_PREVISTO_INVALIDO',
-        `intendedCustodian.${field} es obligatorio y no puede estar vacío.`,
+        `${field} es obligatorio y no puede estar vacío.`,
       );
     }
   }

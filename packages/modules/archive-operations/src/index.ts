@@ -11,3 +11,4 @@ export * from './application/GetExpedienteTimeline.js';
 export * from './application/MovimientoExpedienteWriter.js';
 export * from './application/ArchiveOperationsUnitOfWork.js';
 export * from './application/DispatchExpediente.js';
+export * from './application/AcceptCustody.js';

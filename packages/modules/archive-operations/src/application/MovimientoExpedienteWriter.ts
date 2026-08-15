@@ -3,7 +3,7 @@ import type { ExpedienteId } from '../domain/value-objects/ExpedienteId.js';
 
 export interface MovimientoExpedienteAppend {
   readonly expedienteId: ExpedienteId;
-  readonly movementType: 'DISPATCHED';
+  readonly movementType: 'DISPATCHED' | 'CUSTODY_ACCEPTED';
   readonly originLocation: string | null;
   readonly destinationLocation: string;
   readonly originCustodianRef: string | null;
