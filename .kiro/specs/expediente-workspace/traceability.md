@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.12"
+version: "0.3.14"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 traceability_model: "OS-007 / SDD-006"
@@ -27,10 +27,11 @@ decisions_applied:
   - "DOM-EVENT-001 APPROVED"
   - "AUD-EW-010..013 APPROVED"
   - "DSP-EW-014..016 APPROVED"
+  - "CST-EW-001..010 APPROVED; CST-GAP-001/002 CLOSED"
 requires:
-  - requirements.md (v0.3.12)
-  - design.md (v0.3.12)
-  - tasks.md (v0.3.12)
+  - requirements.md (v0.3.14)
+  - design.md (v0.3.14)
+  - tasks.md (v0.3.14)
 ---
 
 # Expediente Workspace — Traceability
@@ -116,7 +117,7 @@ requires:
 | **Source / SDB** | DECISION-REGISTER OQ-EW-006, DDD-018 v0.2.0, WF-005 v0.2.0 Fase 3 | Receptor autorizado confirma recepción; acción autenticada y auditable |
 | **Business Rule** | BR-019, INV-EXP-005 | CustodyAccepted es momento distinto de despacho |
 | **Workflow** | WF-005 v0.2.0 Fase 3 | AcceptCustody -> CustodyAccepted -> EN_CONSULTA |
-| **Use Case** | UC (AcceptCustody — design.md §7.4) | Validar EN_TRASLADO; rowVersion; custody_accepted_at -> now() |
+| **Use Case** | UC (AcceptCustody — design.md §7.4) | CST-EW-001..010; operationOccurredAt; CST-GAP-001/002 cerrados |
 | **SPEC** | WF-005 v0.2.0, SPEC-009 v0.2.0 FR-VIEW-004 | Custodia con acceptedAt |
 | **REQ** | REQ-EW-004, REQ-EW-012 | Custodia con distinción traslado/aceptada |
 | **API** | POST /api/v1/expedientes/{id}/accept-custody (API-011 v0.2.0) | — |
@@ -359,13 +360,15 @@ requires:
 | 0.3.10 | 2026-08-15 | DOM-EVENT-001 aprobado: operationOccurredAt se pasa al aggregate y se comparte con Movimiento; destinationCustodianRef obligatorio para DISPATCHED. |
 | 0.3.11 | 2026-08-15 | AUD-EW-010..013 aprobadas: invalid-transition para REQUEST_INVALID_TRANSITION; conflict exclusivo de optimistic locking. |
 | 0.3.12 | 2026-08-15 | DSP-EW-014..016 aprobadas: custodio previsto type/reference explícito; Custodia en traslado con service/location/acceptedAt null. |
+| 0.3.13 | 2026-08-15 | CST-EW-001..010 formalizadas; CST-GAP-001/002 bloquean business reference y audit de T-08. |
+| 0.3.14 | 2026-08-15 | CST-GAP-001/002 cerrados: businessReference explícita y audit CUSTODY_ACCEPTED formalizados. |
 
 ---
 
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.12"
+spec_version: "0.3.14"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

@@ -54,3 +54,10 @@ Específicamente para `MovimientoExpedienteAppend` con `movementType='DISPATCHED
 `intendedCustodian.reference`. No se añade destinationCustodianType porque DAT-011 no
 lo contiene. Esto no cambia la nulabilidad general de DAT-011 para
 otros tipos de movimiento. Su occurredAt es exactamente operationOccurredAt de la UoW.
+
+Para CUSTODY_ACCEPTED, origin/destination location y custodian refs derivan del estado
+pre/post; destinationLocation usa ubicacionDestino.id y destinationCustodianRef usa
+receptor.reference. businessReferenceType/id proceden del input AcceptCustody;
+actor/source/correlation proceden de RequestContext. No se añade destinationCustodianType.
+La business reference no se deriva de Dispatch/correlationId ni participa en Custodia,
+autorización o tenant.

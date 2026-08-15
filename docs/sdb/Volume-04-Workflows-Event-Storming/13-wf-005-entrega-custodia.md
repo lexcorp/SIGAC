@@ -44,6 +44,10 @@ transacción tenant-scoped.
 8. El receptor autorizado (Enfermería o médico/solicitante) confirma la recepción
    mediante una acción autenticada y auditable.
 9. Registrar receptor, ubicación de destino y timestamp de aceptación.
+   Receptor efectivo aporta type/reference/service; ubicación usa el ID del VO y debe
+   coincidir con la ubicación actual. No se exige igualdad con el receptor previsto.
+   La referencia de negocio llega explícita para el Movimiento DAT-011; no autoriza ni
+   modifica Custodia o TenantContext.
 10. Ejecutar `AcceptCustody`.
 11. Emitir `CustodyAccepted` → `EstadoOperativo = EN_CONSULTA`.
 12. `CustodiaActual.acceptedAt` queda establecido.

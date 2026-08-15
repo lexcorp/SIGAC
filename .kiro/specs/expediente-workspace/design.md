@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.12"
+version: "0.3.14"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -33,8 +33,9 @@ decisions_applied:
   - "DOM-EVENT-001 APPROVED"
   - "AUD-EW-010..013 APPROVED"
   - "DSP-EW-014..016 APPROVED"
+  - "CST-EW-001..010 APPROVED; CST-GAP-001/002 CLOSED"
 requires:
-  - requirements.md (v0.3.12)
+  - requirements.md (v0.3.14)
 open_questions_blocking: []
 open_questions_non_blocking:
   - OQ-EW-002
@@ -675,7 +676,9 @@ audit success. Después se registra `EXPEDIENTE_DISPATCH/EXPEDIENTE/expedienteId
 ### 7.4 Use Case: AcceptCustody
 
 ```
-Input: { expedienteId, receptorRef, ubicacionDestino, rowVersion, context: RequestContext }
+Input: { expedienteId, receptor: {type,reference,service},
+         ubicacionDestino: Ubicacion, businessReference: {type,id},
+         expectedRowVersion, context: RequestContext }
 
 Pasos:
   1. Verificar permiso CUSTODY_ACCEPT en tenant (actor es receptor autorizado)
@@ -683,12 +686,18 @@ Pasos:
   3. Validar EstadoOperativo = EN_TRASLADO          -> 409 si no
   4. Ejecutar AcceptCustody
   5. EstadoOperativo -> EN_CONSULTA
-  6. custody_accepted_at -> now()
-  7. custodio_ref -> receptorRef
+  6. custody_accepted_at -> transaction.operationOccurredAt
+  7. custodia efectiva -> receptor; location -> ubicacionDestino.id
   8. Guardar con row_version+1
   9. Emitir CustodyAccepted -> MovimientoExpediente
   10. AuditWriter.append(AuditEntry, context)
 ```
+
+Receptor efectivo materializa custodianType/reference/service; location usa
+ubicacionDestino.id y acceptedAt usa operationOccurredAt. Exige Custodia previa no
+aceptada y ubicación coincidente. CustodyAccepted contiene custodio previsto y aceptado.
+Movimiento usa businessReference del input y audit usa
+`CUSTODY_ACCEPTED/EXPEDIENTE/expedienteId`. CST-GAP-001/002 están cerrados.
 
 ### 7.5 ExpedienteCapabilityService (actualizado)
 
@@ -789,7 +798,7 @@ por `GetExpediente` (READ-MODEL-COMPOSITION-DECISION).
 ## 12. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.12"
+spec_version: "0.3.14"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

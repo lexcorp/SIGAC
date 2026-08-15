@@ -1,11 +1,11 @@
 ---
 spec: expediente-workspace
-version: "0.3.12"
+version: "0.3.14"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 requires:
-  - requirements.md (v0.3.12)
-  - design.md (v0.3.12)
+  - requirements.md (v0.3.14)
+  - design.md (v0.3.14)
 decisions_applied:
   - "OQ-EW-001 RESOLVED"
   - "OQ-EW-005 RESOLVED"
@@ -28,6 +28,7 @@ decisions_applied:
   - "DOM-EVENT-001 APPROVED"
   - "AUD-EW-010..013 APPROVED"
   - "DSP-EW-014..016 APPROVED"
+  - "CST-EW-001..010 APPROVED; CST-GAP-001/002 CLOSED"
 ready_gate: "READY-GATE.md — todos los ítems deben estar marcados antes de iniciar T-01"
 done_gate: "OS-018 — spec + tests + API/migrations + auth/tenant/audit + traceability"
 ---
@@ -62,7 +63,7 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
 ## Grupo 0 — Trazabilidad
 
 ### T-00 Completar traceability.md
-- **Descripción:** Verificar que traceability.md v0.3.12 tiene cadenas completas
+- **Descripción:** Verificar que traceability.md v0.3.14 tiene cadenas completas
   para todas las capacidades. Confirmar que GAP-002, GAP-003, GAP-007 están cerrados
   y que no quedan eslabones PENDIENTE en BR, UC o SPEC para las decisiones resueltas.
 - **Criterio de done:** Ningún REQ-EW-* sin cadena completa; matrices actualizadas.
@@ -311,22 +312,27 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
 
 ### T-08 Implementar Use Case AcceptCustody
 - **Descripción:** `packages/modules/expediente/application/AcceptCustody.ts`.
-  - Input: `{ expedienteId, receptorRef, ubicacionDestino, rowVersion, context: RequestContext }`.
+  - Input: `{ expedienteId, receptor: {type,reference,service},
+    ubicacionDestino: Ubicacion, businessReference: {type,id}, expectedRowVersion,
+    context: RequestContext }`.
   Pasos:
   1. Verificar permiso CUSTODY_ACCEPT en tenant (actor = receptor autorizado).
   2. findById con rowVersion -> 409 si conflicto.
-  3. Validar EstadoOperativo = EN_TRASLADO -> 409 si no.
+  3. Validar EN_TRASLADO, Custodia no aceptada y ubicación coincidente -> 409 si no.
   4. EstadoOperativo -> EN_CONSULTA.
-  5. custody_accepted_at -> now().
-  6. custodio_ref -> receptorRef.
+  5. custody_accepted_at -> transaction.operationOccurredAt.
+  6. Custodia efectiva desde receptor; location -> ubicacionDestino.id.
   7. save con rowVersion+1.
   8. INSERT MovimientoExpediente (movement_type = CUSTODY_ACCEPTED).
   9. `AuditWriter.append(AuditEntry, context)` (acción autenticada y auditable).
+  10. Movimiento toma businessReference del input; audit usa
+      `CUSTODY_ACCEPTED/EXPEDIENTE/expedienteId` y los cinco resultados canónicos.
 - **Tests requeridos (Vitest):**
   - EN_TRASLADO -> EN_CONSULTA exitoso.
   - EstadoOperativo != EN_TRASLADO -> 409.
   - rowVersion incorrecto -> 409.
   - custody_accepted_at establecido con timestamp.
+  - receptor efectivo puede diferir del previsto; ubicación usa ID del VO.
   - Actor no autorizado -> 403.
   - Cross-tenant -> rechazado.
 - **Fuente SDB:** DDD-018 v0.2.0, WF-005 v0.2.0 Fase 3, DAT-019,
@@ -625,7 +631,7 @@ T-23 (CI pipeline) <- todas
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.12"
+spec_version: "0.3.14"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

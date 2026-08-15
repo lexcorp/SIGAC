@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.12"
+version: "0.3.14"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -34,6 +34,7 @@ decisions_applied:
   - "DOM-EVENT-001 APPROVED"
   - "AUD-EW-010..013 APPROVED"
   - "DSP-EW-014..016 APPROVED"
+  - "CST-EW-001..010 APPROVED; CST-GAP-001/002 CLOSED"
 ---
 
 # Expediente Workspace — Requirements
@@ -293,6 +294,20 @@ operativos; `EXPEDIENT_VIEW` no es una capability.
 - **Resultado:** CustodyAccepted emitido; EstadoOperativo → EN_CONSULTA;
   custodiaActual.acceptedAt establecido. Acción auditable; sin firma criptográfica.
 - **Fuente SDB:** WF-005 Fase 3, DDD-018, BIZ-008, DECISION-REGISTER OQ-EW-006.
+- **Input:** expedienteId, receptor `{type,reference,service}`, ubicacionDestino
+  `Ubicacion`, businessReference `{type,id}`, expectedRowVersion y RequestContext.
+  type/reference obligatorios;
+  service nullable.
+- **Custodia efectiva:** type/reference/service proceden del receptor efectivo;
+  location = ubicacionDestino.id; acceptedAt = operationOccurredAt. No se exige igualdad
+  con custodio previsto.
+- **Precondiciones:** EN_TRASLADO, Custodia existente no aceptada y ubicación destino
+  igual por valor a ubicación actual. Incumplimiento usa REQUEST_INVALID_TRANSITION.
+- **Evento:** CustodyAccepted contiene expedienteId, location, intendedCustodian y
+  acceptedCustodian; occurredAt pertenece al envelope.
+- **Movimiento:** businessReferenceType/id proceden exclusivamente de input;
+  destinationCustodianRef = receptor.reference y demás campos derivan de estado/contexto.
+- **Audit:** `CUSTODY_ACCEPTED/EXPEDIENTE/expedienteId`; cinco resultados canónicos.
 
 ### REQ-EW-013 — Tab Auditoría (acceso restringido)
 - **Precondición:** permiso de auditoría pendiente de definición bajo OQ-EW-003;
@@ -546,7 +561,7 @@ Ninguna. OQ-EW-001, OQ-EW-005, OQ-EW-006 y OQ-EW-007 están RESUELTAS.
 ## 7. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.12"
+spec_version: "0.3.14"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

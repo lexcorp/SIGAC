@@ -46,6 +46,9 @@ DeclareLost
 
 `AcceptCustody` — registra la confirmación del receptor autorizado en destino.
   Produce `CustodyAccepted`; estado → `EN_CONSULTA`.
+  Input: ExpedienteId, receptor `{type,reference,service}`, ubicacionDestino Ubicacion,
+  businessReference `{type,id}`, expectedRowVersion y RequestContext. type/reference son
+  obligatorios; service nullable.
   Es una acción autenticada y auditable del receptor; no requiere firma criptográfica.
   (OQ-EW-006 RESOLVED)
 

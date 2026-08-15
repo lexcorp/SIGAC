@@ -59,3 +59,9 @@ AUD-EW-010..013 cierran el audit de transición inválida: usa `invalid-transiti
 de la UoW después del rollback; `conflict` permanece exclusivo de optimistic locking.
 DSP-EW-014..016 cierran la construcción de Custodia en traslado mediante custodio
 previsto type/reference explícito y service/location/acceptedAt null.
+
+## AcceptCustody T-08 (v0.3.13)
+
+CST-EW-001..010 define input, custodia efectiva, ubicación, evento, UoW y movimiento.
+CST-GAP-001/002 están CLOSED mediante businessReference explícita y audit
+`CUSTODY_ACCEPTED/EXPEDIENTE/expedienteId`.

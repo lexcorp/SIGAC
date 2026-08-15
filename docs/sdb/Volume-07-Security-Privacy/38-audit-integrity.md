@@ -52,3 +52,6 @@ de su rollback completo. No persiste aggregate, Movimiento ni audit success.
 Una transición inválida se registra como `invalid-transition` fuera de la UoW mutante y
 después del rollback. Tampoco persiste aggregate, Movimiento ni audit success.
 `conflict` no se reutiliza para transiciones inválidas.
+
+Para AcceptCustody se usa `CUSTODY_ACCEPTED/EXPEDIENTE/expedienteId`. Success pertenece
+a la UoW mutante; denied/not-found/conflict/invalid-transition se registran fuera.

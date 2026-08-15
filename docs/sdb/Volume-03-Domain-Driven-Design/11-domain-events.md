@@ -57,6 +57,9 @@ crea `new Date()` para fechar el evento, no obtiene Clock ni usa timestamps impl
 `CustodyAccepted` — emitido por `AcceptCustody`. El receptor autorizado confirma la
   recepción en destino; `EstadoOperativo` → `EN_CONSULTA`. Registra receptor, ubicación
   de destino, timestamp y acción autenticada del receptor.
+  Payload mínimo: expedienteId, location Ubicacion, intendedCustodian `{type,reference}`
+  y acceptedCustodian `{type,reference,service}`. occurredAt usa operationOccurredAt;
+  no incluye metadata técnica.
   (OQ-EW-006 RESOLVED)
 
 `CustodyTransferred` — sigue siendo válido para transferencias internas o

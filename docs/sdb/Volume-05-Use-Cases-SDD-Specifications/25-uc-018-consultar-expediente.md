@@ -134,6 +134,18 @@ Una transición inválida también provoca rollback completo y después se audit
 `invalid-transition` fuera de la UoW; produce `REQUEST_INVALID_TRANSITION`/HTTP 409.
 `conflict` permanece reservado exclusivamente al mismatch de rowVersion.
 
+## AcceptCustody (CST-EW-001..010)
+
+Input: ExpedienteId, receptor `{type,reference,service}`, ubicacionDestino Ubicacion,
+businessReference `{type,id}`, expectedRowVersion y RequestContext. Exige CUSTODY_ACCEPT, EN_TRASLADO, Custodia existente
+no aceptada y ubicación coincidente. Usa receptor efectivo para Custodia, location =
+ubicacionDestino.id y occurredAt = operationOccurredAt. En success, save + Movimiento
+CUSTODY_ACCEPTED + audit success comparten UoW ALL OR NOTHING.
+
+Movimiento toma businessReferenceType/id exclusivamente del input. Audit usa
+`CUSTODY_ACCEPTED/EXPEDIENTE/expedienteId`; success es atómico y denied/not-found/
+conflict/invalid-transition se escriben fuera de la UoW mutante. CST-GAP-001/002 CLOSED.
+
 ## Audit
 
 El Use Case produce un `AuditEntry` semántico y consume

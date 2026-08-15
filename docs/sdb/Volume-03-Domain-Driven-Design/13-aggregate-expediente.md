@@ -39,6 +39,10 @@ y proteger coherencia entre disponibilidad, ubicación y custodia.
   valores obligatorios y no vacíos, además de destination, businessReference y
   `occurredAt: Date`; no deriva el custodio desde destination. Application proporciona
   occurredAt desde la UoW conforme DOM-EVENT-001.
+- `acceptCustody` sólo parte de EN_TRASLADO con Custodia existente no aceptada y exige
+  que ubicacionDestino coincida por valor con ubicación actual. Recibe receptor efectivo
+  type/reference/service y occurredAt; cambia a EN_CONSULTA, conserva ubicación,
+  reemplaza custodia prevista por efectiva aceptada e incrementa rowVersion.
 
 ## Fuente
 SRC-INT-002, SRC-INT-003, DECISION-REGISTER OQ-EW-001, OQ-EW-007, DEC-EW-STATE-001.

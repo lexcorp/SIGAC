@@ -42,5 +42,8 @@ Al emitirse `CustodyAccepted`:
 - `custodianReference` apunta al receptor autenticado.
 - La confirmación es una acción digital autenticada y auditable; no requiere firma
   criptográfica en este slice.
+- type/reference/service proceden del receptor efectivo; el previsto puede diferir.
+- location usa el ID canónico de Ubicacion destino; no código ni descripción.
+- la factory usa operationOccurredAt y produce una Custodia aceptada completa.
 
 **Fuente:** SRC-INT-002, SRC-INT-003, DECISION-REGISTER OQ-EW-006.

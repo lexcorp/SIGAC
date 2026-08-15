@@ -28,6 +28,11 @@ architecture:
 
 No hay endpoint que edite contenido clínico.
 
+El contrato conceptual de `POST /accept-custody` aporta receptor
+`{type,reference,service}`, ubicacionDestino, businessReference `{type,id}` y
+expectedRowVersion. Actor, tenant y trazabilidad proceden del RequestContext server-side,
+no del body. Application audita `CUSTODY_ACCEPTED/EXPEDIENTE/{id}`.
+
 ## Timeline
 
 `GET /api/v1/expedientes/{id}/timeline?cursor={opaque}&limit={n}` devuelve:

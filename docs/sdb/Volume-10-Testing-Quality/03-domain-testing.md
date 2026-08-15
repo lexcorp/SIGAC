@@ -36,6 +36,8 @@ Probar invariantes, value objects, state transitions y policies.
 - `EN_TRASLADO` sin `AcceptCustody` → `custodiaActual.acceptedAt = null`.
 - `AcceptCustody` produce `EstadoOperativo = EN_CONSULTA` y establece `acceptedAt`.
 - Despacho sin aceptación no equivale a custodia formal.
+- AcceptCustody exige EN_TRASLADO, custodia previa no aceptada y ubicación coincidente;
+  materializa receptor efectivo y emite payload con custodio previsto/aceptado.
 
 ### Desambiguación (OQ-EW-007 RESOLVED)
 - Búsqueda con N > 1 coincidencias → sistema no abre automáticamente ninguna.

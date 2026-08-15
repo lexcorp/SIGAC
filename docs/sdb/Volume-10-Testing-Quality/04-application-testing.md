@@ -69,3 +69,7 @@ evento conserva intendedCustodian type/reference sin metadata técnica.
 Para estado incompatible, comprobar rollback sin aggregate/Movimiento/audit success,
 append externo `invalid-transition` y `ApplicationError(REQUEST_INVALID_TRANSITION)`.
 Comprobar además que sólo optimistic rowVersion mismatch usa audit `conflict`.
+
+Para AcceptCustody cubrir receptor efectivo, ubicación por ID, timestamp UoW,
+precondiciones, rowVersion, tenant, Movimiento completo, business reference desde input,
+los cinco resultados de audit y atomicidad. CST-GAP-001/002 están cerrados.

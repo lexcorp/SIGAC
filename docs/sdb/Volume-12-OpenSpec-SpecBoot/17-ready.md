@@ -27,3 +27,6 @@ operationOccurredAt al aggregate y evento/movimiento comparten exactamente el in
 El audit de estado incompatible está cerrado por AUD-EW-010..013:
 `REQUEST_INVALID_TRANSITION` usa `invalid-transition`; `conflict` queda reservado al
 optimistic lock mismatch. T-07 no tiene gaps bloqueantes conocidos.
+
+T-08 está ready: CST-GAP-001/002 están cerrados. businessReference procede del input y
+audit usa `CUSTODY_ACCEPTED/EXPEDIENTE/expedienteId` con los cinco resultados canónicos.
