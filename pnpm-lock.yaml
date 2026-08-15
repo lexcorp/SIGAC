@@ -180,6 +180,12 @@ importers:
 
   packages/platform/database:
     dependencies:
+      '@sigac/archive-operations':
+        specifier: workspace:*
+        version: link:../../modules/archive-operations
+      '@sigac/tenant':
+        specifier: workspace:*
+        version: link:../tenant
       drizzle-orm:
         specifier: 0.45.2
         version: 0.45.2(@types/pg@8.21.0)(pg@8.23.0)
