@@ -9,24 +9,31 @@ architecture:
   api: REST/OpenAPI
   tenancy: database-per-tenant
 ---
-# DAT-011 — MovimientoExpediente
+# DAT-011 — MovimientoExpediente (`movimientos_expediente`)
 
 Append-oriented.
 
-- id
-- expediente_id
-- movement_type
-- origin_location_id nullable
-- destination_location_id nullable
-- origin_custodian_ref nullable
-- destination_custodian_ref nullable
-- business_reference_type
-- business_reference_id nullable
-- occurred_at
-- recorded_at
-- actor_ref
-- source
-- correlation_id
+| Columna | Tipo/nullability |
+|---|---|
+| `id` | UUID PRIMARY KEY |
+| `expediente_id` | UUID NOT NULL FK → `expedientes.id` |
+| `movement_type` | TEXT NOT NULL, sin CHECK en este slice |
+| `origin_location_id` | UUID NULL |
+| `destination_location_id` | UUID NULL |
+| `origin_custodian_ref` | TEXT NULL |
+| `destination_custodian_ref` | TEXT NULL |
+| `business_reference_type` | TEXT NOT NULL, sin CHECK |
+| `business_reference_id` | TEXT NULL |
+| `occurred_at` | TIMESTAMPTZ NOT NULL |
+| `recorded_at` | TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP |
+| `actor_ref` | TEXT NOT NULL |
+| `source` | TEXT NOT NULL CHECK (`source IN ('WEB', 'INTERNAL')`) |
+| `correlation_id` | TEXT NULL |
+
+`business_reference_id` y `correlation_id` no exigen UUID porque Application usa
+strings opacos. No se crean FKs para actor, custodios, business reference, correlation
+ni ubicaciones históricas. La única FK de esta tabla aprobada para el slice es
+`expediente_id → expedientes.id`.
 
 ## Purpose
 Reconstruir trayectoria física/operativa.
@@ -60,4 +67,5 @@ pre/post; destinationLocation usa ubicacionDestino.id y destinationCustodianRef 
 receptor.reference. businessReferenceType/id proceden del input AcceptCustody;
 actor/source/correlation proceden de RequestContext. No se añade destinationCustodianType.
 La business reference no se deriva de Dispatch/correlationId ni participa en Custodia,
-autorización o tenant.
+autorización o tenant. `occurred_at` procede de Application/UoW y `recorded_at` lo
+establece PostgreSQL al insertar. Fuente: POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-009..014.

@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.14"
+version: "0.3.15"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -34,8 +34,9 @@ decisions_applied:
   - "AUD-EW-010..013 APPROVED"
   - "DSP-EW-014..016 APPROVED"
   - "CST-EW-001..010 APPROVED; CST-GAP-001/002 CLOSED"
+  - "POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014 APPROVED"
 requires:
-  - requirements.md (v0.3.14)
+  - requirements.md (v0.3.15)
 open_questions_blocking: []
 open_questions_non_blocking:
   - OQ-EW-002
@@ -100,21 +101,29 @@ ports mínimos como consumidor de proyecciones.
 ### 3.1 Aggregate Expediente (DAT-006 v0.2.0)
 
 ```
-expediente
+ubicaciones
+  id                           UUID  PK
+  codigo                       TEXT NOT NULL
+  descripcion                  TEXT NOT NULL
+
+expedientes
   id                           UUID  PK                   -- ExpedienteId; identidad técnica primaria
-  expediente_numero            varchar                     -- formato RFC_BASE_10+SEP+COD_2; NO UNIQUE
-  expediente_numero_normalizado varchar                    -- sin separador; indexado para búsqueda
-  paciente_ref_id              UUID | null
-  paciente_nombre_busqueda     varchar | null              -- C3; solo búsqueda interna
-  estado_operativo             varchar  CHECK (ver abajo)  -- DEC-EW-STATE-001
+  expediente_numero            TEXT NOT NULL               -- NO UNIQUE
+  expediente_numero_normalizado TEXT NOT NULL              -- btree no unique
+  paciente_id_institucional    TEXT NOT NULL
+  paciente_curp                TEXT NOT NULL
+  paciente_nombre_operativo    TEXT NOT NULL
+  paciente_numero_issste       TEXT NOT NULL
+  estado_operativo             TEXT NOT NULL CHECK          -- DEC-EW-STATE-001
   ubicacion_actual_id          UUID | null  FK -> ubicaciones
-  custodio_tipo                varchar | null
-  custodio_ref                 varchar | null
-  custody_accepted_at          timestamptz | null          -- null si EN_TRASLADO sin CustodyAccepted
-  last_movement_id             UUID | null  FK -> movimientos_expediente
-  created_at                   timestamptz
-  updated_at                   timestamptz
-  row_version                  bigint NOT NULL DEFAULT 0   -- optimistic concurrency
+  custodio_tipo                TEXT | null
+  custodio_ref                 TEXT | null
+  custodio_servicio            TEXT | null
+  custodio_location            TEXT | null
+  custodio_accepted_at         timestamptz | null
+  created_at                   timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+  updated_at                   timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP -- metadata física
+  row_version                  BIGINT NOT NULL DEFAULT 0   -- optimistic concurrency
 ```
 
 **EstadoOperativo — valores aceptados (DEC-EW-STATE-001):**
@@ -135,8 +144,9 @@ expediente
 **Constraint de unicidad:**
 ```sql
 -- NO crear hasta perfilar datos reales de SIMEF (BR-017, INV-EXP-003):
--- UNIQUE(expediente_numero, hospital_id)   <- pendiente profiling
-INDEX ON expediente (expediente_numero_normalizado)  -- para búsqueda flexible
+-- No existe hospital_id ni UNIQUE sobre expediente_numero.
+CREATE INDEX expedientes_numero_normalizado_idx
+  ON expedientes (expediente_numero_normalizado);
 ```
 
 ### 3.2 ExpedienteNumero — VO (DDD-007 v0.2.0)
@@ -163,22 +173,28 @@ Ejemplo anonimizado: `PERR810604/10`
 ```
 movimientos_expediente
   id                        UUID  PK
-  expediente_id             UUID  FK -> expediente
-  movement_type             varchar  -- incluye DISPATCHED, CUSTODY_ACCEPTED, etc.
+  expediente_id             UUID NOT NULL FK -> expedientes
+  movement_type             TEXT NOT NULL  -- sin CHECK en este slice
   origin_location_id        UUID | null
   destination_location_id   UUID | null
-  origin_custodian_ref      varchar | null
-  destination_custodian_ref varchar | null
-  business_reference_type   varchar
-  business_reference_id     UUID | null
-  occurred_at               timestamptz
-  recorded_at               timestamptz
-  actor_ref                 varchar
-  source                    varchar
-  correlation_id            UUID | null
+  origin_custodian_ref      TEXT | null
+  destination_custodian_ref TEXT | null
+  business_reference_type   TEXT NOT NULL  -- sin CHECK
+  business_reference_id     TEXT | null
+  occurred_at               timestamptz NOT NULL
+  recorded_at               timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+  actor_ref                 TEXT NOT NULL
+  source                    TEXT NOT NULL CHECK (source IN ('WEB','INTERNAL'))
+  correlation_id            TEXT | null
 ```
 
 No contiene datos de login, configuración ni audit técnico.
+
+Las tablas viven en la database tenant. HospitalId se toma de TenantContext. El
+Repository hace join `expedientes.ubicacion_actual_id → ubicaciones.id` para rehidratar
+el VO completo. Custodia se rehidrata desde sus cinco columnas inline. No hay FKs para
+actor, custodios, business reference, correlation ni ubicaciones históricas. Véase
+POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014.
 
 ### 3.5 Audit Log (DAT-012) — separado de Movimiento
 
@@ -191,8 +207,8 @@ audit_log
   resource_id      UUID
   result           varchar
   occurred_at      timestamptz
-  request_id       UUID
-  correlation_id   UUID | null
+  request_id       TEXT
+  correlation_id   TEXT | null
   source_ip_hash   varchar | null
   source           varchar
   change_summary   jsonb | null   -- sin payload clínico completo
@@ -647,7 +663,7 @@ Pasos:
   4. Ejecutar `Expediente.dispatch` pasando
      `occurredAt: transaction.operationOccurredAt`
   5. EstadoOperativo -> EN_TRASLADO
-  6. custody_accepted_at -> null
+  6. custodio_accepted_at -> null
   7. Guardar con row_version+1
   8. Emitir ExpedienteDispatched -> MovimientoExpediente DISPATCHED
   9. UoW: save aggregate + append movimiento + audit EXPEDIENTE_DISPATCH success
@@ -686,7 +702,7 @@ Pasos:
   3. Validar EstadoOperativo = EN_TRASLADO          -> 409 si no
   4. Ejecutar AcceptCustody
   5. EstadoOperativo -> EN_CONSULTA
-  6. custody_accepted_at -> transaction.operationOccurredAt
+  6. custodio_accepted_at -> transaction.operationOccurredAt
   7. custodia efectiva -> receptor; location -> ubicacionDestino.id
   8. Guardar con row_version+1
   9. Emitir CustodyAccepted -> MovimientoExpediente
@@ -798,7 +814,7 @@ por `GetExpediente` (READ-MODEL-COMPOSITION-DECISION).
 ## 12. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.14"
+spec_version: "0.3.15"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

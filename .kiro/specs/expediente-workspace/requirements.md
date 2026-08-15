@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.14"
+version: "0.3.15"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -35,6 +35,7 @@ decisions_applied:
   - "AUD-EW-010..013 APPROVED"
   - "DSP-EW-014..016 APPROVED"
   - "CST-EW-001..010 APPROVED; CST-GAP-001/002 CLOSED"
+  - "POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014 APPROVED"
 ---
 
 # Expediente Workspace — Requirements
@@ -371,6 +372,16 @@ Cross-tenant se presenta como `EXPEDIENTE_NOT_FOUND` sin revelar existencia exte
 tenant. `AUTHENTICATION_REQUIRED` pertenece a API/BFF. T-11/T-12 realizará el mapping
 RFC7807.
 
+### NFR-EW-009 — Persistencia PostgreSQL tenant-scoped
+
+Las tablas físicas son `ubicaciones`, `expedientes` y `movimientos_expediente` en la
+database del tenant. No existe `hospital_id`; HospitalId procede de TenantContext.
+PacienteReferencia usa cuatro columnas TEXT NOT NULL, Custodia cinco columnas inline
+nullable y `row_version` es BIGINT NOT NULL DEFAULT 0. El número no es unique y se
+indexa únicamente su forma normalizada con btree no unique. Movimiento usa TEXT nullable
+para business reference/correlation y conserva `audit_log` completamente separado.
+Fuente: POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014, DAT-006, DAT-011.
+
 ---
 
 ## 5. Criterios de aceptación
@@ -561,7 +572,7 @@ Ninguna. OQ-EW-001, OQ-EW-005, OQ-EW-006 y OQ-EW-007 están RESUELTAS.
 ## 7. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.14"
+spec_version: "0.3.15"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

@@ -29,6 +29,11 @@ Chosen for transactional integrity, relational modeling, indexing, JSONB where j
 - UUID/ULID-style opaque internal identifiers;
 - institutional expediente number kept as domain identifier;
 - foreign keys inside tenant DB;
-- explicit unique constraints;
+- constraints explícitos sólo cuando están aprobados; `expedientes.expediente_numero`
+  permanece no unique hasta profiling SIMEF;
 - no soft-delete as a universal pattern;
 - retention handled per record type and policy.
+
+El modelo físico tenant de Expediente Workspace se rige por
+`POSTGRES-PHYSICAL-MODEL-DECISION.md` DB-EW-001..014. HospitalId se deriva del
+TenantContext y no se duplica como columna.

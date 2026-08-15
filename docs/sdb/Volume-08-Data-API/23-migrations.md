@@ -26,3 +26,8 @@ Tenant migration runner:
 7. produce report.
 
 No ad-hoc manual schema changes in production.
+
+Para Expediente Workspace v0.3.15, la migración tenant aplica el DDL de
+POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014: elimina el UNIQUE previo de
+`expediente_numero`, usa `row_version BIGINT DEFAULT 0` y crea/completa `ubicaciones`,
+`expedientes` y `movimientos_expediente`. No modifica `audit_log` ni crea `hospital_id`.

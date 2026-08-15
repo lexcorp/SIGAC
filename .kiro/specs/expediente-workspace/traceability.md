@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.14"
+version: "0.3.15"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 traceability_model: "OS-007 / SDD-006"
@@ -28,10 +28,11 @@ decisions_applied:
   - "AUD-EW-010..013 APPROVED"
   - "DSP-EW-014..016 APPROVED"
   - "CST-EW-001..010 APPROVED; CST-GAP-001/002 CLOSED"
+  - "POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014 APPROVED"
 requires:
-  - requirements.md (v0.3.14)
-  - design.md (v0.3.14)
-  - tasks.md (v0.3.14)
+  - requirements.md (v0.3.15)
+  - design.md (v0.3.15)
+  - tasks.md (v0.3.15)
 ---
 
 # Expediente Workspace — Traceability
@@ -50,7 +51,7 @@ requires:
 
 | Eslabón | Referencia | Detalle |
 |---------|-----------|---------|
-| **Source / SDB** | DDD-013, DAT-006 v0.2.0, READ-MODEL-COMPOSITION-DECISION, NOM-004-SSA3-2012, LGPDPPSO | Expediente con identificador institucional y composición server-side |
+| **Source / SDB** | DDD-013, DAT-006 v0.2.0, READ-MODEL-COMPOSITION-DECISION, POSTGRES-PHYSICAL-MODEL-DECISION, NOM-004-SSA3-2012, LGPDPPSO | Expediente con identificador institucional, persistencia tenant y composición server-side |
 | **Business Rule** | INV-EXP-001, INV-EXP-002, INV-EXP-004 | Identificador institucional; coherencia operativa; EstadoOperativo con 6 valores válidos |
 | **Workflow** | WF (Read Models — V05-41 SPEC-009) | Flujo de consulta |
 | **Use Case** | UC-018 v0.2.0 | GetExpediente compone read model; query ports tenant-scoped, incl. fuentes 0..N |
@@ -66,7 +67,7 @@ requires:
 
 | Eslabón | Referencia | Detalle |
 |---------|-----------|---------|
-| **Source / SDB** | SRC-INT-002, SRC-INT-003, DECISION-REGISTER OQ-EW-001, OQ-EW-007 | Formato RFC_BASE_10+SEP+COD_2; múltiples derechohabientes posibles |
+| **Source / SDB** | SRC-INT-002, SRC-INT-003, DECISION-REGISTER OQ-EW-001/OQ-EW-007, DB-EW-001..014 | Formato RFC_BASE_10+SEP+COD_2; múltiples derechohabientes; índice normalizado no unique |
 | **Business Rule** | BR-016 (formato), BR-017 (no único; desambiguación), INV-EXP-003 | No asumir unicidad; nunca auto-seleccionar si N>1 |
 | **Workflow** | WF (Read Models) | — |
 | **Use Case** | UC-018 v0.2.0 | Búsqueda 0..N; desambiguación manual |
@@ -74,7 +75,7 @@ requires:
 | **REQ** | REQ-EW-002 | Búsqueda 0..N; normalización; desambiguación |
 | **API** | GET /api/v1/expedientes?numero= -> {data[], total} (API-011 v0.2.0) | Colección; N=0 HTTP 200 vacío |
 | **UI** | useExpedienteSearch (normaliza), DisambiguationList (N>1), apertura directa (N=1) | design.md §5.3, APP-003 v0.2.0 |
-| **Test** | AC-EW-002/003/004; T-09/T-11/T-15/T-21/T-22 (escenarios 1..4) | Unit VO normalización; integration findByNumero; E2E variantes |
+| **Test** | AC-EW-002/003/004; T-09/T-10/T-11/T-15/T-21/T-22 (escenarios 1..4) | Migración y Repository PostgreSQL, normalización 0..N y E2E variantes |
 
 ---
 
@@ -362,13 +363,14 @@ requires:
 | 0.3.12 | 2026-08-15 | DSP-EW-014..016 aprobadas: custodio previsto type/reference explícito; Custodia en traslado con service/location/acceptedAt null. |
 | 0.3.13 | 2026-08-15 | CST-EW-001..010 formalizadas; CST-GAP-001/002 bloquean business reference y audit de T-08. |
 | 0.3.14 | 2026-08-15 | CST-GAP-001/002 cerrados: businessReference explícita y audit CUSTODY_ACCEPTED formalizados. |
+| 0.3.15 | 2026-08-15 | DB-EW-001..014 aprobadas: DDL PostgreSQL tenant, nombres físicos, PacienteReferencia, Ubicacion, Custodia inline, bigint, Movimiento, FKs y mapping Repository definidos; T-10 listo. |
 
 ---
 
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.14"
+spec_version: "0.3.15"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

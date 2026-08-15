@@ -1,11 +1,11 @@
 ---
 spec: expediente-workspace
-version: "0.3.14"
+version: "0.3.15"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 requires:
-  - requirements.md (v0.3.14)
-  - design.md (v0.3.14)
+  - requirements.md (v0.3.15)
+  - design.md (v0.3.15)
 decisions_applied:
   - "OQ-EW-001 RESOLVED"
   - "OQ-EW-005 RESOLVED"
@@ -29,6 +29,7 @@ decisions_applied:
   - "AUD-EW-010..013 APPROVED"
   - "DSP-EW-014..016 APPROVED"
   - "CST-EW-001..010 APPROVED; CST-GAP-001/002 CLOSED"
+  - "POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014 APPROVED"
 ready_gate: "READY-GATE.md — todos los ítems deben estar marcados antes de iniciar T-01"
 done_gate: "OS-018 — spec + tests + API/migrations + auth/tenant/audit + traceability"
 ---
@@ -63,7 +64,7 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
 ## Grupo 0 — Trazabilidad
 
 ### T-00 Completar traceability.md
-- **Descripción:** Verificar que traceability.md v0.3.14 tiene cadenas completas
+- **Descripción:** Verificar que traceability.md v0.3.15 tiene cadenas completas
   para todas las capacidades. Confirmar que GAP-002, GAP-003, GAP-007 están cerrados
   y que no quedan eslabones PENDIENTE en BR, UC o SPEC para las decisiones resueltas.
 - **Criterio de done:** Ningún REQ-EW-* sin cadena completa; matrices actualizadas.
@@ -284,7 +285,7 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
   4. EstadoOperativo -> EN_TRASLADO.
      Invocar `Expediente.dispatch` con
      `occurredAt: transaction.operationOccurredAt` (DOM-EVENT-001).
-  5. custody_accepted_at -> null.
+  5. custodio_accepted_at -> null.
   6. save con rowVersion+1.
   7. Append MovimientoExpediente (movement_type = DISPATCHED) mediante writer.
   8. UoW: save + movimiento + audit `EXPEDIENTE_DISPATCH` success, ALL OR NOTHING.
@@ -298,7 +299,7 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
   - EstadoOperativo != APARTADO -> 409.
   - Estado incompatible -> audit `invalid-transition`, sin persistencia parcial.
   - rowVersion incorrecto -> 409.
-  - custody_accepted_at = null tras dispatch.
+  - custodio_accepted_at = null tras dispatch.
   - intendedCustodian type/reference obligatorios/no vacíos; Custodia resultante conserva
     ambos y deja service/location/acceptedAt null, sin derivarlos de destination.
   - `DomainEvent.occurredAt`, Movimiento.occurredAt y operationOccurredAt son el mismo
@@ -320,7 +321,7 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
   2. findById con rowVersion -> 409 si conflicto.
   3. Validar EN_TRASLADO, Custodia no aceptada y ubicación coincidente -> 409 si no.
   4. EstadoOperativo -> EN_CONSULTA.
-  5. custody_accepted_at -> transaction.operationOccurredAt.
+  5. custodio_accepted_at -> transaction.operationOccurredAt.
   6. Custodia efectiva desde receptor; location -> ubicacionDestino.id.
   7. save con rowVersion+1.
   8. INSERT MovimientoExpediente (movement_type = CUSTODY_ACCEPTED).
@@ -331,7 +332,7 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
   - EN_TRASLADO -> EN_CONSULTA exitoso.
   - EstadoOperativo != EN_TRASLADO -> 409.
   - rowVersion incorrecto -> 409.
-  - custody_accepted_at establecido con timestamp.
+  - custodio_accepted_at establecido con timestamp.
   - receptor efectivo puede diferir del previsto; ubicación usa ID del VO.
   - Actor no autorizado -> 403.
   - Cross-tenant -> rechazado.
@@ -349,6 +350,11 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
   - findByNumero: query por expediente_numero_normalizado + tenant;
     retorna Expediente[] (0..N). NO retorna escalar.
   - save: UPDATE con rowVersion check; 409 si conflicto.
+  - Opera en la database resuelta por TenantContext; no filtra ni persiste hospital_id.
+  - Join `expedientes.ubicacion_actual_id -> ubicaciones.id` para rehidratar
+    `Ubicacion {id,codigo,descripcion}`.
+  - Rehidrata las cuatro columnas de PacienteReferencia, las cinco de Custodia y
+    rowVersion como bigint; HospitalId procede de TenantContext.
   - Sin lógica de negocio en el adapter.
 - **Tests requeridos (Vitest + PostgreSQL real):**
   - findByNumero con / -> normaliza y encuentra.
@@ -357,20 +363,26 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
   - findByNumero con número que tiene 2 derechohabientes -> retorna array de 2.
   - Tenant-A no ve expediente de Tenant-B.
   - save con rowVersion incorrecto -> error de concurrencia.
-- **Fuente SDB:** DAT-006 v0.2.0, DAT-016 v0.2.0, SEC-032, AGENTS.md.
+- **Fuente SDB:** DAT-006 v0.2.0, DAT-016 v0.2.0, SEC-032, AGENTS.md,
+  POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014.
 - **Dependencias:** T-03, T-10 (migración de esquema).
 
 ### T-10 Migración de esquema
 - **Descripción:** Migración para tablas `expediente` y `movimientos_expediente`.
-  - expediente: incluir expediente_numero_normalizado varchar; estado_operativo CHECK
-    con exactamente los 6 valores de DEC-EW-STATE-001; custody_accepted_at timestamptz null;
-    row_version bigint NOT NULL DEFAULT 0.
-  - NO crear UNIQUE(expediente_numero, hospital_id) sin profiling de SIMEF (BR-017).
-  - INDEX ON expediente (expediente_numero_normalizado).
-  - movimientos_expediente: incluir movement_type que admita DISPATCHED, CUSTODY_ACCEPTED.
+  - Nombres definitivos: `ubicaciones`, `expedientes`, `movimientos_expediente`.
+  - Aplicar exactamente el DDL conceptual DB-EW-012: cuatro columnas TEXT NOT NULL de
+    PacienteReferencia; cinco columnas inline nullable de Custodia; sin hospital_id.
+  - `row_version BIGINT NOT NULL DEFAULT 0`; Drizzle no usa mode number.
+  - `expediente_numero` NO UNIQUE e índice btree no unique exclusivamente sobre
+    `expediente_numero_normalizado`.
+  - CHECK exacto de seis EstadoOperativo; `source` CHECK WEB/INTERNAL; movement_type y
+    business_reference_type sin CHECK.
+  - Movimiento usa `business_reference_id TEXT NULL` y `correlation_id TEXT NULL`.
+  - FKs únicamente según DB-EW-011; recorded_at usa default CURRENT_TIMESTAMP.
   - Sin datos clínicos en ninguna tabla.
 - **Regla (AGENTS.md):** Todo cambio de schema requiere migración.
-- **Fuente SDB:** DAT-006 v0.2.0, DDD-012 v0.2.0, BR-017, INV-EXP-003.
+- **Fuente SDB:** DAT-006 v0.2.0, DAT-011, DDD-012 v0.2.0, BR-017, INV-EXP-003,
+  POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014.
 - **Dependencias:** T-03.
 
 ---
@@ -631,7 +643,7 @@ T-23 (CI pipeline) <- todas
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.14"
+spec_version: "0.3.15"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

@@ -21,8 +21,8 @@ Fields:
 - resource_id
 - result
 - occurred_at
-- request_id
-- correlation_id
+- request_id (`TEXT`, desde `RequestContext.requestId`)
+- correlation_id (`TEXT` nullable, desde `RequestContext.correlationId` cuando aplique)
 - source_ip_hash/candidate
 - source
 - change_summary jsonb nullable

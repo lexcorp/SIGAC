@@ -12,7 +12,7 @@ architecture:
 # DAT-018 — Constraints
 
 Database constraints candidates:
-- unique expediente_numero;
+- `expediente_numero` explícitamente no unique para expediente-workspace;
 - FK relationships;
 - check states;
 - due_at >= opened_at;
@@ -22,3 +22,7 @@ Database constraints candidates:
 - file_sha256 unique candidate per relevant import scope.
 
 Complex “one active loan” may be protected with partial unique index if semantics are confirmed.
+
+Para Expediente Workspace, DB-EW-001..014 fija únicamente los CHECK de seis estados y
+RequestSource `WEB|INTERNAL`, además de las FKs aprobadas. No se inventan otros
+constraints.

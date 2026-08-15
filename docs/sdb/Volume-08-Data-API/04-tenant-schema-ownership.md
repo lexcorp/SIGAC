@@ -13,7 +13,7 @@ architecture:
 
 | Module | Tables |
 |---|---|
-| archive_operations | expedientes, expediente_movimientos |
+| archive_operations | expedientes, ubicaciones, movimientos_expediente |
 | requests | solicitudes |
 | preparation | jornadas_preparacion, items_preparacion |
 | loans | prestamos, prestamo_renovaciones |

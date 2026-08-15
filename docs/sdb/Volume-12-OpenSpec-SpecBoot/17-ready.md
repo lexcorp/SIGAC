@@ -30,3 +30,8 @@ optimistic lock mismatch. T-07 no tiene gaps bloqueantes conocidos.
 
 T-08 está ready: CST-GAP-001/002 están cerrados. businessReference procede del input y
 audit usa `CUSTODY_ACCEPTED/EXPEDIENTE/expedienteId` con los cinco resultados canónicos.
+
+T-10 está ready mediante POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014: nombres
+físicos, DDL, nullability, índices, CHECKs, FKs, tenant/HospitalId y mapping VO ↔ DB
+quedan definidos. OQ-DAT-004 está RESOLVED; no quedan gaps bloqueantes conocidos para
+la migración.

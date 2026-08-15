@@ -39,7 +39,8 @@ elija manualmente: nombre, CURP, número ISSSTE.
 - Ubicación/custodia actual.
 
 ## PostgreSQL
-- `btree` sobre `expediente_numero_normalizado`.
+- btree no unique `expedientes_numero_normalizado_idx` sobre
+  `expedientes(expediente_numero_normalizado)`.
 - Texto normalizado (unaccented, lowercase) para nombre de paciente.
 - `pg_trgm` candidato si se aprueba búsqueda fuzzy de nombre (OQ-DAT-006 abierta).
 - No se usa motor de búsqueda externo inicialmente.

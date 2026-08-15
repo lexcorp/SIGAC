@@ -65,3 +65,10 @@ previsto type/reference explícito y service/location/acceptedAt null.
 CST-EW-001..010 define input, custodia efectiva, ubicación, evento, UoW y movimiento.
 CST-GAP-001/002 están CLOSED mediante businessReference explícita y audit
 `CUSTODY_ACCEPTED/EXPEDIENTE/expedienteId`.
+
+## PostgreSQL physical model T-10 (v0.3.15)
+
+DB-EW-001..014 cierran los gaps de nombres, tenant/HospitalId, PacienteReferencia,
+Ubicacion, Custodia inline, rowVersion, ExpedienteNumero no unique, tipos de Movimiento,
+RequestSource, FKs y mapping Repository. T-10 queda listo para implementación conforme a
+`POSTGRES-PHYSICAL-MODEL-DECISION.md`; no se abre una OQ nueva.

@@ -52,3 +52,12 @@ filas de audit.
 El Use Case autoriza y comprueba primero la existencia mediante `ExpedienteRepository`.
 Sólo después invoca este query port. De este modo distingue Expediente inexistente de
 Expediente existente sin movimientos.
+
+### Persistencia de Expediente
+
+El Repository opera en la database seleccionada por TenantContext. Consulta
+`expedientes`, hace join con `ubicaciones` para obtener `id/codigo/descripcion`, mapea
+las cuatro columnas explícitas de PacienteReferencia y las cinco columnas inline de
+Custodia, e incorpora `hospitalId` desde TenantContext. `row_version` se mantiene como
+bigint. `findByNumero` compara la normalización del VO contra
+`expediente_numero_normalizado` y conserva cardinalidad 0..N.
