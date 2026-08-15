@@ -6,3 +6,5 @@ export * from './application/ExpedienteCapabilityService.js';
 export * from './application/ApplicationError.js';
 export * from './application/AuditWriter.js';
 export * from './application/ExpedienteWorkspaceQueryPorts.js';
+export * from './application/ExpedienteTimelineQueryPort.js';
+export * from './application/GetExpedienteTimeline.js';
