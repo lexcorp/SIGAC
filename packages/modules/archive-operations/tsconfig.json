@@ -2,7 +2,12 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "../../../dist/packages/modules/archive-operations"
+    "outDir": "../../../dist/packages/modules/archive-operations",
+    "paths": {
+      "@sigac/domain-kernel": [
+        "../../../dist/packages/domain-kernel/index.d.ts"
+      ]
+    }
   },
   "include": [
     "src/**/*.ts"
