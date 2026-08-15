@@ -1,93 +1,114 @@
 ---
 spec: expediente-workspace
-version: "0.2.0"
+version: "0.3.0"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-14"
 requires:
-  - requirements.md (v0.2.0)
-  - design.md (v0.2.0)
-ready_gate: "OS-017 — todos los OQ bloqueantes deben estar resueltos antes de iniciar T-01"
+  - requirements.md (v0.3.0)
+  - design.md (v0.3.0)
+decisions_applied:
+  - "OQ-EW-001 RESOLVED"
+  - "OQ-EW-005 RESOLVED"
+  - "OQ-EW-006 RESOLVED"
+  - "OQ-EW-007 RESOLVED"
+  - "DEC-EW-STATE-001 ACCEPTED"
+ready_gate: "READY-GATE.md — todos los ítems deben estar marcados antes de iniciar T-01"
 done_gate: "OS-018 — spec + tests + API/migrations + auth/tenant/audit + traceability"
 ---
 
 # Expediente Workspace — Tasks
 
 > **Regla de oro (AGENTS.md):** No inventar comportamiento faltante.
-> Si durante la implementación de cualquier tarea aparece una ambigüedad de invariante,
-> permiso o alcance de tenant → STOP_AND_ESCALATE como open question.
+> Si durante la implementación aparece ambigüedad de invariante, permiso o tenant
+> scope -> STOP_AND_ESCALATE como open question.
 
 ---
 
 ## Estado de prerequisitos
 
-Antes de ejecutar cualquier tarea de implementación deben estar resueltas:
+Las OQs que eran bloqueantes en v0.2.0 están resueltas. La implementación puede comenzar.
 
-| OQ bloqueante | Pregunta | Documento |
-|---------------|----------|-----------|
-| OQ-EW-001 | Formato exacto del identificador de expediente | requirements.md §6 |
-| OQ-EW-005 | Permisos exactos para abrir préstamo por tipo de solicitud | requirements.md §6 |
-| OQ-EW-006 | ¿La aceptación de custodia requiere confirmación digital del receptor? | requirements.md §6 |
+| OQ | Estado | Resolución disponible en |
+|----|--------|--------------------------|
+| OQ-EW-001 | RESOLVED | DECISION-REGISTER, DDD-007, DAT-006, DAT-016 |
+| OQ-EW-005 | RESOLVED | DECISION-REGISTER, BIZ-010, BIZ-016, UC-010, SPEC-006 |
+| OQ-EW-006 | RESOLVED | DECISION-REGISTER, DDD-018, WF-005, BIZ-008 |
+| OQ-EW-007 | RESOLVED | DECISION-REGISTER, DDD-009 INV-EXP-003, BR-017 |
+| DEC-EW-STATE-001 | ACCEPTED | DECISION-REGISTER, DDD-012 |
 
-OQ no bloqueantes (pueden quedar abiertos en v1; ver notas en cada tarea):
-OQ-EW-002, OQ-EW-003, OQ-EW-004, OQ-EW-007, OQ-EW-008, OQ-EW-009, OQ-EW-010,
+OQ no bloqueantes (implementación avanza con decisión provisional):
+OQ-EW-002, OQ-EW-003, OQ-EW-004, OQ-EW-008, OQ-EW-009, OQ-EW-010,
 OQ-EW-DESIGN-001 a OQ-EW-DESIGN-005.
 
 ---
 
-## Grupo 0 — Trazabilidad y validación de spec
+## Grupo 0 — Trazabilidad
 
-### T-00 Resolver trazabilidad exacta y validar spec
-- **Descripción:** Revisar y completar `traceability.md`. Confirmar que todo REQ tiene
-  fuente SDB, criterio de aceptación y test mapeado. Confirmar que OQ bloqueantes tienen
-  respuesta registrada antes de avanzar a T-01.
-- **Entregable:** `traceability.md` con todas las cadenas Source→BR→WF→UC→SPEC→API→UI→Test
-  completas para las capacidades del Workspace.
-- **Criterio de done:** Ningún REQ-EW-* sin trazabilidad completa; OQ bloqueantes resueltos.
-- **Fuente:** OS-007, SDD-006, V05-41.
-- **Dependencias:** Ninguna (puede ejecutarse en paralelo con T-01 solo si los OQ
-  bloqueantes ya están resueltos).
+### T-00 Completar traceability.md
+- **Descripción:** Verificar que traceability.md v0.3.0 tiene cadenas completas
+  para todas las capacidades. Confirmar que GAP-002, GAP-003, GAP-007 están cerrados
+  y que no quedan eslabones PENDIENTE en BR, UC o SPEC para las decisiones resueltas.
+- **Criterio de done:** Ningún REQ-EW-* sin cadena completa; matrices actualizadas.
+- **Fuente SDB:** OS-007, SDD-006.
+- **Dependencias:** Ninguna.
 
 ---
 
 ## Grupo 1 — Dominio y puerto
 
 ### T-01 Implementar value objects de dominio
-- **Descripción:** Implementar los value objects necesarios en
-  `packages/modules/expediente/domain/value-objects/`:
-  - `EstadoOperativo` — enum validado con los valores candidatos del diseño §3.1;
-    solo los estados confirmados por DDD-012 y los OQ-DOM resueltos.
-  - `Custodia` — VO con campos `custodioTipo`, `custodioRef`, `servicio`, `aceptadaEn`
-    (DDD-018).
-  - `Ubicacion` — VO con `id`, `codigo`, `descripcion` (DDD-019).
-- **Regla:** El dominio no importa NestJS, Drizzle, React ni HTTP (AGENTS.md).
-- **Tests requeridos:** Unit tests Vitest — construcción válida, construcción inválida,
-  igualdad por valor.
-- **Fuente SDB:** DDD-009 (INV-EXP-002), DDD-012, DDD-018, DDD-019.
-- **OQ no bloqueante:** OQ-DOM-009 (ubicaciones temporales). Implementar solo las
-  categorías confirmadas; dejar extensión abierta.
+- **Descripción:** Implementar en `packages/modules/expediente/domain/value-objects/`:
+  - `ExpedienteNumero` — VO con:
+    - Validación del patrón RFC_BASE_10 + SEP + COD_2.
+    - Catálogo de códigos aceptados: 10, 20, 30, 40, 50, 60, 70, 80, 90.
+    - Método de normalización (sin separador) para búsqueda.
+    - Método de presentación (con / preferente).
+    - Acepta /, - o sin separador en construcción.
+  - `EstadoOperativo` — enum con exactamente 6 valores:
+    DISPONIBLE, APARTADO, EN_TRASLADO, EN_CONSULTA, NO_LOCALIZADO, EXTRAVIADO.
+    Rechaza EN_BUSQUEDA y PRESTADO explícitamente.
+  - `FuenteHabilitanteSalida` — enum:
+    CONSULTA_PROGRAMADA, VALE_ARCHIVO_SM_1_14, ORDEN_SUPERIOR.
+  - `Custodia` — VO: custodianType, custodianReference, service, location, acceptedAt.
+    acceptedAt es null cuando EN_TRASLADO sin CustodyAccepted.
+  - `Ubicacion` — VO: id, codigo, descripcion.
+- **Tests requeridos (Vitest):**
+  - ExpedienteNumero: construir con /, -, sin sep -> misma normalización.
+  - ExpedienteNumero: código fuera de catálogo -> inválido.
+  - ExpedienteNumero: RFC con menos de 10 chars -> inválido.
+  - EstadoOperativo: los 6 valores son válidos.
+  - EstadoOperativo: EN_BUSQUEDA -> excepción.
+  - EstadoOperativo: PRESTADO -> excepción.
+  - FuenteHabilitanteSalida: los 3 valores son válidos.
+  - Custodia: acceptedAt null cuando no aceptada.
+- **Fuente SDB:** DDD-007 v0.2.0, DDD-009 INV-EXP-003/004, DDD-012 v0.2.0.
+- **Dependencias:** Ninguna.
 
 ### T-02 Implementar Aggregate Expediente
-- **Descripción:** Implementar `packages/modules/expediente/domain/Expediente.ts`.
-  Datos: `ExpedienteId`, `ExpedienteNumero`, `PacienteReferencia` (mínima), `HospitalId`,
-  `EstadoOperativo`, `Ubicacion`, `Custodia`, `rowVersion` (DAT-006).
-  - Hacer cumplir INV-EXP-001 (identificador institucional) e INV-EXP-002 (coherencia
-    operativa) en el constructor / métodos de fábrica.
-  - No agregar campos clínicos (diagnósticos, notas, tratamientos).
-- **Tests requeridos:** Unit tests Vitest — invariantes válidos; intentar construir
-  con datos inválidos; verificar que no acepta campos clínicos en su API pública.
-- **Fuente SDB:** DDD-013, DDD-009, DAT-006.
+- **Descripción:** `packages/modules/expediente/domain/Expediente.ts`.
+  - Campos: ExpedienteId (UUID), ExpedienteNumero, PacienteReferencia (mínima),
+    HospitalId, EstadoOperativo (6 valores), Ubicacion, Custodia, rowVersion.
+  - Hacer cumplir INV-EXP-001, INV-EXP-002, INV-EXP-003, INV-EXP-004, INV-EXP-005.
+  - No campos clínicos.
+  - expedienteNumero NO es unique constraint en el aggregate.
+- **Tests requeridos (Vitest):**
+  - Construcción válida con todos los campos.
+  - Intento de establecer EstadoOperativo = EN_BUSQUEDA -> error.
+  - Intento de establecer EstadoOperativo = PRESTADO -> error.
+  - No acepta campos clínicos.
+- **Fuente SDB:** DDD-013 v0.2.0, DDD-009.
 - **Dependencias:** T-01.
 
 ### T-03 Definir puerto ExpedienteRepository
-- **Descripción:** Definir la interface (port) en
-  `packages/modules/expediente/domain/ports/ExpedienteRepository.ts`.
-  Métodos mínimos para este workspace:
+- **Descripción:** `packages/modules/expediente/domain/ports/ExpedienteRepository.ts`.
+  ```typescript
+  findById(id: UUID, tenant: TenantContext): Promise<Expediente | null>
+  findByNumero(numero: ExpedienteNumero, tenant: TenantContext): Promise<Expediente[]>
+  // findByNumero devuelve ARRAY — puede haber 0, 1 o N coincidencias
+  save(expediente: Expediente, tenant: TenantContext): Promise<void>
   ```
-  findById(id, tenant): Promise<Expediente | null>
-  findByNumero(numero, tenant): Promise<Expediente | null>
-  ```
-- **Regla:** Solo interface; sin importar Drizzle ni PostgreSQL aquí.
-- **Fuente SDB:** AGENTS.md (Clean Architecture), steering/structure.md.
+- **Regla:** Solo interface; sin importar Drizzle ni PostgreSQL.
+- **Fuente SDB:** AGENTS.md, steering/structure.md, BR-017, INV-EXP-003.
 - **Dependencias:** T-02.
 
 ---
@@ -95,255 +116,352 @@ OQ-EW-DESIGN-001 a OQ-EW-DESIGN-005.
 ## Grupo 2 — Aplicación
 
 ### T-04 Implementar ExpedienteCapabilityService
-- **Descripción:** Implementar
-  `packages/modules/expediente/application/ExpedienteCapabilityService.ts`.
-  Calcula el array `capabilities[]` dados `EstadoOperativo`, estado de `SolicitudActiva`,
-  estado de `PrestamoActivo` e `ActorContext` (roles + permisos).
-  - La lógica refleja la Permission × Action Matrix (V05-39, INT-002) para las acciones
-    de la barra de comandos del Workspace.
-  - Devuelve solo capabilities cuya transición es válida en el estado actual **y** el
-    actor tiene permiso para ejecutar.
-- **Tests requeridos:**
-  - Actor Archivista + estado `DISPONIBLE` → capabilities esperadas.
-  - Actor sin `EXPEDIENT_VIEW` → capabilities vacías / error de autorización.
-  - Actor Auditor → solo capabilities de lectura.
-  - Estado `PRESTADO` → `ABRIR_PRESTAMO` no aparece.
-- **Fuente SDB:** SEC-017, SDD-005, DDD-010, DDD-012, INT-001, V05-39.
-- **OQ no bloqueante:** OQ-EW-005 (permisos exactos de préstamo). Implementar con
-  la política conservadora hasta resolver; marcar como TODO en código.
+- **Descripción:** `packages/modules/expediente/application/ExpedienteCapabilityService.ts`.
+  Calcula capabilities[] según:
+  - EstadoOperativo (6 valores aceptados).
+  - Estado de SolicitudActiva.
+  - Estado de PrestamoActivo.
+  - actor.roles, actor.permisos.
+  - FuenteHabilitanteSalida disponible en el contexto.
+  
+  Reglas de ABRIR_PRESTAMO (OQ-EW-005 RESOLVED — sin política provisional):
+  - CONSULTA_PROGRAMADA: actor es Archivo o Jefatura -> capability habilitada.
+  - VALE_ARCHIVO_SM_1_14: actor es Director/Subdirector/Coord. Médica -> habilitada.
+  - ORDEN_SUPERIOR: validación pendiente de spec -> no incluir aún.
+  
+  Reglas de DISPATCH:
+  - EstadoOperativo = APARTADO + actor es Archivo/Jefatura -> habilitada.
+  
+  Reglas de ACCEPT_CUSTODY:
+  - EstadoOperativo = EN_TRASLADO + actor es receptor autorizado -> habilitada.
+  
+  Regla: ningún estado debe producir EN_BUSQUEDA ni PRESTADO como valor de EstadoOperativo.
+
+- **Tests requeridos (Vitest):**
+  - DISPONIBLE + Archivista -> SOLICITAR incluida; DISPATCH no incluida.
+  - APARTADO + Archivista -> DISPATCH incluida; ABRIR_PRESTAMO no.
+  - EN_TRASLADO + receptor autorizado -> ACCEPT_CUSTODY incluida.
+  - CONSULTA_PROGRAMADA + Archivista -> ABRIR_PRESTAMO incluida.
+  - VALE_ARCHIVO_SM_1_14 + Archivista (no Director) -> ABRIR_PRESTAMO NO incluida.
+  - VALE_ARCHIVO_SM_1_14 + Director -> ABRIR_PRESTAMO incluida.
+  - Sin EXPEDIENT_VIEW -> capabilities vacías.
+  - Auditor -> solo capabilities de lectura.
+- **Fuente SDB:** SEC-017, SDD-005, DDD-010, DDD-012 v0.2.0, PERM-MATRIX v0.2.0,
+  DECISION-REGISTER OQ-EW-005.
 - **Dependencias:** T-02.
 
 ### T-05 Implementar Use Case GetExpediente
-- **Descripción:** Implementar
-  `packages/modules/expediente/application/GetExpediente.ts`.
-  Pasos según design.md §7.2:
-  1. Verificar autorización (`EXPEDIENT_VIEW` en tenant) → lanzar error de autorización si no.
-  2. Cargar `Expediente` vía `ExpedienteRepository` → 404 si no existe.
-  3. Cargar préstamo activo, solicitud activa e incidencias abiertas (joins o queries
-     adicionales a sus respectivos repositorios/puertos).
-  4. Llamar `ExpedienteCapabilityService`.
-  5. Registrar acceso en audit log (actor, acción `EXPEDIENTE_VIEW`, recurso, tenant).
-  6. Devolver `ExpedienteReadModel` con `capabilities[]`.
-- **Tests requeridos:**
-  - Actor autorizado + expediente existente → read model completo con capabilities.
-  - Actor no autorizado → error de autorización; NO registra datos del expediente en error.
-  - Expediente inexistente → 404; audit registra intento.
-  - Actor de Tenant-A no obtiene expediente de Tenant-B (cross-tenant IDOR).
-- **Fuente SDB:** UC-018, SPEC-009, SEC-017, SEC-032, SEC-038, DAT-012.
+- **Descripción:** `packages/modules/expediente/application/GetExpediente.ts`.
+  Pasos:
+  1. Verificar EXPEDIENT_VIEW en tenant -> 403 si no.
+  2. TenantContext server-side.
+  3. findById(id, tenant) -> 404 si no existe.
+  4. Cargar préstamo activo, solicitud activa, incidencias abiertas.
+  5. ExpedienteCapabilityService.
+  6. INSERT audit_log (EXPEDIENTE_VIEW).
+  7. Retornar ExpedienteReadModel con capabilities[].
+- **Tests requeridos (Vitest):**
+  - Actor autorizado + expediente existente -> read model completo.
+  - Actor sin EXPEDIENT_VIEW -> 403; no loguear datos del expediente en error.
+  - Expediente inexistente -> 404; audit registra intento.
+  - Tenant-A no obtiene expediente de Tenant-B (INV-EXP-003 verificación).
+  - estadoOperativo en respuesta es uno de los 6 valores válidos.
+- **Fuente SDB:** UC-018 v0.2.0, SPEC-009 v0.2.0, SEC-017, SEC-032, SEC-038, DAT-012.
 - **Dependencias:** T-03, T-04.
 
 ### T-06 Implementar Use Case GetExpedienteTimeline
-- **Descripción:** Implementar
-  `packages/modules/expediente/application/GetExpedienteTimeline.ts`.
-  - Carga `MovimientoExpediente[]` del repositorio (DAT-011), ordenados por
-    `occurred_at DESC`.
-  - Paginación cursor-based (pendiente confirmar con OQ-EW-DESIGN-003;
-    implementar con parámetro `limit` como mínimo).
-  - **No** mezcla con `audit_log`.
-  - Registra acceso en audit log.
-- **Tests requeridos:**
-  - Actor autorizado → lista de movimientos correcta.
-  - Actor no autorizado → error.
-  - Cross-tenant → no devuelve movimientos de otro tenant.
+- **Descripción:** `packages/modules/expediente/application/GetExpedienteTimeline.ts`.
+  - Carga MovimientoExpediente[] (DAT-011) por expediente_id; occurred_at DESC.
+  - Paginación con limit (cursor-based o offset según OQ-EW-DESIGN-003; usar limit mínimo).
+  - NO mezcla con audit_log.
+  - INSERT audit_log.
+- **Tests requeridos (Vitest):**
+  - Actor autorizado -> lista de movimientos ordenada.
+  - Incluye movement_type DISPATCHED y CUSTODY_ACCEPTED cuando existen.
+  - Cross-tenant -> sin movimientos de otro tenant.
   - Resultado no contiene filas de audit_log.
 - **Fuente SDB:** DDD-020, DAT-011, SPEC-009 FR-VIEW-007, INT-008.
-- **OQ no bloqueante:** OQ-DOM-001 (¿Movimiento en schema de expediente o separado?).
-  Implementar en schema de expediente hasta resolución; dejar interfaz de repositorio
-  abstracta para facilitar migración.
 - **Dependencias:** T-03.
+
+### T-07 Implementar Use Case DispatchExpediente
+- **Descripción:** `packages/modules/expediente/application/DispatchExpediente.ts`.
+  Pasos:
+  1. Verificar permiso DISPATCH en tenant.
+  2. findById con rowVersion -> 409 si conflicto.
+  3. Validar EstadoOperativo = APARTADO -> 409 si no.
+  4. EstadoOperativo -> EN_TRASLADO.
+  5. custody_accepted_at -> null.
+  6. save con rowVersion+1.
+  7. INSERT MovimientoExpediente (movement_type = DISPATCHED).
+  8. INSERT audit_log.
+- **Tests requeridos (Vitest):**
+  - APARTADO -> EN_TRASLADO exitoso.
+  - EstadoOperativo != APARTADO -> 409.
+  - rowVersion incorrecto -> 409.
+  - custody_accepted_at = null tras dispatch.
+  - Cross-tenant -> rechazado.
+- **Fuente SDB:** DDD-010, DDD-011, WF-005 v0.2.0, DAT-019,
+  DECISION-REGISTER OQ-EW-006.
+- **Dependencias:** T-03, T-04.
+
+### T-08 Implementar Use Case AcceptCustody
+- **Descripción:** `packages/modules/expediente/application/AcceptCustody.ts`.
+  Pasos:
+  1. Verificar permiso ACCEPT_CUSTODY en tenant (actor = receptor autorizado).
+  2. findById con rowVersion -> 409 si conflicto.
+  3. Validar EstadoOperativo = EN_TRASLADO -> 409 si no.
+  4. EstadoOperativo -> EN_CONSULTA.
+  5. custody_accepted_at -> now().
+  6. custodio_ref -> receptorRef.
+  7. save con rowVersion+1.
+  8. INSERT MovimientoExpediente (movement_type = CUSTODY_ACCEPTED).
+  9. INSERT audit_log (acción autenticada y auditable).
+- **Tests requeridos (Vitest):**
+  - EN_TRASLADO -> EN_CONSULTA exitoso.
+  - EstadoOperativo != EN_TRASLADO -> 409.
+  - rowVersion incorrecto -> 409.
+  - custody_accepted_at establecido con timestamp.
+  - Actor no autorizado -> 403.
+  - Cross-tenant -> rechazado.
+- **Fuente SDB:** DDD-018 v0.2.0, WF-005 v0.2.0 Fase 3, DAT-019,
+  DECISION-REGISTER OQ-EW-006.
+- **Dependencias:** T-03, T-04.
 
 ---
 
 ## Grupo 3 — Infraestructura / Persistencia
 
-### T-07 Implementar PostgresExpedienteRepository
-- **Descripción:** Implementar el adapter
-  `packages/platform/persistence/PostgresExpedienteRepository.ts`
-  que satisface el puerto definido en T-03.
-  - `findById` y `findByNumero` con TenantContext (connection pool por tenant).
-  - Query para `MovimientoExpediente` (timeline).
-  - Sin cross-tenant queries.
+### T-09 Implementar PostgresExpedienteRepository
+- **Descripción:** `packages/platform/persistence/PostgresExpedienteRepository.ts`.
+  - findById: query por id + tenant; retorna Expediente | null.
+  - findByNumero: query por expediente_numero_normalizado + tenant;
+    retorna Expediente[] (0..N). NO retorna escalar.
+  - save: UPDATE con rowVersion check; 409 si conflicto.
   - Sin lógica de negocio en el adapter.
-- **Tests requeridos:** PostgreSQL integration tests con base real (TQ-005).
-  - Insertar expediente; recuperar por id; recuperar por numero.
-  - Tenant-A no ve expediente de Tenant-B (clave de aislamiento TQ-007).
-- **Fuente SDB:** DAT-006, DAT-011, SEC-032, AGENTS.md.
-- **Dependencias:** T-03, migración de esquema (ver T-08).
+- **Tests requeridos (Vitest + PostgreSQL real):**
+  - findByNumero con / -> normaliza y encuentra.
+  - findByNumero con - -> normaliza y encuentra el mismo.
+  - findByNumero sin sep -> normaliza y encuentra el mismo.
+  - findByNumero con número que tiene 2 derechohabientes -> retorna array de 2.
+  - Tenant-A no ve expediente de Tenant-B.
+  - save con rowVersion incorrecto -> error de concurrencia.
+- **Fuente SDB:** DAT-006 v0.2.0, DAT-016 v0.2.0, SEC-032, AGENTS.md.
+- **Dependencias:** T-03, T-10 (migración de esquema).
 
-### T-08 Migración de esquema — tabla expediente y movimientos
-- **Descripción:** Crear la migración de base de datos para las tablas `expediente`
-  y `movimientos_expediente` en el schema del tenant, con los campos de DAT-006 y
-  DAT-011 confirmados.
-  - `row_version bigint NOT NULL DEFAULT 0` en `expediente`.
-  - Constraints: `expediente_numero UNIQUE` por tenant, `estado_operativo CHECK`.
-  - Tablas `audit_log` se definen en su propia migración (fuera de scope de esta
-    tarea, pero el Use Case las usa).
-  - La migración no genera datos clínicos.
-- **Regla (AGENTS.md):** Todo cambio de schema requiere migración; no modificar
-  schema existente sin revisar migraciones previas.
-- **Fuente SDB:** DAT-006, DAT-011, DAT-023 (migrations policy).
+### T-10 Migración de esquema
+- **Descripción:** Migración para tablas `expediente` y `movimientos_expediente`.
+  - expediente: incluir expediente_numero_normalizado varchar; estado_operativo CHECK
+    con exactamente los 6 valores de DEC-EW-STATE-001; custody_accepted_at timestamptz null;
+    row_version bigint NOT NULL DEFAULT 0.
+  - NO crear UNIQUE(expediente_numero, hospital_id) sin profiling de SIMEF (BR-017).
+  - INDEX ON expediente (expediente_numero_normalizado).
+  - movimientos_expediente: incluir movement_type que admita DISPATCHED, CUSTODY_ACCEPTED.
+  - Sin datos clínicos en ninguna tabla.
+- **Regla (AGENTS.md):** Todo cambio de schema requiere migración.
+- **Fuente SDB:** DAT-006 v0.2.0, DDD-012 v0.2.0, BR-017, INV-EXP-003.
 - **Dependencias:** T-03.
 
 ---
 
 ## Grupo 4 — API / Controller
 
-### T-09 Implementar ExpedienteController
-- **Descripción:** Implementar `apps/api/src/expediente/ExpedienteController.ts`
-  (NestJS controller).
+### T-11 Implementar ExpedienteController
+- **Descripción:** `apps/api/src/expediente/ExpedienteController.ts`.
   Endpoints:
-  - `GET /api/v1/expedientes/:id` → llama `GetExpediente`.
-  - `GET /api/v1/expedientes?numero=` → llama `GetExpediente` (por numero).
-  - `GET /api/v1/expedientes/:id/timeline` → llama `GetExpedienteTimeline`.
-  - `GET /api/v1/expedientes/:id/current-custody` → sub-recurso de custodia.
-  - `GET /api/v1/expedientes/:id/active-loan` → sub-recurso de préstamo activo.
-  - El controller deserializa, resuelve TenantContext (server-side), llama use case
-    y serializa la respuesta.
-  - El controller **no** escribe repositorios directamente.
-  - Errores: RFC7807 (API-006); sin stack trace, sin nombre de DB, sin datos clínicos.
-- **Tests requeridos:** API contract tests — happy path, 404, 403, 409, tenant isolation.
-- **Fuente SDB:** API-001, API-005, API-006, API-011, AGENTS.md.
-- **Dependencias:** T-05, T-06.
+  - GET /api/v1/expedientes/:id -> GetExpediente.
+  - GET /api/v1/expedientes?numero= -> findByNumero; retorna colección {data[], total}.
+    Normaliza el parámetro antes de llamar al use case.
+  - GET /api/v1/expedientes/:id/timeline -> GetExpedienteTimeline.
+  - GET /api/v1/expedientes/:id/current-custody -> sub-recurso de custodia.
+  - GET /api/v1/expedientes/:id/active-loan -> sub-recurso de préstamo activo.
+  - POST /api/v1/expedientes/:id/dispatch -> DispatchExpediente.
+  - POST /api/v1/expedientes/:id/accept-custody -> AcceptCustody.
+  - POST /api/v1/expedientes/:id/rearchive -> ConfirmRearchive.
+  - El controller NO escribe repositorios directamente.
+  - Errores: RFC7807; sin stack trace, sin nombre DB, sin datos clínicos.
+- **Tests requeridos (contract):**
+  - GET ?numero= con N=0 -> 200 {data:[], total:0}.
+  - GET ?numero= con N=1 -> 200 {data:[...], total:1}.
+  - GET ?numero= con N=2 -> 200 {data:[...,...], total:2}.
+  - GET /:id con id inexistente -> 404.
+  - GET /:id sin token -> 403.
+  - POST /dispatch con rowVersion incorrecto -> 409.
+  - POST /dispatch con estado incorrecto -> 409.
+  - Tenant isolation: Hospital-A no accede a Hospital-B -> 404.
+- **Fuente SDB:** API-001, API-005, API-006, API-011 v0.2.0, AGENTS.md.
+- **Dependencias:** T-05, T-06, T-07, T-08.
 
-### T-10 Actualizar contrato OpenAPI
-- **Descripción:** Actualizar el contrato OpenAPI (`openapi/`) para reflejar los
-  endpoints de T-09:
-  - Schemas de respuesta para `ExpedienteReadModel`, `MovimientoExpediente[]`,
-    `capabilities[]`.
-  - Error responses (404, 403, 409) con formato RFC7807.
-  - Parámetros de paginación para timeline.
+### T-12 Actualizar contrato OpenAPI
+- **Descripción:** Actualizar `openapi/` para reflejar T-11:
+  - Schema ExpedienteSearchResponse: {data: ExpedienteListItem[], total: integer}.
+  - Schema ExpedienteReadModel: estadoOperativo como enum de 6 valores exactos;
+    custodiaActual.aceptadaEn nullable; prestamoActivo.fuenteHabilitante como enum.
+  - Endpoints /dispatch y /accept-custody.
+  - Errores 403 con code INSUFFICIENT_ENABLING_SOURCE.
 - **Regla (AGENTS.md, steering/api.md):** Todo cambio de API requiere actualizar OpenAPI.
-- **Fuente SDB:** API-001, API-011, API-006, DAT-019.
-- **Dependencias:** T-09.
+- **Fuente SDB:** API-001, API-011 v0.2.0.
+- **Dependencias:** T-11.
 
 ---
 
 ## Grupo 5 — Frontend
 
-### T-11 Implementar feature module expediente-workspace (estructura)
-- **Descripción:** Crear la estructura de carpetas y archivos vacíos (barrels, tipos)
+### T-13 Implementar feature module — estructura y hooks
+- **Descripción:** Crear estructura de `apps/web/src/features/expediente-workspace/`
   definida en design.md §6.
-  - Tipos derivados del OpenAPI contract generado (no duplicar manualmente).
-  - Hook `useExpediente` con fetch + invalidación.
-  - Hook `useExpedienteTimeline` con paginación.
-  - `useCapabilities` derivado del read model (no calcula dominio).
+  - `useExpedienteSearch`: normaliza separadores del input antes de llamar al API;
+    retorna {data[], total, isDisambiguating: total > 1}.
+  - `useExpediente`: fetch + cache; invalida en 409.
+  - `useExpedienteTimeline`: fetch paginado DAT-011.
+  - `useCapabilities`: derivado del read model; no calcula dominio.
+  - Tipos derivados del OpenAPI contract generado.
 - **Fuente SDB:** DEL-002, INT-001.
-- **Dependencias:** T-10 (necesita el contrato OpenAPI para generar tipos).
+- **Dependencias:** T-12.
 
-### T-12 Implementar ExpedienteHeader
-- **Descripción:** Componente que renderiza el bloque "above the fold":
-  número de expediente, referencia mínima de paciente (OQ-EW-002 no bloqueante;
-  usar campo provisional hasta resolución), estado operativo con badge semántico,
-  ubicación actual, custodio actual, indicador de préstamo activo e incidencias.
-  - Datos C3 no aparecen en `document.title` ni en atributos visibles al scraper.
-  - Skeleton/loading state.
-  - Estado empty si expediente no encontrado.
-- **Tests requeridos:** Unit tests Vitest + Testing Library — loading, loaded, empty,
-  error; verificar que no se renderizan datos clínicos.
-- **Fuente SDB:** APP-003, IA-005, INT-009, SEC-003, DEL-005.
-- **Dependencias:** T-11.
+### T-14 Implementar ExpedienteHeader
+- **Descripción:** Renderiza el bloque above the fold.
+  - Número de expediente en formato con / (presentación preferente).
+  - Referencia mínima de paciente (OQ-EW-002 no bloqueante; usar campo disponible).
+  - Badge de EstadoOperativo — exactamente 6 valores; EN_BUSQUEDA y PRESTADO
+    nunca deben aparecer como badge del expediente.
+  - Ubicación actual.
+  - Custodio actual: mostrar acceptedAt si EN_CONSULTA; omitir o mostrar null si EN_TRASLADO.
+  - Indicadores: préstamo activo, incidencias abiertas.
+  - Datos C3 no en document.title ni atributos visibles al scraper.
+  - Estados: loading (skeleton), loaded, empty.
+- **Tests requeridos (Vitest + Testing Library):**
+  - Render con cada uno de los 6 EstadoOperativo -> badge correcto.
+  - EN_BUSQUEDA pasado como estado -> no se renderiza (o error).
+  - EN_TRASLADO: acceptedAt no visible.
+  - EN_CONSULTA: acceptedAt visible.
+  - Loading: skeleton visible.
+  - Sin datos clínicos en el DOM.
+- **Fuente SDB:** APP-003 v0.2.0, IA-005, INT-009, SEC-003, DEL-005.
+- **Dependencias:** T-13.
 
-### T-13 Implementar CommandBar
-- **Descripción:** Componente que renderiza los comandos del array `capabilities[]`.
-  - Un comando presente en `capabilities` → botón habilitado.
-  - Un comando ausente → no se renderiza (regla de diseño; ver OQ-EW-DESIGN-002 para
-    posible extensión con metadatos de deshabilitado).
-  - Navegación por teclado (Enter/Space); foco visible (DEL-005, Volume-09 §07).
-  - Comandos que disparan transición muestran estado de carga mientras petición
-    está en vuelo; se deshabilitan para evitar doble-click.
-- **Tests requeridos:**
-  - `capabilities = ['SOLICITAR']` → solo botón Solicitar visible.
-  - `capabilities = []` → ningún botón visible.
+### T-15 Implementar DisambiguationList
+- **Descripción:** Componente de selección cuando useExpedienteSearch.isDisambiguating = true.
+  - Muestra lista con: expedienteNumero, nombre, CURP, número ISSSTE.
+  - Usuario selecciona manualmente; NO hay auto-selección.
+  - Navegación por teclado; foco visible.
+- **Tests requeridos (Vitest + Testing Library):**
+  - Con N=2 resultados -> muestra lista, ninguno auto-seleccionado.
+  - Con N=0 -> estado vacío descriptivo (no este componente).
+  - Con N=1 -> no muestra lista (hook navega directo).
+  - Selección manual -> navega al workspace del expediente elegido.
+- **Fuente SDB:** APP-003 v0.2.0, SPEC-009 v0.2.0 FR-VIEW-001, BIZ-016/017.
+- **Dependencias:** T-13.
+
+### T-16 Implementar CommandBar
+- **Descripción:** Renderiza capabilities[].
+  - Comando presente -> botón habilitado.
+  - Comando ausente -> no se renderiza.
+  - Navegación por teclado (Enter/Space); foco visible.
+  - Deshabilita durante vuelo de petición para evitar doble-click.
+- **Tests requeridos (Vitest + Testing Library):**
+  - capabilities=['SOLICITAR'] -> solo botón Solicitar.
+  - capabilities=[] -> ningún botón.
+  - capabilities=['DISPATCH'] -> botón Despachar visible.
+  - capabilities=['ABRIR_PRESTAMO'] -> botón Abrir Préstamo visible.
   - Teclado: Tab y Enter activan comando.
 - **Fuente SDB:** DS-014, INT-001, INT-003, DEL-005.
-- **Dependencias:** T-11.
+- **Dependencias:** T-13.
 
-### T-14 Implementar tabs del Workspace
-- **Descripción:** Implementar los seis tabs definidos en design.md §5.2:
-  - `ResumenTab` — estado expandido, custodia detallada, préstamo activo, solicitud activa.
-  - `MovimientosTab` — timeline de `MovimientoExpediente`; paginado; no mezcla audit.
-  - `SolicitudesTab` — historial de solicitudes del expediente (consume endpoint de
-    módulo Solicitud; scope: solo listado).
-  - `PrestamosTab` — historial de préstamos (consume endpoint de módulo Préstamo).
-  - `IncidenciasTab` — incidencias abiertas y cerradas.
-  - `AuditoriaTab` — visible **solo** si `capabilities` incluye permiso de auditoría
-    (OQ-EW-003 no bloqueante; implementar con flag de capability).
-- **Tests requeridos:** Cada tab tiene tests de loading/empty/error. `AuditoriaTab`
-  oculto cuando capability ausente; visible cuando presente.
-- **Fuente SDB:** APP-003, INT-008 (Audit ≠ Movimientos), TQ-009.
-- **Dependencias:** T-12, T-13.
+### T-17 Implementar tabs del Workspace
+- **Descripción:** Los 6 tabs de design.md §5.2.
+  - ResumenTab: estado expandido; custodia con/sin acceptedAt; préstamo con FuenteHabilitante.
+  - MovimientosTab: timeline MovimientoExpediente; incluye DISPATCHED y CUSTODY_ACCEPTED;
+    paginado; no mezcla audit.
+  - SolicitudesTab, PrestamosTab, IncidenciasTab: listados; scope = solo listado.
+  - AuditoriaTab: visible SOLO si capabilities incluye permiso de auditoría.
+- **Tests requeridos:**
+  - ResumenTab: muestra acceptedAt solo si EN_CONSULTA.
+  - MovimientosTab: muestra DISPATCHED y CUSTODY_ACCEPTED; no muestra login/config.
+  - AuditoriaTab: oculto sin capability; visible con capability.
+  - Cada tab: loading/empty/error states.
+- **Fuente SDB:** APP-003 v0.2.0, INT-008, TQ-009.
+- **Dependencias:** T-14, T-16.
 
-### T-15 Implementar manejo de concurrencia en UI
-- **Descripción:** Manejar el estado `conflict` (409 optimistic lock) en el Workspace.
-  - Al recibir 409 desde cualquier comando: mostrar banner persistente con mensaje
-    claro (INT-006); ofrecer botón "Recargar"; preservar los datos que el usuario
-    tenía en pantalla.
-  - Al recargar: invalidar cache del read model; recalcular capabilities.
+### T-18 Implementar manejo de concurrencia en UI
+- **Descripción:** Estado conflict (409 optimistic lock).
+  - Banner persistente al recibir 409 de cualquier comando.
+  - Botón Recargar; preservar datos previos en pantalla.
+  - Al recargar: invalidar cache; recalcular capabilities.
   - No sobreescribir silenciosamente.
-- **Tests requeridos:** Simular respuesta 409; verificar que el banner aparece; que los
-  datos anteriores se mantienen visibles; que el botón "Recargar" funciona.
+- **Tests requeridos:**
+  - Simular 409 -> banner aparece; datos anteriores visibles.
+  - Botón Recargar -> invalida cache y recarga.
 - **Fuente SDB:** DAT-019, INT-006, API-006.
-- **Dependencias:** T-12, T-13, T-14.
+- **Dependencias:** T-14, T-16, T-17.
 
 ---
 
 ## Grupo 6 — Seguridad, aislamiento y audit
 
-### T-16 Añadir tests de autorización y tenant isolation
-- **Descripción:** Tests explícitos de seguridad:
-  - Actor sin `EXPEDIENT_VIEW` → use case lanza error; controller devuelve 403.
-  - Actor de Tenant-A solicita expediente de Tenant-B → 404 (no revela existencia).
-  - Token forjado / tenant forjado en body → rechazado server-side.
-  - `AuditoriaTab` no retorna datos a actor sin permiso de auditoría.
-- **Fuente SDB:** SEC-017, SEC-032, TQ-007, AGENTS.md.
-- **Dependencias:** T-05, T-09.
+### T-19 Tests de autorización y tenant isolation
+- **Descripción:**
+  - Sin EXPEDIENT_VIEW -> UC lanza error; controller 403.
+  - Tenant-A solicita expediente Tenant-B -> 404.
+  - Token forjado / tenant forjado en body -> rechazado.
+  - VALE_ARCHIVO_SM_1_14 + Archivista (no Director) -> 403.
+  - AuditoriaTab sin capability -> no retorna datos.
+  - Dispatch sin permiso DISPATCH -> 403.
+  - AcceptCustody por actor no receptor -> 403.
+- **Fuente SDB:** SEC-017, SEC-032, TQ-007, AGENTS.md,
+  DECISION-REGISTER OQ-EW-005, OQ-EW-006.
+- **Dependencias:** T-05, T-07, T-08, T-11.
 
-### T-17 Verificar audit trail completo
-- **Descripción:** Confirmar que todas las acciones del Workspace generan entrada en
-  `audit_log` con campos obligatorios: `actor_ref`, `action`, `resource_type`,
-  `resource_id`, `result`, `occurred_at`, `tenant` (implícito en schema), `request_id`.
-  - `GET /expedientes/{id}` → audit entry `EXPEDIENTE_VIEW`.
-  - Comandos de transición → audit entry del comando respectivo.
-  - Intentos de acceso no autorizados → audit entry de intento fallido.
-  - Verificar que audit_log no contiene datos C3 en campos de log (no en
-    `change_summary` sin protección).
-- **Tests requeridos:** Integration tests que verifican inserción en `audit_log`
-  tras cada operación.
+### T-20 Verificar audit trail completo
+- **Descripción:** Confirmar INSERT en audit_log para:
+  - GET /expedientes/{id} -> EXPEDIENTE_VIEW.
+  - POST /dispatch -> EXPEDIENTE_DISPATCHED.
+  - POST /accept-custody -> CUSTODY_ACCEPTED.
+  - Intento sin autorización -> intento fallido registrado.
+  - Verificar que audit_log no contiene datos C3 en campos de log.
+- **Tests requeridos (integration):** Verificar inserción tras cada operación.
 - **Fuente SDB:** SEC-038, DAT-012, AGENTS.md.
-- **Dependencias:** T-05, T-06, T-09.
+- **Dependencias:** T-05, T-07, T-08, T-11.
 
 ---
 
 ## Grupo 7 — E2E y calidad final
 
-### T-18 Añadir tests de integración PostgreSQL
-- **Descripción:** Tests de integración con PostgreSQL real (no mock) que cubran:
-  - `findById` y `findByNumero` del adapter.
-  - Timeline de movimientos con múltiples entradas.
-  - Verificación de `row_version` en optimistic locking.
-  - Aislamiento de tenant (query en schema correcto).
+### T-21 Tests de integración PostgreSQL
+- **Descripción:**
+  - findByNumero: PERR810604/10, PERR810604-10, PERR81060410 -> misma normalización.
+  - findByNumero con número que tiene 2 coincidencias -> array de 2.
+  - findByNumero con número inexistente -> array vacío.
+  - row_version en optimistic locking.
+  - Tenant isolation en queries.
 - **Fuente SDB:** TQ-005, TQ-007, steering/testing.md.
-- **Dependencias:** T-07, T-08.
+- **Dependencias:** T-09, T-10.
 
-### T-19 Añadir tests E2E Playwright
-- **Descripción:** Escenarios E2E mínimos (TQ-010):
-  1. Archivista abre Workspace de expediente existente → ve estado, ubicación y custodia.
-  2. Archivista abre Workspace de expediente inexistente → ve estado vacío descriptivo.
-  3. CommandBar muestra comando correcto según estado; comando ausente no aparece.
-  4. Conflicto de concurrencia (simular 409) → banner de conflicto visible; datos preservados.
-  5. Tab Auditoría oculto para rol sin permiso; visible para auditor.
-  6. Navegación completa por teclado (accesibilidad).
-- **Fuente SDB:** TQ-010, DEL-005, Volume-09 §07.
-- **Dependencias:** T-14, T-15, T-16.
+### T-22 Tests E2E Playwright
+- **Descripción:** Escenarios mínimos (TQ-010 v0.2.0 + nuevos):
+  1. Archivista busca PERR810604/10 -> workspace abre directamente.
+  2. Archivista busca PERR810604-10 -> misma normalización, mismo expediente.
+  3. Búsqueda con N=2 -> lista de desambiguación; sin auto-selección.
+  4. Búsqueda con N=0 -> estado vacío.
+  5. Expediente DISPONIBLE -> badge correcto; EN_BUSQUEDA NO aparece como badge.
+  6. Dispatch -> EstadoOperativo cambia a EN_TRASLADO; acceptedAt null.
+  7. AcceptCustody -> EstadoOperativo cambia a EN_CONSULTA; acceptedAt visible.
+  8. CommandBar con CONSULTA_PROGRAMADA + Archivista -> ABRIR_PRESTAMO disponible.
+  9. CommandBar con VALE_ARCHIVO_SM_1_14 + Archivista (no Dir.) -> ABRIR_PRESTAMO ausente.
+  10. Conflicto 409 -> banner de conflicto visible; datos preservados.
+  11. Tab Auditoría oculto sin permiso; visible con permiso.
+  12. Navegación completa por teclado.
+- **Fuente SDB:** TQ-010 v0.2.0, DEL-005, Volume-09 §07.
+- **Dependencias:** T-17, T-18, T-19.
 
-### T-20 Ejecutar pipeline CI y verificar quality gates
-- **Descripción:** Ejecutar pipeline completo (`.github/workflows/ci.yml`) y confirmar:
+### T-23 Ejecutar pipeline CI y quality gates
+- **Descripción:** Pipeline completo y verificar:
   - Build sin errores.
-  - Todos los tests pasan (unit, integration, E2E).
-  - Sin violaciones de lint / type-check.
+  - Todos los tests pasan.
+  - Sin violaciones de lint/type-check.
   - Sin datos C3 en logs de test.
-  - Cobertura de acceptance criteria (AC-EW-001 a AC-EW-009) verificada.
-- **Fuente SDB:** TQ-017 (quality gates), OS-018 (Definition of Done).
+  - Todos los ítems del READY-GATE.md marcados.
+  - AC-EW-001 a AC-EW-017 cubiertas.
+- **Fuente SDB:** TQ-017, OS-018.
 - **Dependencias:** Todas las tareas anteriores.
 
 ---
@@ -351,38 +469,65 @@ OQ-EW-DESIGN-001 a OQ-EW-DESIGN-005.
 ## Resumen de dependencias
 
 ```
-T-00 (trazabilidad)
- └─ independiente (ejecutar antes o en paralelo)
+T-00 (trazabilidad) -- independiente
 
-T-01 (value objects)
- └─ T-02 (aggregate)
-      ├─ T-03 (port) ──────────────────────┐
-      │    ├─ T-07 (adapter) ←─ T-08       │
-      │    └─ T-06 (timeline use case)     │
-      └─ T-04 (capabilities service)       │
-           └─ T-05 (GetExpediente UC) ─────┤
-                └─ T-09 (controller) ──────┤
-                     └─ T-10 (OpenAPI)     │
-                          └─ T-11 (FE structure)
-                               ├─ T-12 (Header)
-                               ├─ T-13 (CommandBar)
-                               └─ T-14 (Tabs)
-                                    └─ T-15 (Concurrency UX)
+T-01 (VOs)
+  T-02 (aggregate)
+    T-03 (port)
+      T-07 (DispatchExpediente UC) --|
+      T-08 (AcceptCustody UC) -------|
+      T-09 (adapter) <- T-10 (migración)
+      T-06 (timeline UC)
+      T-04 (capabilities) <- T-05 (GetExpediente UC)
+        T-11 (controller) <- T-12 (OpenAPI)
+          T-13 (FE estructura)
+            T-14 (Header)
+            T-15 (DisambiguationList)
+            T-16 (CommandBar)
+              T-17 (Tabs)
+                T-18 (Concurrency UX)
 
-T-16 (auth + tenant tests) ← T-05, T-09
-T-17 (audit trail)         ← T-05, T-06, T-09
-T-18 (integration tests)   ← T-07, T-08
-T-19 (E2E Playwright)      ← T-14, T-15, T-16
-T-20 (CI pipeline)         ← todas
+T-19 (auth/tenant tests) <- T-05, T-07, T-08, T-11
+T-20 (audit trail) <- T-05, T-07, T-08, T-11
+T-21 (integration PG) <- T-09, T-10
+T-22 (E2E) <- T-17, T-18, T-19
+T-23 (CI pipeline) <- todas
 ```
 
 ---
 
 ## Notas de implementación
 
-- **Ninguna tarea debe inventar comportamiento:** si un invariante, permiso o transición
-  de estado no está en el SDB o en los OQ resueltos, parar y escalar (AGENTS.md).
-- **Las tareas T-01 a T-09 son backend-primeras:** el frontend (T-11+) no puede
-  implementar capabilities que el backend no devuelve.
-- **T-08 (migración) precede a T-07 (adapter):** no adaptar a un schema que no existe.
-- **T-00 no es opcional:** la trazabilidad completa es requisito de Definition of Done.
+- T-01 ya tiene las decisiones de OQ-EW-001 y DEC-EW-STATE-001 para implementar
+  directamente. No hay TODO provisional para esas decisiones.
+- T-04 ya tiene la lógica de FuenteHabilitanteSalida para implementar directamente
+  (OQ-EW-005 RESOLVED). No hay política conservadora temporal.
+- T-07 y T-08 implementan los nuevos comandos de despacho y aceptación de custodia
+  (OQ-EW-006 RESOLVED).
+- T-09 devuelve array en findByNumero (nunca escalar). OQ-EW-007 RESOLVED.
+- Las OQ no bloqueantes (OQ-EW-002..004, OQ-EW-008..010) tienen decisiones provisionales
+  documentadas en requirements.md §6; implementar con esas provisiones.
+- Ninguna tarea debe inventar comportamiento fuera del SDB o las decisiones resueltas.
+
+---
+
+## Implementation Readiness
+
+```yaml
+spec_version: "0.3.0"
+blocking_open_questions: []
+non_blocking_open_questions:
+  - OQ-EW-002
+  - OQ-EW-003
+  - OQ-EW-004
+  - OQ-EW-008
+  - OQ-EW-009
+  - OQ-EW-010
+  - OQ-EW-DESIGN-001
+  - OQ-EW-DESIGN-002
+  - OQ-EW-DESIGN-003
+  - OQ-EW-DESIGN-004
+  - OQ-EW-DESIGN-005
+contradictions_found: []
+implementation_ready: true
+```

@@ -1,42 +1,29 @@
 ---
 spec: expediente-workspace
-version: "0.2.0"
+version: "0.3.0"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-14"
 traceability_model: "OS-007 / SDD-006"
-chain: "Source/SDB → Business Rule → Workflow → Use Case → SPEC → API → UI → Test"
+chain: "Source/SDB -> BR -> WF -> UC -> SPEC -> REQ -> API -> UI -> Test"
+decisions_applied:
+  - "OQ-EW-001 RESOLVED"
+  - "OQ-EW-005 RESOLVED"
+  - "OQ-EW-006 RESOLVED"
+  - "OQ-EW-007 RESOLVED"
+  - "DEC-EW-STATE-001 ACCEPTED"
 requires:
-  - requirements.md (v0.2.0)
-  - design.md (v0.2.0)
-  - tasks.md (v0.2.0)
+  - requirements.md (v0.3.0)
+  - design.md (v0.3.0)
+  - tasks.md (v0.3.0)
 ---
 
 # Expediente Workspace — Traceability
 
 > **Modelo de referencia (OS-007, SDD-006):**
-> `Source/SDB → Business Rule → Workflow → Use Case → SPEC → API → UI → Test`
+> `Source/SDB -> BR -> WF -> UC -> SPEC -> REQ -> API -> UI -> Test`
 >
-> Toda capacidad primaria del Workspace debe tener una cadena completa.
-> Las celdas marcadas `[PENDIENTE]` indican que el eslabón existe en el SDB pero
-> no ha sido confirmado/detallado aún, o depende de un OQ abierto.
-> **No implementar** ninguna capacidad con eslabones `[PENDIENTE]` en BR, UC o SPEC.
-
----
-
-## Leyenda de columnas
-
-| Columna | Contenido |
-|---------|-----------|
-| **ID** | Identificador de la cadena de trazabilidad en este workspace |
-| **Source / SDB** | Documento SDB de origen (norma, NOM, política institucional o decisión de dominio) |
-| **Business Rule** | Invariante o regla de negocio del dominio (DDD-009) |
-| **Workflow** | Flujo de trabajo del dominio (Volume-04 / V05-41) |
-| **Use Case** | Use Case del Volume-05 |
-| **SPEC** | Spec funcional del Volume-05 |
-| **REQ** | Requisito en este spec (requirements.md) |
-| **API** | Endpoint o contrato (Volume-08 / API-011) |
-| **UI** | Componente / pantalla (Volume-09 / APP-003, design.md) |
-| **Test** | Tipo y referencia de test requerido (Volume-10 / tasks.md) |
+> Las celdas marcadas [PENDIENTE] dependen de OQ no bloqueantes.
+> Las cadenas con [RESUELTO] indican que el eslabón fue completado en v0.3.0.
 
 ---
 
@@ -46,242 +33,318 @@ requires:
 
 | Eslabón | Referencia | Detalle |
 |---------|-----------|---------|
-| **Source / SDB** | DDD-013, DAT-006, NOM-004-SSA3-2012 (custodia de expediente), LGPDPPSO | Expediente tiene identificador institucional y situación operativa coherente |
-| **Business Rule** | INV-EXP-001, INV-EXP-002 | (1) Expediente tiene identificador institucional. (2) Mantiene situación operativa coherente entre disponibilidad, ubicación y custodia |
-| **Workflow** | WF (Read Models — V05-41 fila SPEC-009) | Flujo de consulta de situación actual |
-| **Use Case** | UC-018 — Consultar Situación del Expediente | Read model: número, paciente mínimo, estado, ubicación, custodia, préstamo activo, solicitud activa, incidencias, historial |
-| **SPEC** | SPEC-009 FR-VIEW-001, FR-VIEW-002, FR-VIEW-003, FR-VIEW-004, FR-VIEW-005, FR-VIEW-006 | Búsqueda por identificador; situación actual; ubicación; custodia; préstamo activo; incidencias |
-| **REQ** | REQ-EW-001, REQ-EW-002, REQ-EW-003, REQ-EW-004, REQ-EW-005, REQ-EW-006, REQ-EW-007 | Recuperar expediente; búsqueda; ubicación; custodia; préstamo activo; solicitud activa; incidencias |
-| **API** | `GET /api/v1/expedientes/{id}` (API-011) | Read model completo con `capabilities[]` |
-| **UI** | `ExpedienteHeader` (design.md §5.1/5.2), `ResumenTab` (APP-003) | Header above-the-fold; tab Resumen |
-| **Test** | AC-EW-001 (requirements.md); T-05/T-09/T-12 (tasks.md); TQ-010 E2E "abrir workspace" | Unit: GetExpediente UC. Integration: PostgresRepo. API contract: 200. E2E: Playwright escenario 1 |
+| **Source / SDB** | DDD-013, DAT-006 v0.2.0, NOM-004-SSA3-2012, LGPDPPSO | Expediente con identificador institucional y situación operativa coherente |
+| **Business Rule** | INV-EXP-001, INV-EXP-002, INV-EXP-004 | Identificador institucional; coherencia operativa; EstadoOperativo con 6 valores válidos |
+| **Workflow** | WF (Read Models — V05-41 SPEC-009) | Flujo de consulta |
+| **Use Case** | UC-018 v0.2.0 | Read model: numero, paciente mínimo, EstadoOperativo (6 valores), ubicación, custodia, préstamo, solicitud, incidencias |
+| **SPEC** | SPEC-009 v0.2.0 FR-VIEW-001..007 | Situación actual completa |
+| **REQ** | REQ-EW-001, REQ-EW-003..007 | Recuperar; ubicación; custodia; préstamo; solicitud; incidencias |
+| **API** | GET /api/v1/expedientes/{id} (API-011 v0.2.0) | Read model con capabilities[] |
+| **UI** | ExpedienteHeader (design.md §5.1), ResumenTab (APP-003 v0.2.0) | Header above-the-fold; badges de 6 estados |
+| **Test** | AC-EW-001; T-05/T-11/T-14; TQ-010 E2E escenario 5 | Unit UC, integration PG, E2E Playwright |
 
 ---
 
-### TR-002 — Búsqueda por número de expediente
+### TR-002 — Búsqueda por número con normalización y desambiguación
 
 | Eslabón | Referencia | Detalle |
 |---------|-----------|---------|
-| **Source / SDB** | SPEC-009 FR-VIEW-001, DAT-006 (`expediente_numero` UNIQUE per tenant), OQ-EW-001 | Búsqueda rápida por identificadores permitidos |
-| **Business Rule** | INV-EXP-001 | Expediente tiene identificador institucional único por tenant |
+| **Source / SDB** | SRC-INT-002, SRC-INT-003, DECISION-REGISTER OQ-EW-001, OQ-EW-007 | Formato RFC_BASE_10+SEP+COD_2; múltiples derechohabientes posibles |
+| **Business Rule** | BR-016 (formato), BR-017 (no único; desambiguación), INV-EXP-003 | No asumir unicidad; nunca auto-seleccionar si N>1 |
 | **Workflow** | WF (Read Models) | — |
-| **Use Case** | UC-018 | — |
-| **SPEC** | SPEC-009 FR-VIEW-001 | Búsqueda rápida por identificadores permitidos |
-| **REQ** | REQ-EW-002 | Búsqueda por número de expediente |
-| **API** | `GET /api/v1/expedientes?numero={n}` (API-011) | Retorna lista o apertura directa |
-| **UI** | Búsqueda global / entrada del workspace (Volume-09 §39) | [PENDIENTE — diseño de flujo de entrada al workspace no detallado en APP-003] |
-| **Test** | T-05/T-09 (tasks.md) | Unit: findByNumero. API contract: happy path, not found. OQ-EW-001 bloquea validación de formato |
-
-> ⚠️ **OQ-EW-001 abierta:** El formato exacto del identificador (regex, longitud, prefijo) no
-> está confirmado. La validación de entrada no puede finalizarse hasta resolución.
+| **Use Case** | UC-018 v0.2.0 | Búsqueda 0..N; desambiguación manual |
+| **SPEC** | SPEC-009 v0.2.0 FR-VIEW-001 | 0..N; variantes de separador; desambiguación |
+| **REQ** | REQ-EW-002 | Búsqueda 0..N; normalización; desambiguación |
+| **API** | GET /api/v1/expedientes?numero= -> {data[], total} (API-011 v0.2.0) | Colección; N=0 HTTP 200 vacío |
+| **UI** | useExpedienteSearch (normaliza), DisambiguationList (N>1), apertura directa (N=1) | design.md §5.3, APP-003 v0.2.0 |
+| **Test** | AC-EW-002/003/004; T-09/T-11/T-15/T-21/T-22 (escenarios 1..4) | Unit VO normalización; integration findByNumero; E2E variantes |
 
 ---
 
-### TR-003 — Historial de movimientos operativos (Timeline)
+### TR-003 — EstadoOperativo correcto (DEC-EW-STATE-001)
 
 | Eslabón | Referencia | Detalle |
 |---------|-----------|---------|
-| **Source / SDB** | DDD-020, DAT-011, DDD-024 (Movimiento ≠ Audit) | MovimientoExpediente registra trayectoria física/operativa |
-| **Business Rule** | DDD-020 (append-oriented); "Movimiento no es Audit" (DDD-024, DAT-012) | Trayectoria es distinta del audit técnico y del préstamo |
-| **Workflow** | WF (Read Models — V05-41 SPEC-009) | — |
-| **Use Case** | UC-018 (historial relevante) | — |
-| **SPEC** | SPEC-009 FR-VIEW-007 | Historial relevante del expediente |
-| **REQ** | REQ-EW-008 | Mostrar historial de movimientos; separado de audit |
-| **API** | `GET /api/v1/expedientes/{id}/timeline` (API-011) | Movimientos paginados por `occurred_at DESC` |
-| **UI** | `MovimientosTab` (design.md §5.2, APP-003) | Solo trayectoria operativa; no eventos técnicos |
-| **Test** | AC-EW-007 (requirements.md); T-06/T-18 (tasks.md) | Unit: GetExpedienteTimeline. Integration: no cross-tenant; no mezcla audit. E2E: Playwright |
+| **Source / SDB** | DECISION-REGISTER DEC-EW-STATE-001, DDD-012 v0.2.0, BIZ-007 v0.2.0 | 6 valores aceptados; EN_BUSQUEDA y PRESTADO excluidos |
+| **Business Rule** | INV-EXP-004 | EstadoOperativo solo con los 6 valores; EN_BUSQUEDA en Solicitud; PRESTADO en Préstamo |
+| **Workflow** | V04 workflow-state-matrix v0.2.0 | DISPONIBLE->APARTADO->EN_TRASLADO->EN_CONSULTA->EN_TRASLADO->DISPONIBLE |
+| **Use Case** | UC-018 v0.2.0 | estadoOperativo en read model |
+| **SPEC** | SPEC-009 v0.2.0 FR-VIEW-002 | EstadoOperativo con 6 valores |
+| **REQ** | REQ-EW-001, REQ-EW-009 | Estado en read model; capabilities por estado |
+| **API** | estadoOperativo en GET /expedientes/{id} como enum de 6 valores | — |
+| **UI** | ExpedienteHeader badges; CommandBar por estado | design.md §5.2 |
+| **Test** | AC-EW-005/006/007; T-01/T-02/T-04/T-14/T-22 (escenarios 5..7) | Unit VO/aggregate rechaza EN_BUSQUEDA/PRESTADO; E2E badges correctos |
 
 ---
 
-### TR-004 — Barra de comandos contextual (capabilities)
+### TR-004 — Despacho (DispatchExpediente -> EN_TRASLADO)
 
 | Eslabón | Referencia | Detalle |
 |---------|-----------|---------|
-| **Source / SDB** | DDD-010 (Commands), DDD-012 (State Machines), SDD-005 (Permission Model), INT-001, DS-014, DEL-002 | Comandos válidos derivados de estado + rol + contexto; no calculados en frontend |
-| **Business Rule** | INV-EXP-002 (coherencia operativa); permiso = `sujeto + acción + tenant + recurso + contexto` (SEC-017) | Solo transiciones válidas en el estado actual + permisos del actor |
-| **Workflow** | DDD-012 (máquinas de estado Solicitud y Préstamo) | Transiciones válidas por estado |
-| **Use Case** | UC-018 (capabilities derivadas del estado) | — |
-| **SPEC** | SPEC-009 + V05-39 (Permission × Action Matrix) | Acciones según rol |
-| **REQ** | REQ-EW-009 | Barra de comandos contextual; capabilities calculadas server-side |
-| **API** | `capabilities[]` en respuesta de `GET /api/v1/expedientes/{id}` (API-011, design.md §4.3) | Array de nombres de capability calculado en `ExpedienteCapabilityService` |
-| **UI** | `CommandBar` (design.md §5.3, §7.1 DEL-002) | Renderiza solo capabilities recibidas; no calcula dominio |
-| **Test** | AC-EW-003 (requirements.md); T-04/T-13 (tasks.md) | Unit: CapabilityService (por estado y rol). Component: CommandBar renderiza según capabilities. E2E: Playwright escenario 3 |
-
-> ⚠️ **OQ-EW-005 abierta:** Permisos exactos para `ABRIR_PRESTAMO` según tipo de solicitud
-> no están confirmados. `ExpedienteCapabilityService` debe implementarse con política
-> conservadora hasta resolución.
+| **Source / SDB** | DECISION-REGISTER OQ-EW-006, BIZ-008 v0.2.0, SRC-INT-002 | Salida física de Archivo; mensajero porta hoja diaria |
+| **Business Rule** | BR-019, INV-EXP-005 | Despacho y aceptación son eventos distintos |
+| **Workflow** | WF-005 v0.2.0 Fase 1 | DispatchExpediente -> ExpedienteDispatched -> EN_TRASLADO |
+| **Use Case** | UC (DispatchExpediente — design.md §7.3) | Validar APARTADO; rowVersion; custody_accepted_at -> null |
+| **SPEC** | WF-005 v0.2.0 | — |
+| **REQ** | REQ-EW-011 | Despacho con evento y transición de estado |
+| **API** | POST /api/v1/expedientes/{id}/dispatch (API-011 v0.2.0) | 409 si rowVersion o estado incorrecto |
+| **UI** | CommandBar capability DISPATCH; badge EN_TRASLADO; acceptedAt null en ResumenTab | — |
+| **Test** | AC-EW-005/011; T-07/T-11/T-19/T-22 (escenario 6) | Unit UC; API contract; E2E despacho |
 
 ---
 
-### TR-005 — Control de acceso y autorización (EXPEDIENT_VIEW)
+### TR-005 — Aceptación de custodia (AcceptCustody -> EN_CONSULTA)
 
 | Eslabón | Referencia | Detalle |
 |---------|-----------|---------|
-| **Source / SDB** | SEC-017 (RBAC + Contextual), SDD-005, V05-39, NOM-004-SSA3-2012, LGPDPPSO | Autorización = sujeto + permiso + tenant + recurso + contexto negocio |
-| **Business Rule** | `EXPEDIENT_VIEW` requerido; backend re-verifica siempre | Sin delegación al frontend (AGENTS.md) |
-| **Workflow** | — | Transversal a todos los flujos |
-| **Use Case** | UC-018 (precondición: usuario autorizado) | — |
-| **SPEC** | SDD-005 acción `EXPEDIENT_VIEW` | — |
-| **REQ** | REQ-EW-001 (precondición), REQ-EW-013 (tenant isolation) | — |
-| **API** | Middleware de autenticación/autorización en todos los endpoints `/api/v1/expedientes/*` | 403 si falta permiso; 404 si cross-tenant |
-| **UI** | — (aplicado server-side; UI solo recibe 403/404) | — |
-| **Test** | AC-EW-002, AC-EW-005 (requirements.md); T-16 (tasks.md); TQ-007 | Unit: UC lanza error sin permiso. API: 403 sin token; 404 cross-tenant. Tenant isolation gate |
+| **Source / SDB** | DECISION-REGISTER OQ-EW-006, DDD-018 v0.2.0, WF-005 v0.2.0 Fase 3 | Receptor autorizado confirma recepción; acción autenticada y auditable |
+| **Business Rule** | BR-019, INV-EXP-005 | CustodyAccepted es momento distinto de despacho |
+| **Workflow** | WF-005 v0.2.0 Fase 3 | AcceptCustody -> CustodyAccepted -> EN_CONSULTA |
+| **Use Case** | UC (AcceptCustody — design.md §7.4) | Validar EN_TRASLADO; rowVersion; custody_accepted_at -> now() |
+| **SPEC** | WF-005 v0.2.0, SPEC-009 v0.2.0 FR-VIEW-004 | Custodia con acceptedAt |
+| **REQ** | REQ-EW-004, REQ-EW-012 | Custodia con distinción traslado/aceptada |
+| **API** | POST /api/v1/expedientes/{id}/accept-custody (API-011 v0.2.0) | — |
+| **UI** | Badge EN_CONSULTA; acceptedAt visible en ResumenTab; ACCEPT_CUSTODY en capabilities receptor | — |
+| **Test** | AC-EW-005; T-08/T-11/T-19/T-22 (escenario 7) | Unit UC; E2E custodia aceptada |
 
 ---
 
-### TR-006 — Aislamiento multi-tenant
+### TR-006 — Autorización por FuenteHabilitanteSalida
 
 | Eslabón | Referencia | Detalle |
 |---------|-----------|---------|
-| **Source / SDB** | SEC-032, API-005, AGENTS.md (non-negotiable) | database-per-tenant; TenantContext server-side; no cross-tenant queries |
-| **Business Rule** | "Tenant database access requires server-resolved TenantContext. No cross-tenant queries." (AGENTS.md) | Ningún valor de tenant del body de la petición |
-| **Workflow** | — | Transversal |
-| **Use Case** | Todos los use cases del workspace | TenantContext como argumento; no de HTTP body |
-| **SPEC** | — | Transversal a toda la spec |
-| **REQ** | REQ-EW-013 | Aislamiento multi-tenant |
-| **API** | API-005 (Tenant Resolution); resolución en controller antes de llamar use case | Tenant del host/subdomain o claim de sesión validado contra control DB |
-| **UI** | — | — |
-| **Test** | AC-EW-005 (requirements.md); T-16 (tasks.md); TQ-007 (gate crítico) | Actor Tenant-A no obtiene expediente Tenant-B; forged tenant rechazado; caches/exports scoped |
+| **Source / SDB** | DECISION-REGISTER OQ-EW-005, BIZ-010 v0.2.0, BIZ-016 v0.2.0, SRC-INT-003 | CONSULTA_PROGRAMADA / VALE_ARCHIVO_SM_1_14 / ORDEN_SUPERIOR |
+| **Business Rule** | BR-018, INV-LOAN-003 | Fuente habilitante determina actores y plazo |
+| **Workflow** | WF-006 v0.2.0 | OpenLoan evalúa FuenteHabilitanteSalida |
+| **Use Case** | UC-010 v0.2.0 | Verificar actor según fuente |
+| **SPEC** | SPEC-006 v0.2.0 FR-LOAN-007 | Autorización por fuente |
+| **REQ** | REQ-EW-010 | Préstamo con fuente habilitante |
+| **API** | POST /api/v1/prestamos con fuenteHabilitante; 403 INSUFFICIENT_ENABLING_SOURCE | — |
+| **UI** | CommandBar: ABRIR_PRESTAMO incluida/excluida según FuenteHabilitante + rol; ResumenTab muestra fuente | — |
+| **Test** | AC-EW-008/009/010; T-04/T-11/T-19/T-22 (escenarios 8/9) | Unit CapabilityService por fuente; E2E actor correcto/incorrecto |
 
 ---
 
-### TR-007 — Concurrencia optimista (conflictos de estado)
+### TR-007 — Historial de movimientos operativos
 
 | Eslabón | Referencia | Detalle |
 |---------|-----------|---------|
-| **Source / SDB** | DAT-019, API-006, INT-006 | `row_version` en aggregate roots; conflicto → HTTP 409 con metadata |
-| **Business Rule** | INV-EXP-002, INV-LOAN-002 (Préstamo cerrado no vuelve a activo) | Transiciones críticas no pueden sobreescribirse silenciosamente |
-| **Workflow** | Transversal a TransferCustody, OpenLoan, ResolveIncident | — |
-| **Use Case** | UC-018 (read), UC-016 (resolver), UC-010 (abrir préstamo) | Acciones de comando requieren versión del cliente |
-| **SPEC** | SPEC-005, SPEC-006, SPEC-004 | Transferencia custodia, Préstamo, Incidencias |
-| **REQ** | REQ-EW-012 | Manejo de concurrencia y conflictos |
-| **API** | HTTP 409 con `currentVersion` (API-006, DAT-019); cliente envía `row_version` en comandos críticos | — |
-| **UI** | Estado `conflict` + banner + botón "Recargar" (design.md §5.4, INT-006); `useExpediente` invalida cache | `ConcurrencyBanner` dentro del Workspace |
-| **Test** | AC-EW-004 (requirements.md); T-15 (tasks.md) | Component: simular 409 → banner aparece, datos preservados. E2E: Playwright escenario 4 |
+| **Source / SDB** | DDD-020, DAT-011, DDD-011 v0.2.0 | MovimientoExpediente append-only; distinto de audit_log |
+| **Business Rule** | DDD-020; "Movimiento != Audit" | Incluye DISPATCHED, CUSTODY_ACCEPTED, etc. |
+| **Workflow** | WF (Read Models) | — |
+| **Use Case** | UC-018 v0.2.0 (historial relevante) | — |
+| **SPEC** | SPEC-009 v0.2.0 FR-VIEW-007 | Trayectoria física/operativa |
+| **REQ** | REQ-EW-008 | Historial separado de audit |
+| **API** | GET /api/v1/expedientes/{id}/timeline | Paginado por occurred_at DESC |
+| **UI** | MovimientosTab (design.md §5.2); muestra DISPATCHED, CUSTODY_ACCEPTED | — |
+| **Test** | AC-EW-015; T-06/T-17/T-21 | Unit GetTimeline; Integration no-mezcla; Component MovimientosTab |
 
 ---
 
-### TR-008 — Integridad del audit trail
+### TR-008 — Barra de comandos contextual
 
 | Eslabón | Referencia | Detalle |
 |---------|-----------|---------|
-| **Source / SDB** | SEC-038, DAT-012, NOM-004-SSA3-2012 (trazabilidad de acceso) | Append-only; actor y tenant obligatorios; sin UPDATE/DELETE desde rol aplicación |
-| **Business Rule** | "Toda acción registra actor, tenant, recurso y resultado" (SEC-038) | — |
+| **Source / SDB** | DDD-010 v0.2.0, DDD-012 v0.2.0, SDD-005, DS-014, DEL-002 | Comandos derivados de estado + rol + contexto + fuente habilitante |
+| **Business Rule** | INV-EXP-002, SEC-017 v0.2.0 (tupla extendida) | Solo transiciones válidas + permisos del actor + FuenteHabilitanteSalida |
+| **Workflow** | DDD-012 v0.2.0 (máquinas de estado) | — |
+| **Use Case** | UC-018 (capabilities derivadas) | — |
+| **SPEC** | SPEC-009 + PERM-MATRIX v0.2.0 | — |
+| **REQ** | REQ-EW-009 | capabilities[] server-side |
+| **API** | capabilities[] en GET /expedientes/{id} | — |
+| **UI** | CommandBar (design.md §5.3) | Renderiza solo capabilities recibidas |
+| **Test** | AC-EW-011; T-04/T-16/T-22 (escenario 8/9/10) | Unit CapabilityService; Component CommandBar |
+
+---
+
+### TR-009 — Autorización y control de acceso
+
+| Eslabón | Referencia | Detalle |
+|---------|-----------|---------|
+| **Source / SDB** | SEC-017 v0.2.0, SDD-005, NOM-004-SSA3-2012, LGPDPPSO | Tupla: sujeto+permiso+tenant+recurso+contexto+fuente |
+| **Business Rule** | EXPEDIENT_VIEW requerido; backend re-verifica siempre | — |
 | **Workflow** | Transversal | — |
-| **Use Case** | Paso 8 de GetExpediente (design.md §7.2); paso equivalente en GetTimeline | — |
-| **SPEC** | SPEC-010 (Auditoría Operativa) | — |
-| **REQ** | NFR-EW-003 | Audit de toda acción de comando |
-| **API** | INSERT a `audit_log` dentro de cada Use Case (no en controller) | Campos: actor_ref, action, resource_type, resource_id, result, occurred_at, request_id |
-| **UI** | `AuditoriaTab` (design.md §5.2) — muestra DAT-012; separado de `MovimientosTab` | Solo roles autorizados (OQ-EW-003) |
-| **Test** | AC-EW-006, AC-EW-007 (requirements.md); T-17 (tasks.md) | Integration: verificar inserción en audit_log tras GET expediente. Component: AuditoriaTab oculto sin permiso |
-
-> ⚠️ **OQ-EW-003 abierta:** Lista exacta de roles con acceso al tab Auditoría pendiente
-> de confirmación (OQ-UX-008). Implementar con capability flag hasta resolución.
+| **Use Case** | UC-018 paso 1 | — |
+| **REQ** | REQ-EW-001 (precondición), REQ-EW-016 (tenant) | — |
+| **API** | 403 sin permiso; 404 cross-tenant | — |
+| **Test** | AC-EW-013; T-19; TQ-007 | Unit UC; API contract; Tenant isolation gate |
 
 ---
 
-### TR-009 — Privacidad de datos C3 en presentación
+### TR-010 — Aislamiento multi-tenant
 
 | Eslabón | Referencia | Detalle |
 |---------|-----------|---------|
-| **Source / SDB** | SEC-003 (C3 Restricted), INT-009, LGPDPPSO, NOM-004-SSA3-2012 | Datos de paciente son C3; minimización en display |
-| **Business Rule** | "Display minimum patient data required for task" (INT-009); datos C3 no en logs | — |
-| **Workflow** | — | Transversal |
-| **Use Case** | UC-018 ("paciente mínimo" en read model) | — |
-| **SPEC** | SPEC-009 Non-goal: "No mostrar diagnósticos o notas clínicas" | — |
-| **REQ** | REQ-EW-011, NFR-EW-005 | Privacidad en presentación; datos C3 fuera de logs |
-| **API** | Campo `pacienteRef.displayLabel` mínimo en read model (OQ-EW-002); no diagnósticos en ningún endpoint | — |
-| **UI** | `ExpedienteHeader` (design.md §5.2); datos C3 no en `document.title`, URL, toasts, exports | — |
-| **Test** | AC-EW-001 (non-goal), AC-EW-008 (requirements.md); T-12 (tasks.md) | Component: verificar ausencia de datos clínicos en render. Unit: UC no devuelve campos clínicos |
-
-> ⚠️ **OQ-EW-002 abierta:** Campo mínimo de referencia de paciente permitido en el
-> Workspace pendiente de confirmación (OQ-SPEC-012, SEC-003, INT-009).
+| **Source / SDB** | SEC-032, API-005, AGENTS.md | database-per-tenant; TenantContext server-side |
+| **Business Rule** | "No cross-tenant queries" (AGENTS.md) | — |
+| **REQ** | REQ-EW-016 | — |
+| **API** | API-005; tenant del host/claim de sesión | — |
+| **Test** | AC-EW-013; T-19; T-21; TQ-007 | Integration PG; E2E; tenant isolation gate |
 
 ---
 
-### TR-010 — Accesibilidad y navegación por teclado
+### TR-011 — Concurrencia optimista
 
 | Eslabón | Referencia | Detalle |
 |---------|-----------|---------|
-| **Source / SDB** | Volume-09 §07 (keyboard-ux), DEL-005 (UX acceptance criteria), §04 (accessibility) | Todos los flujos core alcanzables con teclado; foco visible |
-| **Business Rule** | — | Requisito de accesibilidad operativa |
-| **Workflow** | — | Transversal |
-| **Use Case** | — | — |
-| **SPEC** | — | — |
-| **REQ** | REQ-EW-014 | Accesibilidad y navegación por teclado |
-| **API** | — | — |
-| **UI** | `CommandBar` (Enter/Space), tabs (Tab/flechas), `ExpedienteHeader` (ARIA), `AuditoriaTab` (foco) | design.md §5.3 |
-| **Test** | AC-EW-009 (requirements.md); T-13/T-19 (tasks.md); TQ-012 (Volume-10) | Component: keyboard nav en CommandBar. E2E: Playwright escenario 6 (teclado + foco visible) |
+| **Source / SDB** | DAT-019, API-006, INT-006 | row_version; conflicto -> HTTP 409 |
+| **Business Rule** | INV-EXP-002, INV-LOAN-002 | Transiciones críticas no sobreescriben |
+| **REQ** | REQ-EW-015 | — |
+| **API** | HTTP 409 con currentVersion (API-006) | DispatchExpediente, AcceptCustody, OpenLoan, etc. |
+| **UI** | Banner de conflicto; Recargar; preservar contexto (design.md §5.4) | — |
+| **Test** | AC-EW-012; T-18/T-22 (escenario 10) | Component 409; E2E concurrencia |
 
 ---
 
-## Matriz de cobertura REQ → Cadena
+### TR-012 — Integridad del audit trail
 
-| REQ | Cadena(s) que lo cubre(n) | Estado |
-|-----|--------------------------|--------|
-| REQ-EW-001 | TR-001, TR-005 | ✅ Cubierto |
-| REQ-EW-002 | TR-002 | ⚠️ OQ-EW-001 bloquea validación |
-| REQ-EW-003 | TR-001 | ⚠️ OQ-EW-008 (ubicaciones temporales) |
-| REQ-EW-004 | TR-001 | ⚠️ OQ-EW-004 / OQ-DOM-003 |
-| REQ-EW-005 | TR-001 | ✅ Cubierto |
-| REQ-EW-006 | TR-001 | ✅ Cubierto |
-| REQ-EW-007 | TR-001 | ⚠️ OQ-EW-004 (NoLocalizado → Incidencia) |
-| REQ-EW-008 | TR-003 | ⚠️ OQ-DOM-001 (schema de Movimiento) |
-| REQ-EW-009 | TR-004 | ⚠️ OQ-EW-005 (permisos préstamo) |
-| REQ-EW-010 | TR-008 | ⚠️ OQ-EW-003 (roles de Auditoría) |
-| REQ-EW-011 | TR-009 | ⚠️ OQ-EW-002 (campo mínimo paciente) |
-| REQ-EW-012 | TR-007 | ✅ Cubierto |
-| REQ-EW-013 | TR-006 | ✅ Cubierto |
-| REQ-EW-014 | TR-010 | ✅ Cubierto |
-| NFR-EW-001 | TR-001 (performance) | [PENDIENTE — SLA confirmación en UAT] |
-| NFR-EW-002 | TR-005 | ✅ Cubierto |
-| NFR-EW-003 | TR-008 | ✅ Cubierto |
-| NFR-EW-004 | TR-006 | ✅ Cubierto |
-| NFR-EW-005 | TR-009 | ✅ Cubierto |
-| NFR-EW-006 | TR-007 | ✅ Cubierto |
+| Eslabón | Referencia | Detalle |
+|---------|-----------|---------|
+| **Source / SDB** | SEC-038, DAT-012, NOM-004-SSA3-2012 | Append-only; actor y tenant obligatorios |
+| **Business Rule** | "Toda acción registra actor, tenant, recurso y resultado" | — |
+| **REQ** | NFR-EW-003 | — |
+| **API** | INSERT audit_log dentro de cada UC | — |
+| **UI** | AuditoriaTab (solo roles autorizados) | — |
+| **Test** | AC-EW-014/015; T-20 | Integration: INSERT tras cada operación |
 
 ---
 
-## Matriz de cobertura AC → Test
+### TR-013 — Privacidad de datos C3
 
-| AC | Tipo de test | Tarea | Estado |
-|----|-------------|-------|--------|
-| AC-EW-001 | E2E Playwright | T-19 | [PENDIENTE implementación] |
-| AC-EW-002 | API contract (404); Integration | T-09, T-16 | [PENDIENTE] |
-| AC-EW-003 | Unit CapabilityService; E2E | T-04, T-19 | [PENDIENTE] |
-| AC-EW-004 | Component (409 banner); E2E | T-15, T-19 | [PENDIENTE] |
-| AC-EW-005 | Tenant isolation test (TQ-007) | T-16 | [PENDIENTE] |
-| AC-EW-006 | Component AuditoriaTab; API 403 | T-14, T-16 | [PENDIENTE — OQ-EW-003] |
-| AC-EW-007 | Integration + Component | T-06, T-14, T-17 | [PENDIENTE] |
-| AC-EW-008 | Component (no C3 en toasts) | T-12 | [PENDIENTE — OQ-EW-002] |
-| AC-EW-009 | E2E Playwright (keyboard) | T-19 | [PENDIENTE] |
+| Eslabón | Referencia | Detalle |
+|---------|-----------|---------|
+| **Source / SDB** | SEC-003, INT-009, LGPDPPSO | C3 minimización |
+| **Business Rule** | "Mínimo necesario para tarea operativa" | — |
+| **REQ** | REQ-EW-014, NFR-EW-005 | — |
+| **API** | pacienteRef.displayLabel mínimo (OQ-EW-002) | — |
+| **UI** | ExpedienteHeader; no en document.title, URL, toasts, exports | — |
+| **Test** | AC-EW-016; T-14 | Component: sin datos clínicos en DOM |
 
 ---
 
-## Eslabones faltantes / pendientes de completar
+### TR-014 — NO_LOCALIZADO != EXTRAVIADO
 
-Los siguientes eslabones de la cadena SDB→Test están parcialmente vacíos porque
-dependen de OQ abiertos o de documentos SDB marcados como `[PENDIENTE]`.
-**No son bugs de esta spec; son trabajo pendiente de validación.**
-
-| ID | Eslabón faltante | OQ asociado | Acción requerida |
-|----|-----------------|-------------|-----------------|
-| GAP-001 | BR exacta de `MarkNotLocated` → apertura automática de Incidencia | OQ-EW-004, OQ-DOM-006 | Validar con dominio; actualizar TR-001/TR-004 |
-| GAP-002 | Permisos exactos por tipo de solicitud para `ABRIR_PRESTAMO` | OQ-EW-005, OQ-SPEC-001 | Validar con stakeholders; actualizar TR-004, CapabilityService |
-| GAP-003 | Flujo de confirmación digital de custodia por receptor | OQ-EW-006, OQ-SPEC-011 | Definir si requiere endpoint adicional; actualizar TR-004 y comandos |
-| GAP-004 | Formato de `pacienteRef.displayLabel` en read model | OQ-EW-002, OQ-SPEC-012 | Confirmar campo mínimo; actualizar TR-009 y `ExpedienteHeader` |
-| GAP-005 | Lista de roles con acceso a `AuditoriaTab` | OQ-EW-003, OQ-UX-008 | Confirmar con sec team; actualizar TR-008 y `AuditoriaTab` |
-| GAP-006 | Schema exacto de `MovimientoExpediente` (en módulo Expediente vs. separado) | OQ-DOM-001, OQ-DAT-004 | Decisión de arquitectura; actualizar TR-003 y T-07 |
-| GAP-007 | Formato y regex del identificador de expediente | OQ-EW-001, OQ-DAT-001 | Confirmar con hospital; actualizar TR-002 y validación de búsqueda |
-| GAP-008 | Codificación de ubicaciones temporales oficiales | OQ-EW-008, OQ-DOM-009 | Confirmar con Archivo Clínico; actualizar TR-001 / DAT-019 |
-| GAP-009 | SLA de performance para read model (≤ 1 s) | NFR-EW-001 | Confirmar en UAT con carga real; actualizar NFR y test de performance |
-| GAP-010 | Política de retención para `MovimientoExpediente` en timeline | OQ-EW-010, OQ-DAT-005, OQ-API-006 | Confirmar con compliance; actualizar TR-003 y paginación |
+| Eslabón | Referencia | Detalle |
+|---------|-----------|---------|
+| **Source / SDB** | BIZ-006 BR-004, INV-INC-002, DDD-012 v0.2.0 | Distinción obligatoria |
+| **Business Rule** | BR-004 (No localizado != perdido), INV-INC-002 | EXTRAVIADO requiere proceso formal |
+| **Use Case** | UC (DeclareLost) | Fuera de scope de este workspace slice |
+| **REQ** | REQ-EW-007 | — |
+| **API** | EstadoOperativo = NO_LOCALIZADO no implica EXTRAVIADO en capabilities | — |
+| **UI** | Badge NO_LOCALIZADO distinto de EXTRAVIADO; transición a EXTRAVIADO solo en capabilities | — |
+| **Test** | AC-EW-007; T-01 (EstadoOperativo unit) | Unit VO; E2E escenario 7 |
 
 ---
 
-## Historial de cambios de esta traceability
+### TR-015 — Accesibilidad y teclado
+
+| Eslabón | Referencia | Detalle |
+|---------|-----------|---------|
+| **Source / SDB** | Volume-09 §07, DEL-005 | Teclado; foco visible |
+| **REQ** | REQ-EW-017 | — |
+| **UI** | CommandBar (Enter/Space); tabs (Tab/flechas); DisambiguationList (teclado); ARIA | — |
+| **Test** | AC-EW-017; T-16/T-22 (escenario 12) | Component keyboard nav; E2E keyboard |
+
+---
+
+## Matriz de cobertura REQ -> Cadena
+
+| REQ | Cadena(s) | Estado |
+|-----|-----------|--------|
+| REQ-EW-001 | TR-001, TR-009 | Cubierto |
+| REQ-EW-002 | TR-002 | Cubierto — OQ-EW-001/007 RESUELTAS |
+| REQ-EW-003 | TR-001 | Cubierto (OQ-EW-008 no bloqueante) |
+| REQ-EW-004 | TR-005 | Cubierto — OQ-EW-006 RESUELTA |
+| REQ-EW-005 | TR-001, TR-006 | Cubierto |
+| REQ-EW-006 | TR-001 | Cubierto |
+| REQ-EW-007 | TR-001, TR-014 | Cubierto (OQ-EW-004 no bloqueante) |
+| REQ-EW-008 | TR-007 | Cubierto (OQ-DOM-001 no bloqueante) |
+| REQ-EW-009 | TR-008 | Cubierto — OQ-EW-005 RESUELTA |
+| REQ-EW-010 | TR-006 | Cubierto — OQ-EW-005 RESUELTA |
+| REQ-EW-011 | TR-004 | Cubierto — OQ-EW-006 RESUELTA |
+| REQ-EW-012 | TR-005 | Cubierto — OQ-EW-006 RESUELTA |
+| REQ-EW-013 | TR-012 | Cubierto (OQ-EW-003 no bloqueante) |
+| REQ-EW-014 | TR-013 | Cubierto (OQ-EW-002 no bloqueante) |
+| REQ-EW-015 | TR-011 | Cubierto |
+| REQ-EW-016 | TR-010 | Cubierto |
+| REQ-EW-017 | TR-015 | Cubierto |
+| NFR-EW-001 | TR-001 | [PENDIENTE SLA en UAT] |
+| NFR-EW-002 | TR-009, TR-006 | Cubierto |
+| NFR-EW-003 | TR-012 | Cubierto |
+| NFR-EW-004 | TR-010 | Cubierto |
+| NFR-EW-005 | TR-013 | Cubierto |
+| NFR-EW-006 | TR-011 | Cubierto |
+
+---
+
+## Matriz de cobertura AC -> Test
+
+| AC | Tipo | Tarea | Estado |
+|----|------|-------|--------|
+| AC-EW-001 | E2E | T-22 | Pendiente implementación |
+| AC-EW-002 | Unit VO + E2E | T-01, T-21, T-22 | Pendiente |
+| AC-EW-003 | Unit + E2E | T-09, T-15, T-22 | Pendiente |
+| AC-EW-004 | API contract + E2E | T-11, T-22 | Pendiente |
+| AC-EW-005 | Unit UC + E2E | T-07, T-08, T-22 | Pendiente |
+| AC-EW-006 | Unit aggregate + E2E | T-02, T-22 | Pendiente |
+| AC-EW-007 | Unit VO + E2E | T-01, T-14, T-22 | Pendiente |
+| AC-EW-008 | Unit CapService + E2E | T-04, T-22 | Pendiente |
+| AC-EW-009 | Unit CapService + API | T-04, T-19 | Pendiente |
+| AC-EW-010 | Unit CapService + E2E | T-04, T-22 | Pendiente |
+| AC-EW-011 | Unit CapService + Component | T-04, T-16 | Pendiente |
+| AC-EW-012 | Component + E2E | T-18, T-22 | Pendiente |
+| AC-EW-013 | Integration + E2E | T-19, T-22 | Pendiente |
+| AC-EW-014 | Component + API | T-17, T-19 | Pendiente (OQ-EW-003) |
+| AC-EW-015 | Integration + Component | T-06, T-17, T-20 | Pendiente |
+| AC-EW-016 | Component | T-14 | Pendiente (OQ-EW-002) |
+| AC-EW-017 | Component + E2E | T-16, T-22 | Pendiente |
+
+---
+
+## GAPs resueltos en v0.3.0
+
+| GAP v0.2.0 | Resolución |
+|------------|------------|
+| GAP-002 — permisos ABRIR_PRESTAMO | RESUELTO — FuenteHabilitanteSalida en TR-006, T-04, SPEC-006 v0.2.0 |
+| GAP-003 — flujo confirmación custodia | RESUELTO — AcceptCustody en TR-005, T-08, WF-005 v0.2.0 |
+| GAP-007 — formato identificador | RESUELTO — ExpedienteNumero VO en TR-002, T-01, DDD-007 v0.2.0 |
+
+## GAPs que permanecen (OQ no bloqueantes)
+
+| ID | Descripción | OQ | Estado |
+|----|------------|-----|--------|
+| GAP-001 | Condición exacta de MarkNotLocated -> Incidencia automática | OQ-EW-004 | Abierto; no automático hasta resolución |
+| GAP-004 | Campo de pacienteRef.displayLabel en read model | OQ-EW-002 | Abierto; usar nombre corto operativo provisional |
+| GAP-005 | Roles exactos del tab Auditoría | OQ-EW-003 | Abierto; capability flag provisional |
+| GAP-006 | Schema de MovimientoExpediente (módulo o dedicado) | OQ-DOM-001 | Abierto; schema expediente provisional |
+| GAP-008 | Codificación de ubicaciones temporales | OQ-EW-008 | Abierto; categoría genérica provisional |
+| GAP-009 | SLA de performance (<= 1 s) | NFR-EW-001 | Pendiente UAT con carga real |
+| GAP-010 | Política de retención del timeline | OQ-EW-010 | Abierto; sin límite provisional |
+
+---
+
+## Historial de cambios
 
 | Versión | Fecha | Cambio |
 |---------|-------|--------|
-| 0.1.0 | — | Bootstrap vacío (placeholder) |
-| 0.2.0 | 2026-08-14 | Primera versión completa: 10 cadenas TR, matrices REQ/AC, 10 GAPs registrados |
+| 0.1.0 | — | Bootstrap vacío |
+| 0.2.0 | 2026-08-14 | Primera versión completa: 10 cadenas TR, matrices REQ/AC, 10 GAPs |
+| 0.3.0 | 2026-08-14 | Decisiones OQ-EW-001/005/006/007 y DEC-EW-STATE-001 aplicadas. GAP-002/003/007 cerrados. 15 cadenas TR. REQ-EW-011/012 añadidas. Búsqueda 0..N, normalización, desambiguación, FuenteHabilitanteSalida, dispatch, custodia aceptada integrados. |
+
+---
+
+## Implementation Readiness
+
+```yaml
+spec_version: "0.3.0"
+blocking_open_questions: []
+non_blocking_open_questions:
+  - OQ-EW-002
+  - OQ-EW-003
+  - OQ-EW-004
+  - OQ-EW-008
+  - OQ-EW-009
+  - OQ-EW-010
+contradictions_found: []
+implementation_ready: true
+```

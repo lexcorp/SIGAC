@@ -1,20 +1,37 @@
 ---
 spec: expediente-workspace
-version: "0.2.0"
+version: "0.3.0"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-14"
 sdb_sources:
-  - "Volume-03 / DDD-009–013, DDD-018–020"
+  - "Volume-02 / BIZ-006, BIZ-007, BIZ-008, BIZ-010, BIZ-016"
+  - "Volume-03 / DDD-007, DDD-009–013, DDD-018–020"
   - "Volume-05 / UC-018, SPEC-009, SDD-005, SDD-006"
   - "Volume-07 / SEC-003, SEC-017, SEC-032, SEC-038"
-  - "Volume-08 / DAT-006, DAT-011, DAT-012, DAT-019, API-001, API-005, API-006, API-011, DAT-030"
+  - "Volume-08 / DAT-006, DAT-011, DAT-012, DAT-019, API-001, API-005, API-006, API-011, DAT-016"
   - "Volume-09 / APP-003, IA-005, DS-014, DEL-002, INT-001–INT-009"
   - "Volume-12 / OS-004, OS-017, OS-018"
+decisions_applied:
+  - "OQ-EW-001 RESOLVED"
+  - "OQ-EW-005 RESOLVED"
+  - "OQ-EW-006 RESOLVED"
+  - "OQ-EW-007 RESOLVED"
+  - "DEC-EW-STATE-001 ACCEPTED"
 requires:
-  - requirements.md (v0.2.0)
+  - requirements.md (v0.3.0)
 open_questions_blocking: []
 open_questions_non_blocking:
-  - OQ-EW-001, OQ-EW-002, OQ-EW-003, OQ-EW-004, OQ-EW-007, OQ-EW-008, OQ-EW-009, OQ-EW-010
+  - OQ-EW-002
+  - OQ-EW-003
+  - OQ-EW-004
+  - OQ-EW-008
+  - OQ-EW-009
+  - OQ-EW-010
+  - OQ-EW-DESIGN-001
+  - OQ-EW-DESIGN-002
+  - OQ-EW-DESIGN-003
+  - OQ-EW-DESIGN-004
+  - OQ-EW-DESIGN-005
 ---
 
 # Expediente Workspace — Design
@@ -23,24 +40,21 @@ open_questions_non_blocking:
 
 ## 1. Principios de diseño
 
-Estos principios derivan directamente del SDB y no pueden ser violados durante la implementación.
-
 | Principio | Regla | Fuente |
 |-----------|-------|--------|
 | **Dominio puro** | El dominio no importa NestJS, Drizzle, React ni HTTP | AGENTS.md, steering/structure.md |
-| **Autorización server-side** | El backend re-verifica cada petición; el frontend solo recibe `capabilities` | SEC-017, DEL-002 |
-| **Tenant immutable** | TenantContext se resuelve server-side; ningún valor de tenant proviene del body | SEC-032, API-005 |
-| **Movimiento ≠ Audit** | Trayectoria física y audit log son tablas y read paths distintos | DDD-020, DAT-011, DAT-012 |
-| **Sin contenido clínico** | Ningún campo clínico (diagnóstico, nota, tratamiento) en ninguna capa | DDD-013, V05-43 r.10 |
-| **UI refleja estado** | El frontend no calcula transiciones; las recibe del API como `capabilities` | INT-001, DEL-002 |
-| **Concurrencia explícita** | Comandos críticos requieren `row_version`; conflicto → 409 con metadata | DAT-019 |
-| **Audit append-only** | El rol de aplicación no puede UPDATE/DELETE filas de audit | SEC-038, DAT-012 |
+| **Autorización server-side** | Backend re-verifica cada petición incluyendo FuenteHabilitanteSalida | SEC-017, DEL-002 |
+| **Tenant immutable** | TenantContext server-side; ningún valor de tenant del body | SEC-032, API-005 |
+| **Movimiento != Audit** | Trayectoria física y audit_log son tablas y read paths distintos | DDD-020, DAT-011, DAT-012 |
+| **Sin contenido clínico** | Ningún campo clínico en ninguna capa | DDD-013, BIZ-014 |
+| **UI refleja estado** | Frontend no calcula transiciones; recibe capabilities del API | INT-001, DEL-002 |
+| **Concurrencia explícita** | Comandos críticos usan row_version; conflicto -> 409 | DAT-019 |
+| **Audit append-only** | Rol de aplicación no puede UPDATE/DELETE filas de audit | SEC-038, DAT-012 |
+| **ExpedienteNumero no único** | No declarar UNIQUE sobre expediente_numero sin profiling SIMEF | BR-017, INV-EXP-003 |
 
 ---
 
 ## 2. Arquitectura por capas
-
-La ruta de datos fluye estrictamente en una sola dirección:
 
 ```
 Browser (React)
@@ -52,65 +66,91 @@ Browser (React)
                            └─ Tenant Database (database-per-tenant)
 ```
 
-Cada capa tiene responsabilidades estrictamente acotadas:
-
 | Capa | Responsabilidad | Prohibido |
 |------|----------------|-----------|
-| **Domain** | Aggregate `Expediente`, invariantes, value objects `Custodia`, `Ubicacion`, `MovimientoExpediente` | Importar NestJS, Drizzle, React, HTTP |
-| **Application** | Use Cases (`GetExpediente`, `GetExpedienteTimeline`); orquestación; cálculo de `capabilities` | Lógica de infraestructura; acceso directo a DB |
-| **Controller (API)** | Deserializar request, resolver TenantContext, llamar Use Case, serializar respuesta | Escribir repositorios directamente; lógica de negocio |
-| **React Feature** | Renderizar read model; mostrar `capabilities` como comandos; enviar comandos vía API client | Calcular transiciones de dominio; almacenar estado mutable de negocio |
-| **Audit / Outbox** | Registrar eventos con append-only; correlacionar | Mezclar con Movimiento o lógica de negocio |
+| **Domain** | Aggregate Expediente, invariantes, VOs (Custodia, Ubicacion, ExpedienteNumero, FuenteHabilitanteSalida, EstadoOperativo) | Importar NestJS, Drizzle, React, HTTP |
+| **Application** | Use Cases, orquestación, cálculo de capabilities | Lógica de infraestructura; acceso directo a DB |
+| **Controller** | Deserializar, resolver TenantContext, llamar UC, serializar | Escribir repositorios; lógica de negocio |
+| **React Feature** | Renderizar read model; mostrar capabilities como comandos | Calcular transiciones de dominio |
+| **Audit** | Registrar eventos append-only | Mezclar con Movimiento |
 
 ---
 
-## 3. Modelo de datos relevante (read model)
+## 3. Modelo de datos
 
-### 3.1 Aggregate Expediente — campos operativos (DAT-006)
+### 3.1 Aggregate Expediente (DAT-006 v0.2.0)
 
 ```
 expediente
-  id                   UUID  PK
-  expediente_numero    varchar  UNIQUE per tenant  ← INV-EXP-001
-  paciente_ref_id      UUID | null
-  paciente_nombre_busqueda  varchar | null        ← dato C3; solo búsqueda
-  estado_operativo     varchar  (enum/check)       ← INV-EXP-002
-  ubicacion_actual_id  UUID | null  FK → ubicaciones
-  custodio_tipo        varchar | null
-  custodio_ref         varchar | null
-  last_movement_id     UUID | null  FK → movimientos_expediente
-  created_at           timestamptz
-  updated_at           timestamptz
-  row_version          bigint                      ← optimistic concurrency DAT-019
+  id                           UUID  PK                   -- ExpedienteId; identidad técnica primaria
+  expediente_numero            varchar                     -- formato RFC_BASE_10+SEP+COD_2; NO UNIQUE
+  expediente_numero_normalizado varchar                    -- sin separador; indexado para búsqueda
+  paciente_ref_id              UUID | null
+  paciente_nombre_busqueda     varchar | null              -- C3; solo búsqueda interna
+  estado_operativo             varchar  CHECK (ver abajo)  -- DEC-EW-STATE-001
+  ubicacion_actual_id          UUID | null  FK -> ubicaciones
+  custodio_tipo                varchar | null
+  custodio_ref                 varchar | null
+  custody_accepted_at          timestamptz | null          -- null si EN_TRASLADO sin CustodyAccepted
+  last_movement_id             UUID | null  FK -> movimientos_expediente
+  created_at                   timestamptz
+  updated_at                   timestamptz
+  row_version                  bigint NOT NULL DEFAULT 0   -- optimistic concurrency
 ```
 
-**Estado operativo — valores candidatos** (DDD-012, INT-001):
+**EstadoOperativo — valores aceptados (DEC-EW-STATE-001):**
 
 | Valor | Descripción |
 |-------|-------------|
-| `DISPONIBLE` | En archivo, sin préstamo activo |
-| `EN_BUSQUEDA` | Solicitud activa en búsqueda |
-| `EN_PREPARACION` | En jornada de preparación |
-| `PRESTADO` | Bajo custodia externa formal |
-| `EN_TRANSITO` | Movimiento en curso |
-| `INCIDENCIA_ABIERTA` | Con incidencia sin resolver |
-| `NO_LOCALIZADO` | No encontrado; no declarado extraviado |
+| DISPONIBLE | En Archivo, sin despacho activo |
+| APARTADO | Reservado para jornada/solicitud; aún en Archivo |
+| EN_TRASLADO | Despachado; custodia aún no aceptada en destino |
+| EN_CONSULTA | Custodia aceptada formalmente por receptor en destino |
+| NO_LOCALIZADO | No encontrado; no declarado extraviado |
+| EXTRAVIADO | Declarado extraviado por proceso formal (requiere autorización) |
 
-> **OQ-EW-OPEN:** La lista exacta y las transiciones válidas entre estados deben ser
-> confirmadas por el dominio antes de implementar. Ver DDD-012, OQ-DOM pendientes.
+**Valores que NO son EstadoOperativo del Expediente:**
+- EN_BUSQUEDA — es estado de Solicitud.
+- PRESTADO — pertenece al aggregate Préstamo.
 
-### 3.2 MovimientoExpediente (DAT-011)
+**Constraint de unicidad:**
+```sql
+-- NO crear hasta perfilar datos reales de SIMEF (BR-017, INV-EXP-003):
+-- UNIQUE(expediente_numero, hospital_id)   <- pendiente profiling
+INDEX ON expediente (expediente_numero_normalizado)  -- para búsqueda flexible
+```
+
+### 3.2 ExpedienteNumero — VO (DDD-007 v0.2.0)
+
+Patrón: `<RFC_BASE_10><SEPARADOR><CODIGO_DERECHOHABIENTE_2>`
+Ejemplo anonimizado: `PERR810604/10`
+
+- rfcBase: 10 chars sin homoclave.
+- separador: / (preferente), - o ausente.
+- codigoDerechohabiente: 10, 20, 30, 40, 50, 60, 70, 80, 90.
+- Normalización: almacenar sin separador para búsqueda; presentar con /.
+- No es identidad técnica primaria; ExpedienteId UUID lo es.
+
+### 3.3 FuenteHabilitanteSalida — VO (DDD-007 v0.2.0)
+
+| Valor | Descripción |
+|-------|-------------|
+| CONSULTA_PROGRAMADA | Flujo normal; habilitada por agenda |
+| VALE_ARCHIVO_SM_1_14 | Solicitud extraordinaria; formato SM 1-14; 24 h máx. |
+| ORDEN_SUPERIOR | Fuente válida reconocida; detalles fuera de este slice |
+
+### 3.4 MovimientoExpediente (DAT-011)
 
 ```
 movimientos_expediente
   id                        UUID  PK
-  expediente_id             UUID  FK → expediente
-  movement_type             varchar
+  expediente_id             UUID  FK -> expediente
+  movement_type             varchar  -- incluye DISPATCHED, CUSTODY_ACCEPTED, etc.
   origin_location_id        UUID | null
   destination_location_id   UUID | null
   origin_custodian_ref      varchar | null
   destination_custodian_ref varchar | null
-  business_reference_type   varchar          ← 'SOLICITUD' | 'PRESTAMO' | 'INCIDENCIA' | ...
+  business_reference_type   varchar
   business_reference_id     UUID | null
   occurred_at               timestamptz
   recorded_at               timestamptz
@@ -119,9 +159,9 @@ movimientos_expediente
   correlation_id            UUID | null
 ```
 
-Este modelo **no** contiene datos de login, configuración ni audit técnico.
+No contiene datos de login, configuración ni audit técnico.
 
-### 3.3 Audit Log (DAT-012) — separado de Movimiento
+### 3.5 Audit Log (DAT-012) — separado de Movimiento
 
 ```
 audit_log
@@ -136,178 +176,198 @@ audit_log
   correlation_id   UUID | null
   source_ip_hash   varchar | null
   source           varchar
-  change_summary   jsonb | null
-  security_context jsonb | null   ← minimal; sin payload clínico completo
+  change_summary   jsonb | null   -- sin payload clínico completo
+  security_context jsonb | null
 ```
 
-Acceso de la aplicación: **INSERT** únicamente. No UPDATE, no DELETE.
+Acceso de la aplicación: INSERT únicamente.
 
 ---
 
-## 4. API — Contratos relevantes (API-011)
+## 4. API — Contratos (API-011 v0.2.0)
 
-### 4.1 Endpoints para el Workspace
+### 4.1 Endpoints de consulta
 
-| Método | Ruta | Propósito | Use Case |
-|--------|------|-----------|----------|
-| `GET` | `/api/v1/expedientes/{id}` | Read model completo del expediente | UC-018 |
-| `GET` | `/api/v1/expedientes?numero={n}` | Búsqueda por número | SPEC-009 FR-VIEW-001 |
-| `GET` | `/api/v1/expedientes/{id}/timeline` | Historial de movimientos | SPEC-009 FR-VIEW-007 |
-| `GET` | `/api/v1/expedientes/{id}/current-custody` | Custodia actual (sub-resource) | SPEC-009 FR-VIEW-004 |
-| `GET` | `/api/v1/expedientes/{id}/active-loan` | Préstamo activo si existe | SPEC-009 FR-VIEW-005 |
+| Método | Ruta | Propósito |
+|--------|------|-----------|
+| GET | /api/v1/expedientes/{id} | Read model completo por ExpedienteId UUID |
+| GET | /api/v1/expedientes?numero={n} | Búsqueda — devuelve colección 0..N |
+| GET | /api/v1/expedientes/{id}/timeline | Historial de movimientos operativos |
+| GET | /api/v1/expedientes/{id}/current-custody | Custodia actual |
+| GET | /api/v1/expedientes/{id}/active-loan | Préstamo activo si existe |
 
-### 4.2 Comandos disponibles desde el Workspace (INT-003)
-
-Estos endpoints son invocados desde la barra de comandos contextual.
-El Workspace **no** los implementa; los dispara a sus respectivos módulos.
-
-| Intento UI | API endpoint candidato | Comando de dominio |
-|------------|----------------------|--------------------|
-| Solicitar expediente | `POST /api/v1/solicitudes` | `CreateRequest` |
-| Iniciar búsqueda | `POST /api/v1/solicitudes/{id}/start-search` | `StartSearch` |
-| Marcar localizado | `POST /api/v1/solicitudes/{id}/mark-located` | `MarkLocated` |
-| Marcar no localizado | `POST /api/v1/solicitudes/{id}/mark-not-located` | `MarkNotLocated` |
-| Abrir préstamo | `POST /api/v1/prestamos` | `OpenLoan` |
-| Renovar préstamo | `POST /api/v1/prestamos/{id}/renew` | `RenewLoan` |
-| Recibir devolución | `POST /api/v1/devoluciones` | `ReceiveReturn` |
-| Confirmar rearchivo | `POST /api/v1/expedientes/{id}/rearchive` | `ConfirmRearchive` |
-| Transferir custodia | `POST /api/v1/expedientes/{id}/custody-transfers` | `TransferCustody` |
-| Reportar incidencia | `POST /api/v1/incidencias` | `OpenIncident` |
-
-> Estos comandos son de otros módulos y tienen sus propias specs. El Workspace
-> solo consume su resultado y refresca el read model.
-
-### 4.3 Modelo de respuesta — Read Model (candidato)
+### 4.2 Búsqueda por número — respuesta colección
 
 ```jsonc
-// GET /api/v1/expedientes/{id}
+// GET /api/v1/expedientes?numero=PERR810604/10
+{
+  "data": [
+    {
+      "id": "uuid",
+      "expedienteNumero": "PERR810604/10",
+      "pacienteRef": { "displayLabel": "..." },
+      "estadoOperativo": "DISPONIBLE",
+      "ubicacionActual": { ... }
+    }
+  ],
+  "total": 1
+}
+// N=0 -> data:[], total:0, HTTP 200
+// N>1 -> array con datos de desambiguación; cliente NO elige automáticamente
+```
+
+### 4.3 Comandos de transición de estado
+
+| Intento UI | Endpoint | Comando dominio |
+|------------|----------|-----------------|
+| Despachar | POST /api/v1/expedientes/{id}/dispatch | DispatchExpediente |
+| Aceptar custodia | POST /api/v1/expedientes/{id}/accept-custody | AcceptCustody |
+| Transferir custodia | POST /api/v1/expedientes/{id}/custody-transfers | TransferCustody |
+| Confirmar rearchivo | POST /api/v1/expedientes/{id}/rearchive | ConfirmRearchive |
+| Abrir préstamo | POST /api/v1/prestamos | OpenLoan + FuenteHabilitanteSalida |
+| Renovar préstamo | POST /api/v1/prestamos/{id}/renew | RenewLoan |
+| Recibir devolución | POST /api/v1/devoluciones | ReceiveReturn |
+| Solicitar expediente | POST /api/v1/solicitudes | CreateRequest |
+| Iniciar búsqueda | POST /api/v1/solicitudes/{id}/start-search | StartSearch |
+| Marcar localizado | POST /api/v1/solicitudes/{id}/mark-located | MarkLocated |
+| Marcar no localizado | POST /api/v1/solicitudes/{id}/mark-not-located | MarkNotLocated |
+| Reportar incidencia | POST /api/v1/incidencias | OpenIncident |
+
+### 4.4 Read model — GET /api/v1/expedientes/{id}
+
+```jsonc
 {
   "id": "uuid",
-  "expedienteNumero": "string",
-  "pacienteRef": {              // C3 — mínimo necesario para identificación operativa
+  "expedienteNumero": "PERR810604/10",
+  "pacienteRef": {
     "id": "uuid",
-    "displayLabel": "string"   // formato exacto: OQ-EW-002
+    "displayLabel": "string"   // C3 mínimo — campo exacto: OQ-EW-002
   },
-  "estadoOperativo": "DISPONIBLE | EN_BUSQUEDA | ...",
-  "ubicacionActual": {
-    "id": "uuid",
-    "codigo": "string",
-    "descripcion": "string"
-  },
+  "estadoOperativo": "DISPONIBLE|APARTADO|EN_TRASLADO|EN_CONSULTA|NO_LOCALIZADO|EXTRAVIADO",
+  "ubicacionActual": { "id": "uuid", "codigo": "string", "descripcion": "string" },
   "custodiaActual": {
-    "custodioTipo": "ARCHIVO | SERVICIO | PERSONAL | ...",
+    "custodioTipo": "string",
     "custodioRef": "string",
-    "servicio": "string | null",
-    "aceptadaEn": "ISO8601 | null"
+    "servicio": "string|null",
+    "aceptadaEn": "ISO8601|null"  // null si EN_TRASLADO sin CustodyAccepted
   },
-  "prestamoActivo": { ... } | null,
-  "solicitudActiva": { ... } | null,
+  "prestamoActivo": {
+    "fuenteHabilitante": "CONSULTA_PROGRAMADA|VALE_ARCHIVO_SM_1_14|ORDEN_SUPERIOR",
+    "estado": "Activo|Vencido",
+    ...
+  } | null,
+  "solicitudActiva": { "estado": "EnBusqueda|Preparada|...", ... } | null,
   "incidenciasAbiertas": [ ... ],
-  "capabilities": ["SOLICITAR", "INICIAR_BUSQUEDA", "REPORTAR_INCIDENCIA", ...],
+  "capabilities": ["DISPATCH", "SOLICITAR", "REPORTAR_INCIDENCIA", ...],
   "rowVersion": 42,
   "updatedAt": "ISO8601"
 }
 ```
 
-El campo `capabilities` es calculado server-side por el Use Case considerando:
-estado operativo + rol del actor + contexto del negocio (SEC-017).
-El frontend solo renderiza lo que `capabilities` contiene.
+capabilities[] es calculado server-side por ExpedienteCapabilityService considerando:
+EstadoOperativo + rol del actor + FuenteHabilitanteSalida disponible + contexto.
+Frontend solo renderiza lo que capabilities contiene.
 
-### 4.4 Manejo de errores (API-006)
+### 4.5 Manejo de errores (API-006)
 
 ```jsonc
-// Ejemplo: recurso no encontrado
 { "type": "https://sigac/errors/not-found", "status": 404,
   "code": "EXPEDIENTE_NOT_FOUND", "traceId": "..." }
 
-// Ejemplo: conflicto de concurrencia
 { "type": "https://sigac/errors/conflict", "status": 409,
   "code": "OPTIMISTIC_LOCK_CONFLICT",
   "detail": "El expediente fue modificado. Recarga antes de reintentar.",
   "currentVersion": 43, "traceId": "..." }
 
-// Ejemplo: transición inválida
-{ "type": "https://sigac/errors/invalid-transition", "status": 409,
-  "code": "INVALID_STATE_TRANSITION", "traceId": "..." }
+{ "type": "https://sigac/errors/authorization", "status": 403,
+  "code": "INSUFFICIENT_ENABLING_SOURCE", "traceId": "..." }
 ```
 
 Sin stack trace, sin nombre de DB, sin datos clínicos en errores.
 
 ---
 
-## 5. Diseño de la UI (APP-003 / IA-005)
+## 5. Diseño de la UI (APP-003 v0.2.0)
 
 ### 5.1 Anatomía de la página
 
 ```
-┌─────────────────────────────────────────────────────┐
-│ 1. Global Shell (navegación global, tenant, usuario) │
-├─────────────────────────────────────────────────────┤
-│ 2. Breadcrumb: Archivo > Expediente > {numero}       │
-├─────────────────────────────────────────────────────┤
-│ 3. Header del Expediente (above the fold)            │
-│    ┌─────────────────────────────────────────────┐   │
-│    │ Nº Expediente  | Ref. Paciente (mínima) C3  │   │
-│    │ Estado: badge  | Ubicación actual            │   │
-│    │ Custodio actual | Indicador Préstamo/Incid.  │   │
-│    └─────────────────────────────────────────────┘   │
-├─────────────────────────────────────────────────────┤
-│ 4. Barra de Comandos Contextual (capabilities)       │
-│    [Solicitar] [Iniciar búsqueda] [Reportar incid.]  │
-├─────────────────────────────────────────────────────┤
-│ 5. Tabs                                              │
-│    Resumen | Movimientos | Solicitudes | Préstamos   │
-│            | Incidencias | Auditoría*                │
-├─────────────────────────────────────────────────────┤
-│ 6. Superficie de trabajo (tab activo)                │
-├─────────────────────────────────────────────────────┤
-│ 7. Región persistente de feedback / error            │
-└─────────────────────────────────────────────────────┘
-  * Tab Auditoría: visible solo si capabilities lo incluye
++------------------------------------------------------+
+| 1. Global Shell                                      |
++------------------------------------------------------+
+| 2. Breadcrumb: Archivo > Expediente > {numero}       |
++------------------------------------------------------+
+| 3. Header (above the fold)                           |
+|    Nº Expediente | Ref. Paciente (mínima) C3         |
+|    Estado: badge | Ubicación actual                  |
+|    Custodio (+ acceptedAt si EN_CONSULTA)            |
+|    Indicadores: préstamo activo / incidencias        |
++------------------------------------------------------+
+| 4. Barra de Comandos (capabilities[])                |
+|    [Solicitar] [Despachar] [Reportar incid.] ...     |
++------------------------------------------------------+
+| 5. Tabs                                              |
+|    Resumen | Movimientos | Solicitudes | Préstamos   |
+|    Incidencias | Auditoría*                          |
++------------------------------------------------------+
+| 6. Superficie de trabajo (tab activo)                |
++------------------------------------------------------+
+| 7. Región persistente de feedback / error            |
++------------------------------------------------------+
+* Tab Auditoría: visible solo si capabilities lo incluye
 ```
 
-### 5.2 Tabs y contenido
+### 5.2 Badges de EstadoOperativo
 
-| Tab | Contenido | Fuente SDB | Restricción |
-|-----|-----------|------------|-------------|
-| **Resumen** | Estado operativo expandido, ubicación, custodia detallada, préstamo activo, solicitud activa | APP-003, UC-018 | Todos los roles con `EXPEDIENT_VIEW` |
-| **Movimientos** | Timeline de trayectoria física/operativa (DAT-011) | SPEC-009 FR-VIEW-007, DDD-020 | Archivista, Jefatura; Auditor (lectura) |
-| **Solicitudes** | Historial de solicitudes del expediente | DDD-014, SPEC-001 | Según permisos de solicitud |
-| **Préstamos** | Historial de préstamos (activo + cerrados) | DDD-015, SPEC-006 | Según permisos de préstamo |
-| **Incidencias** | Incidencias abiertas y cerradas | DDD-017, SPEC-004 | Según permisos de incidencia |
-| **Auditoría** | Registros de audit log (DAT-012) | SEC-038, INT-008 | Roles autorizados — OQ-EW-003 |
+Los badges reflejan exactamente los 6 valores de DEC-EW-STATE-001:
 
-### 5.3 Barra de comandos contextual (DS-014)
+| Badge | Color semántico sugerido | Nota |
+|-------|--------------------------|------|
+| DISPONIBLE | Verde | En archivo |
+| APARTADO | Azul | Reservado |
+| EN_TRASLADO | Naranja | En tránsito; custodio sin confirmar |
+| EN_CONSULTA | Morado | Custodia aceptada en destino |
+| NO_LOCALIZADO | Amarillo | No encontrado |
+| EXTRAVIADO | Rojo | Proceso formal requerido |
 
-- Renderiza exactamente los items de `capabilities` del read model.
-- Un comando deshabilitado **no** se muestra (no se muestra en gris con tooltip).
-  Excepción: si la política de UX decide mostrarlo con explicación — esto debe acordarse.
-- Comandos que abren otro flujo/módulo (ej. Abrir Préstamo) navegan al módulo
-  correspondiente o abren un drawer/dialog, dependiendo del patrón de interacción acordado.
-  > **OQ-EW-DESIGN-001:** ¿Drawer inline vs. navegación a módulo para comandos de estado?
-  > Pendiente de decisión de UX.
+EN_BUSQUEDA y PRESTADO NO se usan como badges del Expediente.
 
-### 5.4 Estados de la UI (INT-001)
+### 5.3 Pantalla de desambiguación (OQ-EW-001/007 RESOLVED)
 
-La UI tiene estados derivados, no propios:
+Cuando la búsqueda devuelve N > 1:
+1. Lista de coincidencias con: expedienteNumero, nombre, CURP, número ISSSTE.
+2. Usuario selecciona manualmente.
+3. NUNCA apertura automática cuando N > 1.
+4. Input de búsqueda acepta /, - o sin separador; normaliza antes de enviar.
+
+### 5.4 Estados de la UI
 
 | Estado UI | Condición | Comportamiento |
 |-----------|-----------|----------------|
-| `loading` | Petición en vuelo | Skeleton / spinner; comandos deshabilitados |
-| `loaded` | Datos recibidos | Render normal |
-| `empty` | Expediente no encontrado (404) | Estado vacío descriptivo (Volume-09 §32) |
-| `error` | Error de red / 5xx | Región de error persistente; no sobreescribir datos previos |
-| `conflict` | 409 optimistic lock | Banner de conflicto; botón "Recargar"; preservar contexto (INT-006) |
-| `stale` | Datos recargados tras conflicto | Recalcular capabilities antes de habilitar comandos |
+| loading | Petición en vuelo | Skeleton; comandos deshabilitados |
+| loaded | Datos recibidos | Render normal |
+| empty | N=0 en búsqueda | Estado vacío descriptivo |
+| error | Error red / 5xx | Región de error persistente |
+| conflict | 409 optimistic lock | Banner; botón Recargar; preservar contexto |
+| disambiguate | N>1 en búsqueda | Lista de desambiguación |
 
-### 5.5 Privacidad en presentación (INT-009)
+### 5.5 Tabs y contenido
 
-- El **número de expediente** es dato C3; no aparece en `document.title`, URL de navegador
-  ni en logs de frontend.
-- La **referencia de paciente** muestra solo el campo mínimo necesario para identificación
-  operativa (formato exacto pendiente: OQ-EW-002).
+| Tab | Contenido | Restricción |
+|-----|-----------|-------------|
+| **Resumen** | Estado expandido, custodia detallada (con/sin acceptedAt), préstamo activo, solicitud activa | EXPEDIENT_VIEW |
+| **Movimientos** | Timeline MovimientoExpediente (incl. DISPATCHED, CUSTODY_ACCEPTED) | Archivista, Jefatura, Auditor |
+| **Solicitudes** | Historial de solicitudes | Según permisos |
+| **Préstamos** | Historial con FuenteHabilitanteSalida visible | Según permisos |
+| **Incidencias** | Abiertas y cerradas | Según permisos |
+| **Auditoría** | audit_log (DAT-012); distinto de Movimientos | Roles con capability — OQ-EW-003 |
+
+### 5.6 Privacidad en presentación (INT-009)
+
+- expedienteNumero es dato C3; no en document.title, URL visible ni logs frontend.
+- pacienteRef.displayLabel: campo mínimo (OQ-EW-002 no bloqueante).
 - Toasts y notificaciones no contienen datos C3.
-- Nombres de archivos exportados no contienen datos de paciente.
+- Exports no contienen datos de paciente en filename.
 
 ---
 
@@ -315,163 +375,214 @@ La UI tiene estados derivados, no propios:
 
 ```
 apps/web/src/features/expediente-workspace/
-  ├── index.ts                  # barrel export
-  ├── ExpedienteWorkspace.tsx   # page component (routing entry)
-  ├── components/
-  │   ├── ExpedienteHeader.tsx      # número, ref paciente, estado, ubicación, custodia
-  │   ├── CommandBar.tsx            # capabilities → acciones habilitadas
-  │   ├── tabs/
-  │   │   ├── ResumenTab.tsx
-  │   │   ├── MovimientosTab.tsx    # timeline DAT-011
-  │   │   ├── SolicitudesTab.tsx
-  │   │   ├── PrestamosTab.tsx
-  │   │   ├── IncidenciasTab.tsx
-  │   │   └── AuditoriaTab.tsx      # solo si capability presente
-  ├── hooks/
-  │   ├── useExpediente.ts          # fetch + cache del read model
-  │   ├── useExpedienteTimeline.ts  # fetch DAT-011 timeline
-  │   └── useCapabilities.ts        # derivado del read model; no calcula dominio
-  ├── api/
-  │   └── expedienteApi.ts          # funciones tipadas sobre el cliente OpenAPI
-  └── types/
-      └── expediente.types.ts       # tipos derivados del OpenAPI contract
+  index.ts
+  ExpedienteWorkspace.tsx          # routing entry
+  components/
+    ExpedienteHeader.tsx           # numero, ref paciente, estado badge, ubicación, custodia
+    CommandBar.tsx                 # capabilities[] -> botones; no calcula dominio
+    DisambiguationList.tsx         # lista cuando N>1; selección manual obligatoria
+    tabs/
+      ResumenTab.tsx
+      MovimientosTab.tsx           # timeline DAT-011; incluye DISPATCHED/CUSTODY_ACCEPTED
+      SolicitudesTab.tsx
+      PrestamosTab.tsx
+      IncidenciasTab.tsx
+      AuditoriaTab.tsx             # solo si capability presente
+  hooks/
+    useExpediente.ts               # fetch + cache; invalidar en 409
+    useExpedienteSearch.ts         # búsqueda 0..N; normaliza separadores
+    useExpedienteTimeline.ts       # fetch DAT-011
+    useCapabilities.ts             # derivado del read model; no calcula dominio
+  api/
+    expedienteApi.ts               # funciones tipadas sobre cliente OpenAPI
+  types/
+    expediente.types.ts            # derivados del OpenAPI contract
 ```
 
-**Regla (DEL-002):** El frontend no contiene lógica de transición de dominio autorizada.
-`capabilities` viene del API; los hooks derivan de él.
+### Reglas del frontend (DEL-002)
+- No contiene lógica de transición de dominio.
+- capabilities viene del API; hooks derivan de él.
+- useExpedienteSearch normaliza separadores antes de enviar; no elige coincidencias.
 
 ---
 
 ## 7. Módulos del backend
 
-### 7.1 Estructura de módulo (steering/structure.md)
+### 7.1 Estructura
 
 ```
 packages/modules/expediente/
-  ├── domain/
-  │   ├── Expediente.ts              # aggregate root
-  │   ├── ports/
-  │   │   └── ExpedienteRepository.ts  # interface (port)
-  │   └── value-objects/
-  │       ├── Custodia.ts
-  │       ├── Ubicacion.ts
-  │       └── EstadoOperativo.ts
-  ├── application/
-  │   ├── GetExpediente.ts           # use case — query
-  │   ├── GetExpedienteTimeline.ts   # use case — query
-  │   └── ExpedienteCapabilityService.ts  # calcula capabilities
-  └── infrastructure/               # (en packages/platform o co-ubicado)
-      └── PostgresExpedienteRepository.ts  # adapter
+  domain/
+    Expediente.ts                  # aggregate root
+    ports/
+      ExpedienteRepository.ts      # interface
+    value-objects/
+      ExpedienteNumero.ts          # VO con normalización y catálogo de códigos
+      EstadoOperativo.ts           # enum 6 valores; rechaza EN_BUSQUEDA y PRESTADO
+      FuenteHabilitanteSalida.ts   # enum 3 valores
+      Custodia.ts                  # custodianType, custodianReference, acceptedAt
+      Ubicacion.ts
+  application/
+    GetExpediente.ts               # use case query
+    GetExpedienteTimeline.ts       # use case query
+    DispatchExpediente.ts          # use case command
+    AcceptCustody.ts               # use case command
+    ExpedienteCapabilityService.ts # calcula capabilities[]
+
+packages/platform/persistence/
+  PostgresExpedienteRepository.ts  # adapter
 
 apps/api/src/expediente/
-  └── ExpedienteController.ts        # NestJS controller; llama use cases
+  ExpedienteController.ts          # NestJS controller
 ```
 
 ### 7.2 Use Case: GetExpediente
 
 ```
-Input:  { expedienteId: string, actor: ActorContext, tenant: TenantContext }
-Output: ExpedienteReadModel {
-          expediente: ...,
-          custodiaActual: ...,
-          prestamoActivo: ... | null,
-          solicitudActiva: ... | null,
-          incidenciasAbiertas: [...],
-          capabilities: string[]
-        }
+Input: { expedienteId: UUID, actor: ActorContext, tenant: TenantContext }
 
 Pasos:
-  1. Verificar autorización: actor tiene EXPEDIENT_VIEW en tenant  → 403 si no
-  2. Resolver conexión tenant (server-side, never from body)        → TenantContext
-  3. Cargar Expediente por id/numero                               → 404 si no existe
-  4. Cargar préstamo activo (si existe)
-  5. Cargar solicitud activa (si existe)
-  6. Cargar incidencias abiertas (si existen)
-  7. Calcular capabilities según estado + actor + contexto
-  8. Registrar acceso en audit log
-  9. Devolver read model
+  1. Verificar EXPEDIENT_VIEW en tenant             -> 403 si no
+  2. TenantContext server-side                      -> nunca del body
+  3. findById(id, tenant)                           -> 404 si no existe
+  4. Cargar préstamo activo
+  5. Cargar solicitud activa
+  6. Cargar incidencias abiertas
+  7. ExpedienteCapabilityService(estado, solicitud, prestamo, actor)
+  8. INSERT audit_log (EXPEDIENTE_VIEW)
+  9. Retornar ExpedienteReadModel con capabilities[]
 ```
 
-### 7.3 Use Case: GetExpedienteTimeline
+### 7.3 Use Case: DispatchExpediente
 
 ```
-Input:  { expedienteId: string, actor: ActorContext, tenant: TenantContext,
-          pagination: { cursor?, limit } }
-Output: MovimientoExpediente[]  (append-only; ordered by occurred_at DESC)
+Input: { expedienteId, destinoRef, actor, tenant, rowVersion }
 
 Pasos:
-  1. Verificar autorización: actor tiene EXPEDIENT_VIEW en tenant
-  2. Cargar movimientos por expediente_id (DAT-011)
-  3. NO mezclar con audit_log
-  4. Devolver resultado paginado
+  1. Verificar permiso DISPATCH en tenant
+  2. findById con row_version                       -> 409 si conflicto
+  3. Validar EstadoOperativo = APARTADO             -> 409 si no
+  4. Ejecutar DispatchExpediente
+  5. EstadoOperativo -> EN_TRASLADO
+  6. custody_accepted_at -> null
+  7. Guardar con row_version+1
+  8. Emitir ExpedienteDispatched -> MovimientoExpediente
+  9. INSERT audit_log
 ```
 
-### 7.4 ExpedienteCapabilityService
+### 7.4 Use Case: AcceptCustody
 
-Calcula el array `capabilities` para un actor dado y un estado de Expediente.
-La lógica vive en la capa de **aplicación** (no en el dominio puro, porque requiere
-conocer el actor; no en el controller, porque es lógica de negocio).
+```
+Input: { expedienteId, receptorRef, ubicacionDestino, actor, tenant, rowVersion }
 
-Entradas: `EstadoOperativo`, `SolicitudActiva?`, `PrestamoActivo?`, `actor.roles`, `actor.permisos`.
-Salida: `string[]` — nombres de capabilities válidas.
+Pasos:
+  1. Verificar permiso ACCEPT_CUSTODY en tenant (actor es receptor autorizado)
+  2. findById con row_version                       -> 409 si conflicto
+  3. Validar EstadoOperativo = EN_TRASLADO          -> 409 si no
+  4. Ejecutar AcceptCustody
+  5. EstadoOperativo -> EN_CONSULTA
+  6. custody_accepted_at -> now()
+  7. custodio_ref -> receptorRef
+  8. Guardar con row_version+1
+  9. Emitir CustodyAccepted -> MovimientoExpediente
+  10. INSERT audit_log (acción autenticada y auditable)
+```
 
-> Esta lista es la fuente de verdad que el API serializa como `capabilities[]`.
+### 7.5 ExpedienteCapabilityService (actualizado)
+
+Entradas: EstadoOperativo, SolicitudActiva?, PrestamoActivo?, actor.roles,
+          actor.permisos, FuenteHabilitanteSalida disponible (del contexto).
+
+Salida: string[] de nombres de capabilities.
+
+Reglas de capabilities para préstamo:
+- ABRIR_PRESTAMO incluido SOLO si:
+  - EstadoOperativo compatible (ej. DISPONIBLE)
+  - FuenteHabilitanteSalida = CONSULTA_PROGRAMADA + actor es Archivo/Jefatura, O
+  - FuenteHabilitanteSalida = VALE_ARCHIVO_SM_1_14 + actor es Director/Subdirector/Coord., O
+  - FuenteHabilitanteSalida = ORDEN_SUPERIOR + validación pendiente de spec.
+- Sin política conservadora temporal; usar la decisión aprobada directamente.
+
+Reglas de capabilities para despacho/custodia:
+- DISPATCH incluido si EstadoOperativo = APARTADO + actor es Archivo/Jefatura.
+- ACCEPT_CUSTODY incluido si EstadoOperativo = EN_TRASLADO + actor es receptor autorizado.
 
 ---
 
 ## 8. Seguridad y privacidad
 
-| Control | Implementación | Fuente SDB |
-|---------|----------------|------------|
+| Control | Implementación | Fuente |
+|---------|----------------|--------|
 | Autenticación | OIDC/BFF; token validado en cada petición | API-034, SEC |
-| Autorización | Server-side en Use Case; re-verificación completa | SEC-017, AGENTS.md |
+| Autorización | Server-side; incluye FuenteHabilitanteSalida en tupla | SEC-017, AGENTS.md |
 | Tenant isolation | TenantContext server-side; connection pool por tenant | SEC-032, API-005 |
 | Datos C3 en logs | No loguear pacienteRef, expedienteNumero, custodioRef | SEC-003, AGENTS.md |
-| Audit append | INSERT-only desde rol aplicación; nunca UPDATE/DELETE | SEC-038, DAT-012 |
-| Concurrencia | `row_version` en aggregate roots críticos; 409 en conflicto | DAT-019 |
+| Audit append | INSERT-only; nunca UPDATE/DELETE | SEC-038, DAT-012 |
+| Concurrencia | row_version; 409 en conflicto | DAT-019 |
 | Errores | RFC7807; sin stack trace, sin nombre DB, sin datos clínicos | API-006 |
-| CORS / CSRF | Según Volume 07 §27/28 | SEC-027, SEC-028 |
+| CORS/CSRF | Según Volume 07 §27/28 | SEC-027, SEC-028 |
 
 ---
 
-## 9. Testing — capas requeridas (TQ-002)
+## 9. Testing — capas requeridas (TQ-002 v0.2.0)
 
 | Capa | Qué probar | Framework |
 |------|-----------|-----------|
-| **Domain unit** | Invariantes de Expediente; transiciones de estado válidas/inválidas; cálculo de capabilities | Vitest |
-| **Application use case** | GetExpediente con actor autorizado/no autorizado; cálculo de capabilities por estado/rol | Vitest |
-| **PostgreSQL integration** | Repository adapter; queries de read model; no cross-tenant | Vitest + PostgreSQL real |
-| **API contract** | GET /expedientes/{id} happy path; 404; 403; 409; tenant isolation | Vitest / contract test |
-| **Tenant isolation** | Actor de Tenant-A no obtiene expediente de Tenant-B; forged tenant → 403/404 | TQ-007 |
-| **Frontend component** | ExpedienteHeader (estados: loading, loaded, empty, error, conflict); CommandBar (capabilities → botones); AuditoriaTab (oculto sin permiso) | Vitest + Testing Library |
-| **E2E** | Abrir workspace; ver estado/ubicación/custodia; ejecutar comando disponible; ver conflicto de concurrencia | Playwright |
-| **Accesibilidad** | Navegación por teclado; foco visible; ARIA en header y tabs | Playwright / axe |
+| **Domain unit** | ExpedienteNumero (variantes de separador, catálogo); EstadoOperativo (6 valores, rechaza EN_BUSQUEDA/PRESTADO); FuenteHabilitanteSalida; capabilities por estado/rol/fuente; INV-EXP-003..005 | Vitest |
+| **Application UC** | GetExpediente, DispatchExpediente, AcceptCustody con actores autorizados/no; cross-tenant IDOR; audit trail | Vitest |
+| **PostgreSQL integration** | findById, findByNumero (0..N, normalización separadores); no cross-tenant; row_version | Vitest + PostgreSQL real |
+| **API contract** | GET /expedientes/{id}; GET ?numero= colección 0/1/N; POST /dispatch; POST /accept-custody; 403; 404; 409; tenant | Vitest / contract |
+| **Tenant isolation** | Tenant-A no obtiene Tenant-B; forged tenant rechazado | TQ-007 |
+| **Frontend component** | ExpedienteHeader (6 badges; EN_BUSQUEDA/PRESTADO ausentes); DisambiguationList (N>1 no auto-selecciona); CommandBar (capabilities); AuditoriaTab (oculto sin permiso) | Vitest + Testing Library |
+| **E2E** | Búsqueda variantes; desambiguación; estados; despacho/custodia; préstamo por fuente; conflicto 409; tenant | Playwright |
+| **Accesibilidad** | Teclado; foco; ARIA | Playwright / axe |
 
 ---
 
 ## 10. Dependencias entre módulos
 
-El Workspace consume datos de otros módulos pero **no los implementa**:
+| Dato | Módulo propietario | API |
+|------|--------------------|-----|
+| Préstamo activo | Módulo Préstamo | GET /expedientes/{id}/active-loan |
+| Solicitud activa | Módulo Solicitud | join en read model |
+| Incidencias abiertas | Módulo Incidencia | join en read model |
+| Historial movimientos | Módulo Expediente | GET /expedientes/{id}/timeline |
+| Capabilities préstamo | ExpedienteCapabilityService | incluidas en capabilities[] |
 
-| Dato mostrado | Módulo propietario | API consumida |
-|---------------|--------------------|---------------|
-| Préstamo activo | Módulo Préstamo | `GET /expedientes/{id}/active-loan` |
-| Solicitud activa | Módulo Solicitud | (join en read model o sub-query) |
-| Incidencias abiertas | Módulo Incidencia | (join en read model) |
-| Historial de movimientos | Módulo Expediente / Movimiento | `GET /expedientes/{id}/timeline` |
-| Capabilities de préstamo | Módulo Préstamo / AppService | incluidas en `capabilities[]` |
-
-> **OQ-DOM-001** abierta: ¿`MovimientoExpediente` vive en el schema del módulo
-> `expediente` o en un schema dedicado? Impacta la estructura del repository adapter.
+> **OQ-DOM-001 abierta:** ¿MovimientoExpediente en schema de expediente o separado?
+> Implementar en schema de expediente hasta resolución; interfaz abstracta para migración.
 
 ---
 
-## 11. Preguntas de diseño abiertas
+## 11. Open Questions de diseño (no bloqueantes)
 
 | ID | Pregunta | Impacto |
 |----|----------|---------|
-| OQ-EW-DESIGN-001 | ¿Comandos de transición abren drawer inline o navegan a otro módulo? | Diseño de CommandBar y flujo UX |
-| OQ-EW-DESIGN-002 | ¿`capabilities[]` incluye metadatos de por qué está deshabilitado un comando? | Diseño del read model y UX de comandos no disponibles |
-| OQ-EW-DESIGN-003 | ¿El timeline usa cursor-based pagination o offset? | DAT-030, OQ-API-006 |
-| OQ-EW-DESIGN-004 | ¿El read model de expediente es un endpoint único o compuesto (BFF aggregate)? | Performance vs. complejidad; relacionado con OQ-API-002 |
-| OQ-EW-DESIGN-005 | ¿Dónde vive `ExpedienteCapabilityService`: en application layer del módulo Expediente o es un servicio de orquestación cross-module? | Estructura de packages/modules |
+| OQ-EW-DESIGN-001 | ¿Comandos abren drawer inline o navegan a módulo? | CommandBar y flujo UX |
+| OQ-EW-DESIGN-002 | ¿capabilities[] incluye metadatos de por qué está deshabilitado? | Read model y UX |
+| OQ-EW-DESIGN-003 | ¿Timeline usa cursor-based pagination u offset? | GetExpedienteTimeline |
+| OQ-EW-DESIGN-004 | ¿Read model es endpoint único o BFF aggregate? | Performance vs. complejidad |
+| OQ-EW-DESIGN-005 | ¿ExpedienteCapabilityService en módulo Expediente o cross-module? | Estructura packages |
+
+---
+
+## 12. Implementation Readiness
+
+```yaml
+spec_version: "0.3.0"
+blocking_open_questions: []
+non_blocking_open_questions:
+  - OQ-EW-002
+  - OQ-EW-003
+  - OQ-EW-004
+  - OQ-EW-008
+  - OQ-EW-009
+  - OQ-EW-010
+  - OQ-EW-DESIGN-001
+  - OQ-EW-DESIGN-002
+  - OQ-EW-DESIGN-003
+  - OQ-EW-DESIGN-004
+  - OQ-EW-DESIGN-005
+contradictions_found: []
+implementation_ready: true
+```
