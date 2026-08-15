@@ -8,7 +8,7 @@ export class SessionController {
   constructor(
     @Inject(EXPEDIENTE_API_TOKENS.requestContextResolver) private readonly resolver: AuthenticatedRequestContextResolver,
     @Inject(EXPEDIENTE_API_TOKENS.getSessionAuthorization) private readonly useCase: GetSessionAuthorization,
-    private readonly mapper: ApiProblemMapper,
+    @Inject(ApiProblemMapper) private readonly mapper: ApiProblemMapper,
   ) {}
 
   @Get()
@@ -27,7 +27,7 @@ export class UbicacionesController {
   constructor(
     @Inject(EXPEDIENTE_API_TOKENS.requestContextResolver) private readonly resolver: AuthenticatedRequestContextResolver,
     @Inject(EXPEDIENTE_API_TOKENS.listUbicaciones) private readonly useCase: ListUbicaciones,
-    private readonly mapper: ApiProblemMapper,
+    @Inject(ApiProblemMapper) private readonly mapper: ApiProblemMapper,
   ) {}
 
   @Get()

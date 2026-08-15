@@ -24,7 +24,7 @@ export class ExpedienteApiError extends Error {
 }
 
 export class ExpedienteApi {
-  constructor(private readonly fetcher: Fetcher = fetch) {}
+  constructor(private readonly fetcher: Fetcher = (input, init) => fetch(input, init)) {}
 
   async searchByNumero(numero: string): Promise<ExpedienteSearchResponse> {
     return this.get(`/api/v1/expedientes?numero=${encodeURIComponent(numero)}`);

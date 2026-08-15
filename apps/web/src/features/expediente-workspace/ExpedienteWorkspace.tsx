@@ -3,6 +3,7 @@ import type { ExpedienteCapability } from './types/expediente.types';
 import { ExpedienteApiError } from './api/expedienteApi';
 import { CommandBar } from './components/CommandBar';
 import { AcceptCustodyDialog } from './components/AcceptCustodyDialog';
+import { ConflictBanner } from './components/ConflictBanner';
 import { DisambiguationList } from './components/DisambiguationList';
 import { DispatchExpedienteDialog } from './components/DispatchExpedienteDialog';
 import { ExpedienteHeader } from './components/ExpedienteHeader';
@@ -82,6 +83,7 @@ export function ExpedienteWorkspace(props: {
         <>
           <ExpedienteHeader expediente={expediente.data} />
           <CommandBar capabilities={capabilities} onCommand={handleCommand} />
+          <ConflictBanner visible={commands.conflict} onReload={() => { void commands.reload(); }} />
           <WorkspaceTabs
             expediente={expediente.data}
             movimientos={movimientos}

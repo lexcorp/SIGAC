@@ -51,7 +51,7 @@ export class ExpedienteController {
     private readonly dispatchExpedienteUseCase: DispatchExpediente,
     @Inject(EXPEDIENTE_API_TOKENS.acceptCustody)
     private readonly acceptCustodyUseCase: AcceptCustody,
-    private readonly problemMapper: ApiProblemMapper,
+    @Inject(ApiProblemMapper) private readonly problemMapper: ApiProblemMapper,
   ) {}
 
   @Get()

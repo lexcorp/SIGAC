@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { expedienteApi, ExpedienteApiError, type ExpedienteApi } from '../api/expedienteApi';
-import type { AcceptCustodyRequest, DispatchRequest } from '../types/expediente.types';
+import type { AcceptCustodyRequest, DispatchRequest, ProblemDetails } from '../types/expediente.types';
 import { expedienteQueryKey } from './useExpediente';
 
 export function useExpedienteCommands(
@@ -13,7 +13,12 @@ export function useExpedienteCommands(
   const [conflict, setConflict] = useState(false);
 
   const handleError = (error: unknown) => {
-    if (error instanceof ExpedienteApiError && error.problem?.code === 'OPTIMISTIC_LOCK_CONFLICT') {
+    const problem = error instanceof ExpedienteApiError
+      ? error.problem
+      : typeof error === 'object' && error !== null && 'problem' in error
+        ? (error as { readonly problem?: ProblemDetails }).problem
+        : null;
+    if (problem?.code === 'OPTIMISTIC_LOCK_CONFLICT') {
       setConflict(true);
     }
   };
