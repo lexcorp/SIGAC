@@ -63,3 +63,6 @@ conflict: rollback sin aggregate ni Movimiento, seguido de audit `conflict` exte
 Comprobar identidad temporal:
 `DomainEvent.occurredAt === MovimientoExpedienteAppend.occurredAt ===
 transaction.operationOccurredAt`, y destinationCustodianRef obligatorio en DISPATCHED.
+Para estado incompatible, comprobar rollback sin aggregate/Movimiento/audit success,
+append externo `invalid-transition` y `ApplicationError(REQUEST_INVALID_TRANSITION)`.
+Comprobar además que sólo optimistic rowVersion mismatch usa audit `conflict`.

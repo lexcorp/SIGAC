@@ -125,6 +125,9 @@ exactamente ese mismo instante.
 Audit: `EXPEDIENTE_DISPATCH/EXPEDIENTE/{expedienteId}`. Denied/not-found quedan fuera de
 la transacción mutante. Optimistic conflict provoca rollback completo y después se
 audita `conflict` fuera de la UoW fallida; no persiste aggregate ni Movimiento.
+Una transición inválida también provoca rollback completo y después se audita
+`invalid-transition` fuera de la UoW; produce `REQUEST_INVALID_TRANSITION`/HTTP 409.
+`conflict` permanece reservado exclusivamente al mismatch de rowVersion.
 
 ## Audit
 

@@ -40,11 +40,14 @@ Application y contiene exclusivamente:
 - action
 - resourceType
 - resourceId
-- result: `success | denied | not-found | conflict`
+- result: `success | denied | not-found | conflict | invalid-transition`
 - changeSummary opcional, sólo cuando esté permitido
 
 `conflict` representa optimistic lock mismatch. Para una mutación fallida se escribe
 fuera de la UoW mutante y únicamente después de su rollback.
+`invalid-transition` representa un recurso existente y actor autorizado cuya operación
+no es válida para el estado actual. También se escribe fuera de la UoW mutante después
+del rollback. No se persisten aggregate, Movimiento ni audit success.
 
 `AuditRecord` es el registro persistido completo. `AuditWriter` lo enriquece con:
 

@@ -2,7 +2,7 @@
 
 **Estado:** APPROVED  
 **Fecha:** 2026-08-15  
-**Scope:** Expediente Workspace v0.3.10 / T-07
+**Scope:** Expediente Workspace v0.3.11 / T-07
 
 ## DSP-EW-001 — Semántica
 
@@ -173,16 +173,44 @@ registran fuera de la transacción mutante mediante `AuditWriter`.
 El resultado canónico de audit es:
 
 ```typescript
-type AuditResult = 'success' | 'denied' | 'not-found' | 'conflict';
+type AuditResult =
+  | 'success'
+  | 'denied'
+  | 'not-found'
+  | 'conflict'
+  | 'invalid-transition';
 ```
 
-`denied` representa falta de permission, `not-found` recurso ausente en el tenant,
-`conflict` optimistic lock mismatch y `success` una mutación confirmada.
+`denied` representa falta de permission, `not-found` recurso ausente o no visible en el
+tenant activo, `conflict` exclusivamente optimistic lock mismatch, `invalid-transition`
+un recurso existente y actor autorizado cuya operación no es válida para el estado
+actual, y `success` una operación confirmada.
 
 Ante `OPTIMISTIC_LOCK_CONFLICT`, la UoW mutante hace rollback completo. Fuera de esa
 UoW fallida y después del rollback, `AuditWriter` registra
 `EXPEDIENTE_DISPATCH/EXPEDIENTE/expedienteId` con `result=conflict`. No se persisten
 cambio de aggregate, Movimiento ni audit success.
+
+## AUD-EW-010..013 — Transición inválida
+
+`AuditResult` incorpora `invalid-transition`. `REQUEST_INVALID_TRANSITION` produce ese
+resultado y posteriormente API lo mapea a HTTP 409. `conflict` permanece reservado
+exclusivamente a `OPTIMISTIC_LOCK_CONFLICT`.
+
+Ante una transición inválida, la UoW mutante hace rollback. No se persiste el aggregate,
+no se crea MovimientoExpediente y no se escribe audit success. Después del rollback y
+fuera de la UoW mutante, `AuditWriter` registra:
+
+- `action = EXPEDIENTE_DISPATCH`;
+- `resourceType = EXPEDIENTE`;
+- `resourceId = expedienteId`;
+- `result = invalid-transition`.
+
+Application lanza después `ApplicationError(REQUEST_INVALID_TRANSITION)`. Varios errores
+de Application pueden compartir HTTP 409 sin compartir AuditResult:
+
+- `OPTIMISTIC_LOCK_CONFLICT` → `conflict` → HTTP 409;
+- `REQUEST_INVALID_TRANSITION` → `invalid-transition` → HTTP 409.
 
 ## DSP-EW-011 — Separación
 

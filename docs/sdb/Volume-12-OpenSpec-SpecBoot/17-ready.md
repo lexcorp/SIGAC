@@ -22,3 +22,6 @@ no vacío; AuditResult incorpora conflict y su append ocurre después del rollba
 de la UoW mutante.
 El gap temporal también está cerrado por DOM-EVENT-001: Application pasa
 operationOccurredAt al aggregate y evento/movimiento comparten exactamente el instante.
+El audit de estado incompatible está cerrado por AUD-EW-010..013:
+`REQUEST_INVALID_TRANSITION` usa `invalid-transition`; `conflict` queda reservado al
+optimistic lock mismatch. T-07 no tiene gaps bloqueantes conocidos.

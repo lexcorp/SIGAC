@@ -1,11 +1,11 @@
 ---
 spec: expediente-workspace
-version: "0.3.10"
+version: "0.3.11"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 requires:
-  - requirements.md (v0.3.10)
-  - design.md (v0.3.10)
+  - requirements.md (v0.3.11)
+  - design.md (v0.3.11)
 decisions_applied:
   - "OQ-EW-001 RESOLVED"
   - "OQ-EW-005 RESOLVED"
@@ -26,6 +26,7 @@ decisions_applied:
   - "OQ-DOM-001 RESOLVED"
   - "DISPATCH-DECISION DSP-EW-001..011 APPROVED; DSP-GAP-001/002 CLOSED"
   - "DOM-EVENT-001 APPROVED"
+  - "AUD-EW-010..013 APPROVED"
 ready_gate: "READY-GATE.md — todos los ítems deben estar marcados antes de iniciar T-01"
 done_gate: "OS-018 — spec + tests + API/migrations + auth/tenant/audit + traceability"
 ---
@@ -60,7 +61,7 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
 ## Grupo 0 — Trazabilidad
 
 ### T-00 Completar traceability.md
-- **Descripción:** Verificar que traceability.md v0.3.10 tiene cadenas completas
+- **Descripción:** Verificar que traceability.md v0.3.11 tiene cadenas completas
   para todas las capacidades. Confirmar que GAP-002, GAP-003, GAP-007 están cerrados
   y que no quedan eslabones PENDIENTE en BR, UC o SPEC para las decisiones resueltas.
 - **Criterio de done:** Ningún REQ-EW-* sin cadena completa; matrices actualizadas.
@@ -287,9 +288,12 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
   9. Denied/not-found fuera de la transacción mutante. Ante optimistic conflict,
      rollback completo y audit `conflict` fuera de la UoW fallida; sin aggregate ni
      Movimiento persistidos.
+  10. Ante estado incompatible, rollback completo; audit `invalid-transition` fuera de
+      la UoW y `ApplicationError(REQUEST_INVALID_TRANSITION)`. No reutilizar `conflict`.
 - **Tests requeridos (Vitest):**
   - APARTADO -> EN_TRASLADO exitoso.
   - EstadoOperativo != APARTADO -> 409.
+  - Estado incompatible -> audit `invalid-transition`, sin persistencia parcial.
   - rowVersion incorrecto -> 409.
   - custody_accepted_at = null tras dispatch.
   - `DomainEvent.occurredAt`, Movimiento.occurredAt y operationOccurredAt son el mismo
@@ -616,7 +620,7 @@ T-23 (CI pipeline) <- todas
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.10"
+spec_version: "0.3.11"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

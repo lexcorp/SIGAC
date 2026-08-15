@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.10"
+version: "0.3.11"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -32,6 +32,7 @@ decisions_applied:
   - "OQ-DOM-001 RESOLVED"
   - "DISPATCH-DECISION DSP-EW-001..011 APPROVED; DSP-GAP-001/002 CLOSED"
   - "DOM-EVENT-001 APPROVED"
+  - "AUD-EW-010..013 APPROVED"
 ---
 
 # Expediente Workspace — Requirements
@@ -268,8 +269,14 @@ operativos; `EXPEDIENT_VIEW` no es una capability.
   no se usa string vacío ni se deriva desde destination.
 - **Concurrencia:** optimistic lock mismatch revierte la UoW mutante y después registra
   audit `conflict` fuera de ella; no persiste aggregate ni Movimiento.
-- **AuditResult:** `success | denied | not-found | conflict`; respectivamente mutación
-  confirmada, permission ausente, recurso tenant-scoped ausente y optimistic lock mismatch.
+- **AuditResult:** `success | denied | not-found | conflict | invalid-transition`;
+  respectivamente operación confirmada, permission ausente, recurso tenant-scoped
+  ausente/no visible, optimistic lock mismatch y operación inválida para el estado de
+  un recurso existente con actor autorizado.
+- **Transición inválida:** rollback sin aggregate, Movimiento ni audit success; después
+  audit `invalid-transition` fuera de la UoW y
+  `ApplicationError(REQUEST_INVALID_TRANSITION)`. `conflict` es exclusivo de
+  `OPTIMISTIC_LOCK_CONFLICT`; ambos errores se mapean posteriormente a HTTP 409.
 - **Tiempo efectivo (DOM-EVENT-001):** Application pasa
   `transaction.operationOccurredAt` a `Expediente.dispatch` como `occurredAt`; el
   Domain Event y Movimiento DISPATCHED comparten exactamente ese instante. No procede
@@ -536,7 +543,7 @@ Ninguna. OQ-EW-001, OQ-EW-005, OQ-EW-006 y OQ-EW-007 están RESUELTAS.
 ## 7. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.10"
+spec_version: "0.3.11"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.10"
+version: "0.3.11"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -31,8 +31,9 @@ decisions_applied:
   - "OQ-DOM-001 RESOLVED"
   - "DISPATCH-DECISION DSP-EW-001..011 APPROVED; DSP-GAP-001/002 CLOSED"
   - "DOM-EVENT-001 APPROVED"
+  - "AUD-EW-010..013 APPROVED"
 requires:
-  - requirements.md (v0.3.10)
+  - requirements.md (v0.3.11)
 open_questions_blocking: []
 open_questions_non_blocking:
   - OQ-EW-002
@@ -533,7 +534,12 @@ interface AuditEntry {
   readonly action: string;
   readonly resourceType: string;
   readonly resourceId: string;
-  readonly result: 'success' | 'denied' | 'not-found' | 'conflict';
+  readonly result:
+    | 'success'
+    | 'denied'
+    | 'not-found'
+    | 'conflict'
+    | 'invalid-transition';
   readonly changeSummary?: Readonly<Record<string, string>>;
 }
 
@@ -656,6 +662,10 @@ no crea new Date() para fechar el evento ni obtiene un Clock. Para DISPATCHED,
 `destinationCustodianRef: string` es obligatorio. Se verifica que
 `DomainEvent.occurredAt === MovimientoExpedienteAppend.occurredAt ===
 transaction.operationOccurredAt`. No se introduce event factory/envelope diferido.
+Si el estado no permite Dispatch, la UoW hace rollback sin aggregate, Movimiento ni
+audit success. Después se registra `EXPEDIENTE_DISPATCH/EXPEDIENTE/expedienteId` con
+`invalid-transition` fuera de la UoW y se lanza `REQUEST_INVALID_TRANSITION`/409.
+`conflict` permanece exclusivo del mismatch de rowVersion aunque ambos errores usen 409.
 
 ### 7.4 Use Case: AcceptCustody
 
@@ -774,7 +784,7 @@ por `GetExpediente` (READ-MODEL-COMPOSITION-DECISION).
 ## 12. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.10"
+spec_version: "0.3.11"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

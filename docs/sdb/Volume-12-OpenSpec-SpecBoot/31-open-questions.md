@@ -46,7 +46,7 @@ y ownership de Movimiento en Archive Operations/schema tenant. Permanece abierta
 
 También permanecen abiertas `OQ-EW-002`, `OQ-EW-003` y `OQ-EW-004`.
 
-## DispatchExpediente T-07 (v0.3.10)
+## DispatchExpediente T-07 (v0.3.11)
 
 DSP-EW-001..011 define semántica, input, evento, MovimientoWriter, timestamps, UoW y
 audit. DSP-GAP-001/002 están CLOSED: intendedCustodianRef es obligatorio y no vacío;
@@ -54,3 +54,5 @@ optimistic conflict usa AuditResult `conflict` después del rollback.
 El gap temporal está CLOSED mediante DOM-EVENT-001: Application pasa
 operationOccurredAt explícitamente a `Expediente.dispatch`; evento y movimiento usan
 exactamente el mismo instante.
+AUD-EW-010..013 cierran el audit de transición inválida: usa `invalid-transition` fuera
+de la UoW después del rollback; `conflict` permanece exclusivo de optimistic locking.

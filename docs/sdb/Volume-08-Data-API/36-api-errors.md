@@ -36,6 +36,13 @@ validaciones de dominio.
 }
 ```
 
+Compartir HTTP 409 no implica compartir resultado de audit:
+
+- `OPTIMISTIC_LOCK_CONFLICT` → audit `conflict`;
+- `REQUEST_INVALID_TRANSITION` → audit `invalid-transition`.
+
+`conflict` está reservado exclusivamente al mismatch de rowVersion.
+
 No stack trace/SQL/internal DB name.
 
 La capa API mapea el code a RFC7807 y lo conserva como extensión estable:

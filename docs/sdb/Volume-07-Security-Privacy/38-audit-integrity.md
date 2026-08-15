@@ -49,3 +49,6 @@ Para Dispatch, acción `EXPEDIENTE_DISPATCH`, recurso `EXPEDIENTE`, ID expedient
 Success es atómico con aggregate/movimiento; denied/not-found se escriben sin mutación.
 Optimistic lock mismatch se registra como `conflict`, fuera de la UoW mutante y después
 de su rollback completo. No persiste aggregate, Movimiento ni audit success.
+Una transición inválida se registra como `invalid-transition` fuera de la UoW mutante y
+después del rollback. Tampoco persiste aggregate, Movimiento ni audit success.
+`conflict` no se reutiliza para transiciones inválidas.
