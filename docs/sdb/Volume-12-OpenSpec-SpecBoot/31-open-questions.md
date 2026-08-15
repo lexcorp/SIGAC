@@ -24,3 +24,12 @@ No se requiere política conservadora temporal para ninguna de ellas.
 `docs/decisions/expediente-workspace/AUTHORIZATION-DECISION.md`.
 OQ-EW-003 permanece abierta y no bloqueante; el permiso del tab Auditoría queda
 fuera de las capabilities operativas.
+
+## Read model composition de T-05 (2026-08-15)
+
+`OQ-EW-DESIGN-004` está RESOLVED a favor de un endpoint/read model agregado compuesto
+server-side. La decisión y los contratos canónicos están en
+`docs/decisions/expediente-workspace/READ-MODEL-COMPOSITION-DECISION.md`.
+
+Permanecen abiertas `OQ-EW-002`, `OQ-EW-003`, `OQ-EW-004`, las OQs de
+retención/paginación del timeline y el ownership físico de `MovimientoExpediente`.

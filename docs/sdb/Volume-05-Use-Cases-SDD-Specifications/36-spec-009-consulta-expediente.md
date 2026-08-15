@@ -41,6 +41,18 @@ FR-VIEW-007 Historial de movimientos operativos (`MovimientoExpediente`).
 
 FR-VIEW-008 `capabilities[]` — acciones válidas para el actor en el estado actual.
 
+FR-VIEW-009 El backend compone un único `ExpedienteReadModel`. El Workspace consume
+proyecciones 0..1 de Solicitud activa y Préstamo activo, y 0..N de Incidencias abiertas,
+siempre por `ExpedienteId` y `TenantContext`. El frontend no compone el read model desde
+múltiples dominios.
+
+FR-VIEW-010 Los contratos de proyección son propiedad de Application de Expediente
+Workspace y no exponen aggregates ajenos. Sus schemas exactos están definidos en
+READ-MODEL-COMPOSITION-DECISION READ-EW-003..006.
+
+FR-VIEW-011 La consulta registra audit append-only en Application mediante `AuditWriter`;
+el resultado es `success`, `denied` o `not-found` y el registro no contiene datos C3.
+
 ## Non-goals
 - No mostrar diagnósticos, notas clínicas, tratamientos ni estudios.
 - No seleccionar automáticamente entre coincidencias múltiples.
@@ -74,4 +86,5 @@ And la custodia no muestra acceptedAt hasta que CustodyAccepted ocurra
 ```
 
 ## Fuente
-UC-018, DDD-013, BIZ-007, DECISION-REGISTER OQ-EW-001, OQ-EW-007, DEC-EW-STATE-001.
+UC-018, DDD-013, BIZ-007, DECISION-REGISTER OQ-EW-001, OQ-EW-007,
+DEC-EW-STATE-001, READ-MODEL-COMPOSITION-DECISION.

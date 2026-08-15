@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.1"
+version: "0.3.2"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 traceability_model: "OS-007 / SDD-006"
@@ -12,10 +12,12 @@ decisions_applied:
   - "OQ-EW-007 RESOLVED"
   - "DEC-EW-STATE-001 ACCEPTED"
   - "AUTHORIZATION-DECISION APPROVED"
+  - "READ-MODEL-COMPOSITION-DECISION APPROVED"
+  - "OQ-EW-DESIGN-004 RESOLVED"
 requires:
-  - requirements.md (v0.3.1)
-  - design.md (v0.3.1)
-  - tasks.md (v0.3.1)
+  - requirements.md (v0.3.2)
+  - design.md (v0.3.2)
+  - tasks.md (v0.3.2)
 ---
 
 # Expediente Workspace — Traceability
@@ -34,11 +36,11 @@ requires:
 
 | Eslabón | Referencia | Detalle |
 |---------|-----------|---------|
-| **Source / SDB** | DDD-013, DAT-006 v0.2.0, NOM-004-SSA3-2012, LGPDPPSO | Expediente con identificador institucional y situación operativa coherente |
+| **Source / SDB** | DDD-013, DAT-006 v0.2.0, READ-MODEL-COMPOSITION-DECISION, NOM-004-SSA3-2012, LGPDPPSO | Expediente con identificador institucional y composición server-side |
 | **Business Rule** | INV-EXP-001, INV-EXP-002, INV-EXP-004 | Identificador institucional; coherencia operativa; EstadoOperativo con 6 valores válidos |
 | **Workflow** | WF (Read Models — V05-41 SPEC-009) | Flujo de consulta |
-| **Use Case** | UC-018 v0.2.0 | Read model: numero, paciente mínimo, EstadoOperativo (6 valores), ubicación, custodia, préstamo, solicitud, incidencias |
-| **SPEC** | SPEC-009 v0.2.0 FR-VIEW-001..007 | Situación actual completa |
+| **Use Case** | UC-018 v0.2.0 | GetExpediente compone read model; query ports 0..1/0..N tenant-scoped |
+| **SPEC** | SPEC-009 v0.2.0 FR-VIEW-001..011 | Situación actual completa; proyecciones y audit Application |
 | **REQ** | REQ-EW-001, REQ-EW-003..007 | Recuperar; ubicación; custodia; préstamo; solicitud; incidencias |
 | **API** | GET /api/v1/expedientes/{id} (API-011 v0.2.0) | Read model con capabilities[] |
 | **UI** | ExpedienteHeader (design.md §5.1), ResumenTab (APP-003 v0.2.0) | Header above-the-fold; badges de 6 estados |
@@ -201,10 +203,10 @@ requires:
 
 | Eslabón | Referencia | Detalle |
 |---------|-----------|---------|
-| **Source / SDB** | SEC-038, DAT-012, NOM-004-SSA3-2012 | Append-only; actor y tenant obligatorios |
+| **Source / SDB** | SEC-038, DAT-012, AUD-EW-001/002, NOM-004-SSA3-2012 | AuditWriter append-only; actor y tenant obligatorios |
 | **Business Rule** | "Toda acción registra actor, tenant, recurso y resultado" | — |
 | **REQ** | NFR-EW-003 | — |
-| **API** | INSERT audit_log dentro de cada UC | — |
+| **API** | Application usa AuditWriter; controller no escribe audit | — |
 | **UI** | AuditoriaTab (solo roles autorizados) | — |
 | **Test** | AC-EW-014/015; T-20 | Integration: INSERT tras cada operación |
 
@@ -275,6 +277,7 @@ requires:
 | NFR-EW-004 | TR-010 | Cubierto |
 | NFR-EW-005 | TR-013 | Cubierto |
 | NFR-EW-006 | TR-011 | Cubierto |
+| NFR-EW-007 | TR-012 | Cubierto — AuditWriter Application append-only |
 
 ---
 
@@ -332,13 +335,14 @@ requires:
 | 0.2.0 | 2026-08-14 | Primera versión completa: 10 cadenas TR, matrices REQ/AC, 10 GAPs |
 | 0.3.0 | 2026-08-14 | Decisiones OQ-EW-001/005/006/007 y DEC-EW-STATE-001 aplicadas. GAP-002/003/007 cerrados. 15 cadenas TR. REQ-EW-011/012 añadidas. Búsqueda 0..N, normalización, desambiguación, FuenteHabilitanteSalida, dispatch, custodia aceptada integrados. |
 | 0.3.1 | 2026-08-15 | AUTHORIZATION-DECISION aplicada. AUTH-GAP-001..013 cerrados para T-04; roles, permissions, capabilities, estados contextuales, SM 1-14 y tenant prevalidado formalizados. |
+| 0.3.2 | 2026-08-15 | READ-MODEL-COMPOSITION-DECISION aplicada. OQ-EW-DESIGN-004 resuelta; query ports de proyección y AuditWriter definidos para T-05..T-08. |
 
 ---
 
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.1"
+spec_version: "0.3.2"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

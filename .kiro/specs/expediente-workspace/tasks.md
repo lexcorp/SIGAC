@@ -1,11 +1,11 @@
 ---
 spec: expediente-workspace
-version: "0.3.1"
+version: "0.3.2"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 requires:
-  - requirements.md (v0.3.1)
-  - design.md (v0.3.1)
+  - requirements.md (v0.3.2)
+  - design.md (v0.3.2)
 decisions_applied:
   - "OQ-EW-001 RESOLVED"
   - "OQ-EW-005 RESOLVED"
@@ -13,6 +13,8 @@ decisions_applied:
   - "OQ-EW-007 RESOLVED"
   - "DEC-EW-STATE-001 ACCEPTED"
   - "AUTHORIZATION-DECISION APPROVED"
+  - "READ-MODEL-COMPOSITION-DECISION APPROVED"
+  - "OQ-EW-DESIGN-004 RESOLVED"
 ready_gate: "READY-GATE.md — todos los ítems deben estar marcados antes de iniciar T-01"
 done_gate: "OS-018 — spec + tests + API/migrations + auth/tenant/audit + traceability"
 ---
@@ -36,6 +38,7 @@ Las OQs que eran bloqueantes en v0.2.0 están resueltas. La implementación pued
 | OQ-EW-006 | RESOLVED | DECISION-REGISTER, DDD-018, WF-005, BIZ-008 |
 | OQ-EW-007 | RESOLVED | DECISION-REGISTER, DDD-009 INV-EXP-003, BR-017 |
 | DEC-EW-STATE-001 | ACCEPTED | DECISION-REGISTER, DDD-012 |
+| OQ-EW-DESIGN-004 | RESOLVED | READ-MODEL-COMPOSITION-DECISION, UC-018, SPEC-009 |
 
 OQ no bloqueantes (implementación avanza con decisión provisional):
 OQ-EW-002, OQ-EW-003, OQ-EW-004, OQ-EW-008, OQ-EW-009, OQ-EW-010,
@@ -46,7 +49,7 @@ OQ-EW-DESIGN-001 a OQ-EW-DESIGN-005.
 ## Grupo 0 — Trazabilidad
 
 ### T-00 Completar traceability.md
-- **Descripción:** Verificar que traceability.md v0.3.1 tiene cadenas completas
+- **Descripción:** Verificar que traceability.md v0.3.2 tiene cadenas completas
   para todas las capacidades. Confirmar que GAP-002, GAP-003, GAP-007 están cerrados
   y que no quedan eslabones PENDIENTE en BR, UC o SPEC para las decisiones resueltas.
 - **Criterio de done:** Ningún REQ-EW-* sin cadena completa; matrices actualizadas.
@@ -178,9 +181,19 @@ OQ-EW-DESIGN-001 a OQ-EW-DESIGN-005.
   1. Verificar EXPEDIENT_VIEW en tenant -> 403 si no.
   2. TenantContext server-side.
   3. findById(id, tenant) -> 404 si no existe.
-  4. Cargar préstamo activo, solicitud activa, incidencias abiertas.
+  4. Consultar los puertos Application propiedad del Workspace:
+     - `ActiveLoanQueryPort.findActiveByExpedienteId(id, tenant)` ->
+       `ActiveLoanSummary | null` (0..1).
+     - `ActiveRequestQueryPort.findActiveByExpedienteId(id, tenant)` ->
+       `ActiveRequestSummary | null` (0..1).
+     - `OpenIncidentsQueryPort.findOpenByExpedienteId(id, tenant)` ->
+       `readonly OpenIncidentSummary[]` (0..N; vacío = `[]`).
+     Los summaries tienen exactamente los campos de READ-EW-003..005 y no exponen
+     aggregates ajenos. `ExpedienteId` y `TenantContext` son obligatorios.
   5. ExpedienteCapabilityService.
-  6. INSERT audit_log (EXPEDIENTE_VIEW).
+  6. `AuditWriter.append(record, tenant)` con `action=EXPEDIENTE_VIEW`,
+     `resourceType=EXPEDIENTE`, resultado `success|denied|not-found`; timestamp
+     server-side y sin datos C3. El controller no escribe audit.
   7. Retornar ExpedienteReadModel con capabilities[].
 - **Tests requeridos (Vitest):**
   - Actor autorizado + expediente existente -> read model completo.
@@ -188,7 +201,11 @@ OQ-EW-DESIGN-001 a OQ-EW-DESIGN-005.
   - Expediente inexistente -> 404; audit registra intento.
   - Tenant-A no obtiene expediente de Tenant-B (INV-EXP-003 verificación).
   - estadoOperativo en respuesta es uno de los 6 valores válidos.
-- **Fuente SDB:** UC-018 v0.2.0, SPEC-009 v0.2.0, SEC-017, SEC-032, SEC-038, DAT-012.
+  - Ausencia de préstamo/solicitud -> ambos `null`; ausencia de incidencias -> `[]`.
+  - Cada query port recibe el mismo ExpedienteId y TenantContext server-side.
+  - Los intentos success/denied/not-found escriben audit sin datos C3.
+- **Fuente SDB:** UC-018 v0.2.0, SPEC-009 v0.2.0, SEC-017, SEC-032, SEC-038,
+  DAT-012, READ-MODEL-COMPOSITION-DECISION.
 - **Dependencias:** T-03, T-04.
 
 ### T-06 Implementar Use Case GetExpedienteTimeline
@@ -537,7 +554,7 @@ T-23 (CI pipeline) <- todas
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.1"
+spec_version: "0.3.2"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002
@@ -549,7 +566,6 @@ non_blocking_open_questions:
   - OQ-EW-DESIGN-001
   - OQ-EW-DESIGN-002
   - OQ-EW-DESIGN-003
-  - OQ-EW-DESIGN-004
   - OQ-EW-DESIGN-005
 contradictions_found: []
 implementation_ready: true

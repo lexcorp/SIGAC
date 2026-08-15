@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.1"
+version: "0.3.2"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -18,8 +18,10 @@ decisions_applied:
   - "OQ-EW-007 RESOLVED"
   - "DEC-EW-STATE-001 ACCEPTED"
   - "AUTHORIZATION-DECISION APPROVED"
+  - "READ-MODEL-COMPOSITION-DECISION APPROVED"
+  - "OQ-EW-DESIGN-004 RESOLVED"
 requires:
-  - requirements.md (v0.3.1)
+  - requirements.md (v0.3.2)
 open_questions_blocking: []
 open_questions_non_blocking:
   - OQ-EW-002
@@ -31,7 +33,6 @@ open_questions_non_blocking:
   - OQ-EW-DESIGN-001
   - OQ-EW-DESIGN-002
   - OQ-EW-DESIGN-003
-  - OQ-EW-DESIGN-004
   - OQ-EW-DESIGN-005
 ---
 
@@ -66,6 +67,10 @@ Browser (React)
                       └─ PostgreSQL Repository Adapter  [packages/platform/persistence]
                            └─ Tenant Database (database-per-tenant)
 ```
+
+`GetExpediente` compone un único read model en Application. El frontend consume esa
+respuesta y no orquesta bounded contexts. Application del Workspace posee los query
+ports mínimos como consumidor de proyecciones.
 
 | Capa | Responsabilidad | Prohibido |
 |------|----------------|-----------|
@@ -253,12 +258,31 @@ Acceso de la aplicación: INSERT únicamente.
     "aceptadaEn": "ISO8601|null"  // null si EN_TRASLADO sin CustodyAccepted
   },
   "prestamoActivo": {
-    "fuenteHabilitante": "CONSULTA_PROGRAMADA|VALE_ARCHIVO_SM_1_14|ORDEN_SUPERIOR",
-    "estado": "Activo|Vencido",
-    ...
+    "prestamoId": "uuid",
+    "finalidad": "string",
+    "custodioRef": "string",
+    "destinoTipo": "string",
+    "destinoRef": "string",
+    "dueAt": "ISO8601",
+    "fuenteHabilitanteSalida": "CONSULTA_PROGRAMADA|VALE_ARCHIVO_SM_1_14|ORDEN_SUPERIOR",
+    "estado": "Activo|Vencido"
   } | null,
-  "solicitudActiva": { "estado": "EnBusqueda|Preparada|...", ... } | null,
-  "incidenciasAbiertas": [ ... ],
+  "solicitudActiva": {
+    "solicitudId": "uuid",
+    "tipo": "string",
+    "origen": "string",
+    "estado": "Pendiente|Asignada|EnBusqueda|Localizada|Preparada|Entregada|Cancelada|NoLocalizada",
+    "asignadoA": "string|null"
+  } | null,
+  "incidenciasAbiertas": [{
+    "incidenciaId": "uuid",
+    "tipo": "string",
+    "severidad": "string",
+    "estado": "Abierta|EnInvestigacion|Escalada",
+    "resumen": "string",
+    "asignadoA": "string|null",
+    "openedAt": "ISO8601"
+  }],
   "capabilities": ["DISPATCH", "SOLICITAR", "REPORTAR_INCIDENCIA", ...],
   "rowVersion": 42,
   "updatedAt": "ISO8601"
@@ -439,6 +463,39 @@ apps/api/src/expediente/
 
 ### 7.2 Use Case: GetExpediente
 
+#### Puertos de Application propiedad de Expediente Workspace
+
+```typescript
+interface ActiveRequestQueryPort {
+  findActiveByExpedienteId(
+    expedienteId: ExpedienteId,
+    tenant: TenantContext,
+  ): Promise<ActiveRequestSummary | null>;
+}
+
+interface ActiveLoanQueryPort {
+  findActiveByExpedienteId(
+    expedienteId: ExpedienteId,
+    tenant: TenantContext,
+  ): Promise<ActiveLoanSummary | null>;
+}
+
+interface OpenIncidentsQueryPort {
+  findOpenByExpedienteId(
+    expedienteId: ExpedienteId,
+    tenant: TenantContext,
+  ): Promise<readonly OpenIncidentSummary[]>;
+}
+
+interface AuditWriter {
+  append(record: AuditRecord, tenant: TenantContext): Promise<void>;
+}
+```
+
+Los summaries y `AuditRecord` tienen exactamente los campos definidos en
+READ-MODEL-COMPOSITION-DECISION. Ausencia: Solicitud/Préstamo `null`; Incidencias `[]`.
+Los query ports no exponen aggregates. `AuditWriter` no ofrece update/delete.
+
 ```
 Input: { expedienteId: UUID, actor: ActorContext, tenant: TenantContext }
 
@@ -446,11 +503,11 @@ Pasos:
   1. Verificar EXPEDIENT_VIEW en tenant             -> 403 si no
   2. TenantContext server-side                      -> nunca del body
   3. findById(id, tenant)                           -> 404 si no existe
-  4. Cargar préstamo activo
-  5. Cargar solicitud activa
-  6. Cargar incidencias abiertas
+  4. ActiveLoanQueryPort.findActiveByExpedienteId(id, tenant)
+  5. ActiveRequestQueryPort.findActiveByExpedienteId(id, tenant)
+  6. OpenIncidentsQueryPort.findOpenByExpedienteId(id, tenant)
   7. ExpedienteCapabilityService(estado, solicitud, prestamo, actor)
-  8. INSERT audit_log (EXPEDIENTE_VIEW)
+  8. AuditWriter.append(EXPEDIENTE_VIEW, success|denied|not-found, tenant)
   9. Retornar ExpedienteReadModel con capabilities[]
 ```
 
@@ -555,9 +612,9 @@ Reglas de capabilities para despacho/custodia:
 
 | Dato | Módulo propietario | API |
 |------|--------------------|-----|
-| Préstamo activo | Módulo Préstamo | GET /expedientes/{id}/active-loan |
-| Solicitud activa | Módulo Solicitud | join en read model |
-| Incidencias abiertas | Módulo Incidencia | join en read model |
+| Préstamo activo | Módulo Préstamo; query port consumidor en Workspace | read model server-side y GET /expedientes/{id}/active-loan |
+| Solicitud activa | Módulo Solicitud; query port consumidor en Workspace | read model server-side |
+| Incidencias abiertas | Módulo Incidencia; query port consumidor en Workspace | read model server-side |
 | Historial movimientos | Módulo Expediente | GET /expedientes/{id}/timeline |
 | Capabilities préstamo | ExpedienteCapabilityService | incluidas en capabilities[] |
 
@@ -573,15 +630,17 @@ Reglas de capabilities para despacho/custodia:
 | OQ-EW-DESIGN-001 | ¿Comandos abren drawer inline o navegan a módulo? | CommandBar y flujo UX |
 | OQ-EW-DESIGN-002 | ¿capabilities[] incluye metadatos de por qué está deshabilitado? | Read model y UX |
 | OQ-EW-DESIGN-003 | ¿Timeline usa cursor-based pagination u offset? | GetExpedienteTimeline |
-| OQ-EW-DESIGN-004 | ¿Read model es endpoint único o BFF aggregate? | Performance vs. complejidad |
 | OQ-EW-DESIGN-005 | ¿ExpedienteCapabilityService en módulo Expediente o cross-module? | Estructura packages |
+
+`OQ-EW-DESIGN-004` está RESOLVED: endpoint/read model agregado compuesto server-side
+por `GetExpediente` (READ-MODEL-COMPOSITION-DECISION).
 
 ---
 
 ## 12. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.1"
+spec_version: "0.3.2"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002
@@ -593,7 +652,6 @@ non_blocking_open_questions:
   - OQ-EW-DESIGN-001
   - OQ-EW-DESIGN-002
   - OQ-EW-DESIGN-003
-  - OQ-EW-DESIGN-004
   - OQ-EW-DESIGN-005
 contradictions_found: []
 implementation_ready: true

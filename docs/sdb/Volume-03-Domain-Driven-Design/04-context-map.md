@@ -22,3 +22,13 @@ flowchart LR
  LOAN --> REP
  INC --> REP
 ```
+
+## Proyecciones consumidas por Expediente Workspace
+
+Archive Operations conserva la propiedad del Workspace y consume proyecciones mínimas
+de Requests, Loans & Returns e Incidents mediante query ports propiedad del consumidor:
+`ActiveRequestQueryPort`, `ActiveLoanQueryPort` y `OpenIncidentsQueryPort`. Estos puertos
+no exponen aggregates completos ni cambian la propiedad de dominio de cada bounded
+context. Todas sus consultas reciben `ExpedienteId` y `TenantContext`.
+
+Fuente: READ-MODEL-COMPOSITION-DECISION, READ-EW-002..006.

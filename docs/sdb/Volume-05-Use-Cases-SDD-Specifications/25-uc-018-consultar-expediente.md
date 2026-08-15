@@ -50,5 +50,31 @@ Debe responder rápidamente: dónde está, quién lo tiene, desde cuándo y qué
 ## Precondición
 Actor autenticado con permiso `EXPEDIENT_VIEW` en el tenant resuelto server-side.
 
+## Composición del read model (READ-EW-001..007)
+
+`GetExpediente` compone server-side un único `ExpedienteReadModel`. Obtiene el Expediente
+tenant-scoped y consume proyecciones mínimas mediante:
+
+- `ActiveRequestQueryPort.findActiveByExpedienteId(ExpedienteId, TenantContext)` ->
+  `ActiveRequestSummary | null` (`solicitudId`, `tipo`, `origen`, `estado`,
+  `asignadoA` nullable).
+- `ActiveLoanQueryPort.findActiveByExpedienteId(ExpedienteId, TenantContext)` ->
+  `ActiveLoanSummary | null` (`prestamoId`, `finalidad`, `custodioRef`, `destinoTipo`,
+  `destinoRef`, `dueAt`, `fuenteHabilitanteSalida`, `estado: Activo|Vencido`).
+- `OpenIncidentsQueryPort.findOpenByExpedienteId(ExpedienteId, TenantContext)` ->
+  `readonly OpenIncidentSummary[]` (`incidenciaId`, `tipo`, `severidad`, `estado`,
+  `resumen`, `asignadoA` nullable, `openedAt`).
+
+Los puertos pertenecen a Application de Expediente Workspace como consumidor de
+proyecciones; los aggregates siguen perteneciendo a sus módulos. El frontend recibe el
+read model ya compuesto y no orquesta dominios.
+
+## Audit
+
+El Use Case consume `AuditWriter.append(record, tenant)` desde Application. Registra
+`EXPEDIENTE_VIEW` / `EXPEDIENTE` con resultado exacto `success`, `denied` o `not-found`,
+timestamp server-side y sin datos C3. El controller no escribe audit.
+
 ## Fuente
-DDD-013, SPEC-009, BIZ-007, DECISION-REGISTER OQ-EW-001, OQ-EW-007, DEC-EW-STATE-001.
+DDD-013, SPEC-009, BIZ-007, DECISION-REGISTER OQ-EW-001, OQ-EW-007,
+DEC-EW-STATE-001, READ-MODEL-COMPOSITION-DECISION.

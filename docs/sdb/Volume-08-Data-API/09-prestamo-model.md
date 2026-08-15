@@ -22,10 +22,16 @@ architecture:
 - destino_ref
 - opened_at
 - due_at
+- fuente_habilitante_salida
 - returned_at
 - closed_at
 - estado
 - row_version
+
+`fuente_habilitante_salida` registra uno de `CONSULTA_PROGRAMADA`,
+`VALE_ARCHIVO_SM_1_14`, `ORDEN_SUPERIOR`. Es necesario para SPEC-006 y para la
+proyección de préstamo activo de UC-018; no modifica la política fail-closed de
+`ORDEN_SUPERIOR` para T-04.
 
 `prestamo_renovaciones`
 - id

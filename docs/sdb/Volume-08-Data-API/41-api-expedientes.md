@@ -73,14 +73,42 @@ El parámetro `numero` se normaliza internamente (sin separador) antes de la bú
     "servicio": "string | null",
     "aceptadaEn": "ISO8601 | null"   // null si EN_TRASLADO sin CustodyAccepted
   },
-  "prestamoActivo": { ... } | null,
-  "solicitudActiva": { ... } | null,
-  "incidenciasAbiertas": [ ... ],
+  "prestamoActivo": {
+    "prestamoId": "uuid",
+    "finalidad": "string",
+    "custodioRef": "string",
+    "destinoTipo": "string",
+    "destinoRef": "string",
+    "dueAt": "ISO8601",
+    "fuenteHabilitanteSalida": "CONSULTA_PROGRAMADA | VALE_ARCHIVO_SM_1_14 | ORDEN_SUPERIOR",
+    "estado": "Activo | Vencido"
+  } | null,
+  "solicitudActiva": {
+    "solicitudId": "uuid",
+    "tipo": "string",
+    "origen": "string",
+    "estado": "Pendiente | Asignada | EnBusqueda | Localizada | Preparada | Entregada | Cancelada | NoLocalizada",
+    "asignadoA": "string | null"
+  } | null,
+  "incidenciasAbiertas": [{
+    "incidenciaId": "uuid",
+    "tipo": "string",
+    "severidad": "string",
+    "estado": "Abierta | EnInvestigacion | Escalada",
+    "resumen": "string",
+    "asignadoA": "string | null",
+    "openedAt": "ISO8601"
+  }],
   "capabilities": ["DISPATCH", "SOLICITAR", "REPORTAR_INCIDENCIA", ...],
   "rowVersion": 42,
   "updatedAt": "ISO8601"
 }
 ```
+
+El backend compone este único read model mediante query ports tenant-scoped propiedad de
+Application de Expediente Workspace. Cardinalidades: solicitud `0..1`, préstamo `0..1`,
+incidencias `0..N`. Ausencia: `null`, `null`, `[]`, respectivamente. El frontend no
+orquesta dominios para construir la respuesta.
 
 ## Fuente
 DECISION-REGISTER OQ-EW-001, OQ-EW-006, OQ-EW-007, DEC-EW-STATE-001, DAT-006, DAT-016.

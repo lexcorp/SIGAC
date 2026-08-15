@@ -30,3 +30,22 @@ Fields:
 
 No payload clínico completo.
 No UPDATE/DELETE desde rol aplicación.
+
+## Application port — Expediente Workspace
+
+`AuditWriter.append(AuditRecord, TenantContext): Promise<void>` es el contrato
+append-only consumido por los Use Cases. `AuditRecord` contiene:
+
+- actorRef
+- action
+- resourceType
+- resourceId
+- result: `success | denied | not-found`
+- occurredAt
+- requestId
+- correlationId nullable
+- source
+- metadata de strings nullable, sin datos C3
+
+El puerto no ofrece update/delete. Para `GetExpediente`, `action = EXPEDIENTE_VIEW` y
+`resourceType = EXPEDIENTE`.

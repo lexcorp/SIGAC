@@ -30,6 +30,10 @@ api_contract: "REST/OpenAPI /api/v1"
 
 ## Barra de comandos contextual
 Muestra únicamente los comandos del array `capabilities[]` devuelto por el API.
+
+El Workspace consume un único `ExpedienteReadModel` compuesto server-side, incluyendo
+Solicitud activa, Préstamo activo e Incidencias abiertas. El frontend no consulta ni
+orquesta esos dominios por separado para reconstruir la pantalla.
 No calcula transiciones en el frontend.
 
 Ejemplos de comandos posibles (según estado y rol):

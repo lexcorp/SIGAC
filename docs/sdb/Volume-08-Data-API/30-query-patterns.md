@@ -22,3 +22,15 @@ Optimized queries:
 - returned pending rearchive.
 
 Avoid giant “everything joins everything” screens. Use purpose-built read models.
+
+## Expediente Workspace
+
+El read model del Workspace se compone server-side. Application de Expediente Workspace
+posee `ActiveLoanQueryPort`, `ActiveRequestQueryPort` y `OpenIncidentsQueryPort`; todos
+reciben `ExpedienteId` y `TenantContext` y retornan summaries, nunca aggregates.
+
+- Solicitud activa: `0..1`, ausencia `null`.
+- Préstamo activo: `0..1`, ausencia `null`.
+- Incidencias abiertas: `0..N`, ausencia `[]`.
+
+Los contratos exactos están en READ-MODEL-COMPOSITION-DECISION READ-EW-003..006.

@@ -10,3 +10,13 @@ Para `ExpedienteCapabilityService`, cubrir al menos:
 - ActorContext/TenantContext llegan ya validados; el servicio no resuelve tenant.
 - SM 1-14: emisor y ejecutante separados; ejecución por Archivo/Jefatura con fuente validada.
 - `ORDEN_SUPERIOR` no habilita `ABRIR_PRESTAMO` (fail-closed).
+
+Para `GetExpediente` y sus puertos de proyección, cubrir al menos:
+- composición server-side del read model único;
+- cardinalidad `0..1` y ausencia `null` para Solicitud/Préstamo activos;
+- cardinalidad `0..N` y ausencia `[]` para Incidencias abiertas;
+- `ExpedienteId` y `TenantContext` obligatorios en cada query port;
+- ningún query port retorna aggregates ajenos;
+- audit `EXPEDIENTE_VIEW` con `success`, `denied`, `not-found`;
+- ningún registro de audit contiene datos C3;
+- el controller no escribe audit.

@@ -39,4 +39,14 @@ flowchart LR
  APP --> OUT
 ```
 
+## Expediente Workspace read model
+
+`GetExpediente` es el compositor server-side de un único `ExpedienteReadModel`.
+Application de Expediente Workspace posee los query ports mínimos que consume de
+Requests, Loans & Returns e Incidents; estos contratos retornan proyecciones, no
+aggregates. El frontend consume el endpoint agregado y no orquesta bounded contexts.
+
+Esta decisión resuelve `OQ-EW-DESIGN-004`. Fuente:
+`docs/decisions/expediente-workspace/READ-MODEL-COMPOSITION-DECISION.md`.
+
 Controllers no contienen reglas de negocio. Repositories implementan ports definidos hacia el interior.

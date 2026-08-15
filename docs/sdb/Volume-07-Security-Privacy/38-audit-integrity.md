@@ -23,3 +23,15 @@ baseline:
 - periodic integrity/reconciliation checks candidate.
 
 Cryptographic chaining is optional and requires separate ADR; not required by default.
+
+## Enforcement para Expediente Workspace
+
+Los Use Cases escriben mediante el puerto de Application `AuditWriter`; los controllers
+no son propietarios del audit. El contrato sólo permite append y requiere
+`actorRef`, `action`, `resourceType`, `resourceId`, `result`, `occurredAt`, `requestId`,
+`correlationId` cuando aplique, `source` y metadata mínima permitida. `TenantContext` es
+obligatorio en cada append.
+
+Para `GetExpediente`, la acción canónica es `EXPEDIENTE_VIEW`, el recurso es
+`EXPEDIENTE` y los resultados son exactamente `success`, `denied`, `not-found`.
+Los intentos fallidos también se registran sin datos C3.

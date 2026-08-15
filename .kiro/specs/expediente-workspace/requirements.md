@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.1"
+version: "0.3.2"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -19,6 +19,8 @@ decisions_applied:
   - "OQ-EW-007 RESOLVED — DECISION-REGISTER"
   - "DEC-EW-STATE-001 ACCEPTED — DECISION-REGISTER"
   - "AUTHORIZATION-DECISION APPROVED"
+  - "READ-MODEL-COMPOSITION-DECISION APPROVED"
+  - "OQ-EW-DESIGN-004 RESOLVED"
 ---
 
 # Expediente Workspace — Requirements
@@ -91,6 +93,25 @@ del aggregate, el rol del usuario y el contexto del negocio.
   incidencias abiertas, capabilities[].
 - **Fuente SDB:** UC-018, SPEC-009 FR-VIEW-001..006, API-011.
 - **Invariantes:** INV-EXP-001, INV-EXP-002, INV-EXP-004.
+- **Composición (READ-EW-001..007):** `GetExpediente` compone server-side un único
+  `ExpedienteReadModel`. El frontend no orquesta Préstamo, Solicitud e Incidencia.
+- **Cardinalidades:** `prestamoActivo` 0..1 (`null` si no existe), `solicitudActiva`
+  0..1 (`null` si no existe), `incidenciasAbiertas` 0..N (`[]` si no existen).
+- **Tenant:** cada query port recibe obligatoriamente `ExpedienteId` y `TenantContext`.
+
+### REQ-EW-001A — Contratos de proyección del Workspace
+- **Ownership:** Application de Expediente Workspace es propietario consumidor de
+  `ActiveLoanQueryPort`, `ActiveRequestQueryPort` y `OpenIncidentsQueryPort`.
+- **Boundary:** los módulos de Préstamo, Solicitud e Incidencia conservan sus aggregates
+  y reglas; los puertos retornan summaries, nunca aggregates completos.
+- **Contrato Solicitud activa:** `solicitudId`, `tipo`, `origen`, `estado`,
+  `asignadoA` nullable; estados canónicos existentes únicamente.
+- **Contrato Préstamo activo:** `prestamoId`, `finalidad`, `custodioRef`, `destinoTipo`,
+  `destinoRef`, `dueAt`, `fuenteHabilitanteSalida`, `estado` (`Activo|Vencido`).
+- **Contrato Incidencias abiertas:** `incidenciaId`, `tipo`, `severidad`, `estado`,
+  `resumen`, `asignadoA` nullable, `openedAt`; estado exclusivamente
+  `Abierta|EnInvestigacion|Escalada` (`Resuelta` no es abierta).
+- **Regla:** `NO_LOCALIZADO` no crea automáticamente una Incidencia; OQ-EW-004 sigue abierta.
 
 ### REQ-EW-002 — Búsqueda por número de expediente (0..N resultados)
 - **Actor:** Archivista, Jefatura.
@@ -246,6 +267,13 @@ operativos; `EXPEDIENT_VIEW` no es una capability.
 | NFR-EW-004 | Aislamiento | Ningún query puede cruzar tenant | SEC-032, TQ-007 |
 | NFR-EW-005 | Privacidad | Datos C3 no aparecen en logs ni telemetría | SEC-003, INT-009 |
 | NFR-EW-006 | Concurrencia | Transiciones críticas usan row_version; conflicto → HTTP 409 | DAT-019 |
+
+### NFR-EW-007 — Audit append-only desde Application
+
+Los Use Cases del Workspace consumen `AuditWriter`; el controller no escribe audit. El
+puerto recibe `AuditRecord` y `TenantContext`, sólo permite append y conserva los campos
+DAT-012/SEC-038. Para `GetExpediente`, acción `EXPEDIENTE_VIEW`, recurso `EXPEDIENTE` y
+resultado `success|denied|not-found`. No se registran datos C3.
 
 ---
 
@@ -437,7 +465,7 @@ Ninguna. OQ-EW-001, OQ-EW-005, OQ-EW-006 y OQ-EW-007 están RESUELTAS.
 ## 7. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.1"
+spec_version: "0.3.2"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002
