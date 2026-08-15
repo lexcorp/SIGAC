@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.18"
+version: "0.3.19"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 traceability_model: "OS-007 / SDD-006"
@@ -32,10 +32,11 @@ decisions_applied:
   - "TENANT-TRANSACTION-AUDIT-DECISION TX-EW-001..012 APPROVED"
   - "AUDIT-PHYSICAL-MODEL-DECISION AUD-DB-EW-001..013 APPROVED; AUD-DB-GAP CLOSED"
   - "HTTP-REQUEST-CONTEXT-DECISION HTTP-EW-001, API-BIGINT-001, API-EW-021 APPROVED"
+  - "HTTP-COMMAND-CONTRACT-DECISION API-EW-024..026, API-EW-030 APPROVED"
 requires:
-  - requirements.md (v0.3.18)
-  - design.md (v0.3.18)
-  - tasks.md (v0.3.18)
+  - requirements.md (v0.3.19)
+  - design.md (v0.3.19)
+  - tasks.md (v0.3.19)
 ---
 
 # Expediente Workspace — Traceability
@@ -108,7 +109,7 @@ requires:
 | **Use Case** | UC (DispatchExpediente — design.md §7.3) | DSP-EW-001..011; UoW atómica; DOM-EVENT-001; DSP-GAP-001/002 cerrados |
 | **SPEC** | WF-005 v0.2.0 | — |
 | **REQ** | REQ-EW-011 | Despacho con evento y transición de estado |
-| **API** | POST /api/v1/expedientes/{id}/dispatch (API-011 v0.2.0) | 409 si rowVersion o estado incorrecto |
+| **API** | POST /api/v1/expedientes/{id}/dispatch (API-011, API-EW-024) | Success 204 sin body; 409 si rowVersion o estado incorrecto |
 | **UI** | CommandBar capability DISPATCH; badge EN_TRASLADO; acceptedAt null en ResumenTab | — |
 | **Test** | AC-EW-005/011; T-07/T-11/T-19/T-22 (escenario 6) | Unit UC; API contract; E2E despacho |
 
@@ -124,7 +125,7 @@ requires:
 | **Use Case** | UC (AcceptCustody — design.md §7.4) | CST-EW-001..010; operationOccurredAt; CST-GAP-001/002 cerrados |
 | **SPEC** | WF-005 v0.2.0, SPEC-009 v0.2.0 FR-VIEW-004 | Custodia con acceptedAt |
 | **REQ** | REQ-EW-004, REQ-EW-012 | Custodia con distinción traslado/aceptada |
-| **API** | POST /api/v1/expedientes/{id}/accept-custody (API-011 v0.2.0) | — |
+| **API** | POST /api/v1/expedientes/{id}/accept-custody (API-011, API-EW-025) | Success 204 sin body; DomainEvent interno |
 | **UI** | Badge EN_CONSULTA; acceptedAt visible en ResumenTab; ACCEPT_CUSTODY en capabilities receptor | — |
 | **Test** | AC-EW-005; T-08/T-11/T-19/T-22 (escenario 7) | Unit UC; E2E custodia aceptada |
 
@@ -297,6 +298,7 @@ requires:
 | NFR-EW-006 | TR-011 | Cubierto |
 | NFR-EW-007 | TR-012 | Cubierto — AuditWriter Application append-only |
 | NFR-EW-012 | TR-009/TR-010/TR-011 | Cubierto — resolver HTTP, 401/403 y bigint decimal |
+| NFR-EW-013 | TR-004/TR-005/TR-009 | Cubierto — 204 commands, validation 400 y module composition |
 
 ---
 
@@ -372,13 +374,14 @@ requires:
 | 0.3.16 | 2026-08-15 | TX-EW-001..012 aprobadas: TenantDatabaseRouter, transaction-bound AuditWriter, UoW tenant y audit local formalizados; AUD-DB-GAP bloquea T-09. |
 | 0.3.17 | 2026-08-15 | AUD-DB-EW-001..013 aprobadas: DDL audit_log, checks, mapping, exclusión source_ip_hash y migration ownership definidos; AUD-DB-GAP cerrado. |
 | 0.3.18 | 2026-08-15 | HTTP-EW-001, API-BIGINT-001 y API-EW-021 aprobadas: resolver HTTP autenticado, tenant membership/tracing, bigint decimal, scope T-11 y 401/403 formalizados. |
+| 0.3.19 | 2026-08-15 | API-EW-024..026/API-EW-030 aprobadas: command success 204, HTTP validation 400 y módulo API configurable/composition ownership definidos. |
 
 ---
 
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.18"
+spec_version: "0.3.19"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

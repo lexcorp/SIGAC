@@ -167,3 +167,7 @@ active-loan y rearchive quedan diferidos; el controller no accede al Repository.
 
 En JSON, `rowVersion` y `expectedRowVersion` son strings decimales; Application conserva
 `bigint`.
+
+Dispatch y AcceptCustody son comandos síncronos/transaccionales. En success sus
+endpoints responden 204 sin body; los DomainEvent `ExpedienteDispatched` y
+`CustodyAccepted` no se exponen por HTTP. El cliente puede refrescar GetExpediente.

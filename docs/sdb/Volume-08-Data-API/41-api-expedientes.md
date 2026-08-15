@@ -40,6 +40,14 @@ La búsqueda por número, `current-custody`, `active-loan` y `rearchive` permane
 diferidos. Búsqueda requiere `SearchExpedientesByNumero` o nombre canónico equivalente.
 El controller no consume Repository directamente.
 
+## Command success (API-EW-024/025)
+
+- `POST /api/v1/expedientes/{id}/dispatch` → 204 No Content.
+- `POST /api/v1/expedientes/{id}/accept-custody` → 204 No Content.
+
+No existe response body y los DomainEvent no son contratos HTTP. No aplica 201 ni 202;
+el cliente puede refrescar el GET del Expediente.
+
 No hay endpoint que edite contenido clínico.
 
 El contrato conceptual de `POST /accept-custody` aporta receptor

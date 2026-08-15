@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.18"
+version: "0.3.19"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -38,8 +38,9 @@ decisions_applied:
   - "TENANT-TRANSACTION-AUDIT-DECISION TX-EW-001..012 APPROVED"
   - "AUDIT-PHYSICAL-MODEL-DECISION AUD-DB-EW-001..013 APPROVED; AUD-DB-GAP CLOSED"
   - "HTTP-REQUEST-CONTEXT-DECISION HTTP-EW-001, API-BIGINT-001, API-EW-021 APPROVED"
+  - "HTTP-COMMAND-CONTRACT-DECISION API-EW-024..026, API-EW-030 APPROVED"
 requires:
-  - requirements.md (v0.3.18)
+  - requirements.md (v0.3.19)
 open_questions_blocking: []
 open_questions_non_blocking:
   - OQ-EW-002
@@ -361,6 +362,19 @@ tenant, requestId, correlationId y `source=WEB`. El tenant es trusted/allow-list
 pertenece a `actor.tenantIds`; body/query no seleccionan contexto. CorrelationId sólo se
 propaga de fuente trusted o se genera, y nunca reutiliza requestId. Tipos HTTP no entran
 a Application. Request no autenticada retorna 401; actor autenticado sin permission, 403.
+
+### 4.7 Validación y módulo configurable
+
+Dispatch y AcceptCustody responden 204 No Content; sus DomainEvent no se serializan.
+La validación estructural retorna RFC7807 400 con code `HTTP_VALIDATION_ERROR`, detail
+estable y `errors?` con códigos `REQUIRED|INVALID_FORMAT|INVALID_TYPE|OUT_OF_RANGE`.
+Nunca refleja valores recibidos ni mensajes default de NestJS.
+
+`ExpedienteApiModule` (nombre adaptable) se configura con
+`AuthenticatedRequestContextResolver`, GetExpediente, GetExpedienteTimeline,
+DispatchExpediente y AcceptCustody. Controller sólo consume esos objetos construidos.
+El composition root posee adapters y UoW. Tests registran providers explícitos;
+`AppModule` productivo no registra fakes ni monta este módulo sin dependencias reales.
 
 ### 4.5 Manejo de errores (API-006)
 
@@ -851,7 +865,7 @@ por `GetExpediente` (READ-MODEL-COMPOSITION-DECISION).
 ## 12. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.18"
+spec_version: "0.3.19"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

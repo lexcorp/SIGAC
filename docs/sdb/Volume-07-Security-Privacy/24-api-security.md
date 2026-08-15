@@ -18,6 +18,11 @@ allow-listed pertenezca a `actor.tenantIds`. Body/query no pueden aportar tenant
 databaseName, connection string, actor, requestId ni correlationId. Los tipos HTTP no
 cruzan el boundary hacia Application.
 
+Los errores de validación HTTP no reflejan valores recibidos ni mensajes internos de
+framework. Problem Details puede listar sólo field + código cerrado (`REQUIRED`,
+`INVALID_FORMAT`, `INVALID_TYPE`, `OUT_OF_RANGE`) y nunca datos C3, tokens, cookies,
+stack traces, SQL, database names o connection strings.
+
 - auth mandatory by default;
 - authorization in application layer;
 - schema validation;

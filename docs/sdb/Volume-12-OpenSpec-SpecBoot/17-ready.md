@@ -12,6 +12,10 @@ HTTP autenticado, tenant membership, tracing, bigint decimal en JSON, scope limi
 Use Cases existentes y distinción 401/403. La selección concreta de claims OIDC no se
 inventa ni bloquea este contrato de frontera.
 
+API-EW-024/025 definen 204 sin body para ambos commands; API-EW-026 cierra RFC7807 de
+validación 400; API-EW-030 define el módulo configurable y ownership de composition.
+T-11 puede probarse con providers explícitos y no requiere fakes en `AppModule`.
+
 Para T-05, `READ-EW-001..013`, `AUTH-EW-006/007`, `CTX-EW-001..004`,
 `AUD-EW-001..006` y `ERR-EW-001..004` definen
 composición server-side, query ports de proyección, colección de fuentes habilitantes y

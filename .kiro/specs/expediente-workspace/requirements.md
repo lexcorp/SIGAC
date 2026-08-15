@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.18"
+version: "0.3.19"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -39,6 +39,7 @@ decisions_applied:
   - "TENANT-TRANSACTION-AUDIT-DECISION TX-EW-001..012 APPROVED"
   - "AUDIT-PHYSICAL-MODEL-DECISION AUD-DB-EW-001..013 APPROVED; AUD-DB-GAP CLOSED"
   - "HTTP-REQUEST-CONTEXT-DECISION HTTP-EW-001, API-BIGINT-001, API-EW-021 APPROVED"
+  - "HTTP-COMMAND-CONTRACT-DECISION API-EW-024..026, API-EW-030 APPROVED"
 ---
 
 # Expediente Workspace — Requirements
@@ -418,6 +419,19 @@ diferidos hasta contar con Use Case Application canónico. Request no autenticad
 `AUTHENTICATION_REQUIRED`/401; actor autenticado sin permission usa
 `PERMISSION_DENIED`/403.
 
+### NFR-EW-013 — Commands HTTP, validación y composition
+
+Dispatch y AcceptCustody responden 204 No Content en success; sus DomainEvent no se
+exponen por HTTP. Errores estructurales usan 400 `HTTP_VALIDATION_ERROR` con detail
+estable y `errors` opcional limitado a field + `REQUIRED|INVALID_FORMAT|INVALID_TYPE|
+OUT_OF_RANGE`, sin reflejar valores ni información sensible. Se mantiene separado de
+`REQUEST_INVALID_TRANSITION`/409.
+
+El módulo API de Expediente es configurable con el resolver y los cuatro Use Cases ya
+construidos. El composition root posee autenticación, tenant/projection/persistence
+adapters y UoW. Tests pueden registrar fakes explícitos; `AppModule` productivo no monta
+el módulo ni registra fakes hasta disponer de dependencias reales.
+
 ---
 
 ## 5. Criterios de aceptación
@@ -608,7 +622,7 @@ Ninguna. `AUD-DB-GAP` y las OQs históricamente bloqueantes están cerradas.
 ## 7. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.18"
+spec_version: "0.3.19"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

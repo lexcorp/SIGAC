@@ -75,3 +75,9 @@ será implementada mediante acceso directo del controller a `findByNumero`.
 `AUTHENTICATION_REQUIRED` pertenece a API/BFF; no se añade a `ApplicationError`. La
 respuesta usa RFC7807 con `code` estable y sin datos sensibles, detalles internos ni
 existencia cross-tenant.
+
+## Extensión v0.3.19
+
+API-EW-024..026 y API-EW-030, definidos en
+`HTTP-COMMAND-CONTRACT-DECISION.md`, completan success 204, validación HTTP 400 y el
+módulo configurable requerido por T-11. No alteran el contrato de RequestContext.

@@ -24,7 +24,12 @@ It covers representative endpoints and schemas for:
 
 It is a contract starter; Volume 09 UI and implementation will expand it.
 
-Para Expediente Workspace v0.3.18, OpenAPI sólo publica operaciones respaldadas por un
+Para Expediente Workspace v0.3.19, OpenAPI sólo publica operaciones respaldadas por un
 Use Case Application canónico. `rowVersion` y `expectedRowVersion` usan `type: string`,
 `pattern: '^[0-9]+$'`. La frontera documenta 401 para request no autenticada y 403 para
 actor autenticado sin permission, además de los mappings RFC7807 canónicos.
+
+Los comandos Dispatch/AcceptCustody documentan 204 sin content. HTTP validation usa
+400 `HTTP_VALIDATION_ERROR` y field codes cerrados. El módulo API configurable puede
+probarse con providers explícitos aunque su montaje productivo se difiera hasta disponer
+de dependencias reales; esto no cambia el contrato OpenAPI.

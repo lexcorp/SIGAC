@@ -11,3 +11,8 @@ Para T-11/T-12 de Expediente Workspace se verifica:
 - `rowVersion`/`expectedRowVersion` como string decimal, sin conversión a number;
 - RFC7807 y ausencia de información cross-tenant;
 - paridad exacta entre implementación y OpenAPI.
+
+Además, Dispatch y AcceptCustody success retornan 204 con body vacío; UUID, bigint y
+campos inválidos retornan 400 `HTTP_VALIDATION_ERROR` sin reflejar valores; y el módulo
+configurable acepta providers de test explícitos mientras `AppModule` productivo no
+registra fake auth/projections.

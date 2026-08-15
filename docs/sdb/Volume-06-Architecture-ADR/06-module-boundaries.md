@@ -42,3 +42,9 @@ Un resolver de infraestructura convierte el contexto HTTP autenticado en el
 `RequestContext` canónico. Los tipos HTTP/NestJS no entran a Application. Controllers
 sólo invocan Use Cases canónicos y no acceden directamente a Repository. Actor, tenant
 y trazabilidad se resuelven server-side antes del Use Case.
+
+El módulo API de Expediente es configurable mediante providers/tokens NestJS para el
+resolver y los cuatro Use Cases de T-11. El composition root construye autenticación,
+tenant resolver, projection/persistence adapters y UoW antes de registrar el módulo.
+El controller no conoce esos puertos internos. Tests pueden aportar fakes explícitos;
+`AppModule` productivo no registra fakes ni monta el módulo sin dependencias reales.

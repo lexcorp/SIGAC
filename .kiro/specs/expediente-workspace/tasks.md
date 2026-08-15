@@ -1,11 +1,11 @@
 ---
 spec: expediente-workspace
-version: "0.3.18"
+version: "0.3.19"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 requires:
-  - requirements.md (v0.3.18)
-  - design.md (v0.3.18)
+  - requirements.md (v0.3.19)
+  - design.md (v0.3.19)
 decisions_applied:
   - "OQ-EW-001 RESOLVED"
   - "OQ-EW-005 RESOLVED"
@@ -33,6 +33,7 @@ decisions_applied:
   - "TENANT-TRANSACTION-AUDIT-DECISION TX-EW-001..012 APPROVED"
   - "AUDIT-PHYSICAL-MODEL-DECISION AUD-DB-EW-001..013 APPROVED; AUD-DB-GAP CLOSED"
   - "HTTP-REQUEST-CONTEXT-DECISION HTTP-EW-001, API-BIGINT-001, API-EW-021 APPROVED"
+  - "HTTP-COMMAND-CONTRACT-DECISION API-EW-024..026, API-EW-030 APPROVED"
 ready_gate: "READY-GATE.md — todos los ítems deben estar marcados antes de iniciar T-01"
 done_gate: "OS-018 — spec + tests + API/migrations + auth/tenant/audit + traceability"
 ---
@@ -67,7 +68,7 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
 ## Grupo 0 — Trazabilidad
 
 ### T-00 Completar traceability.md
-- **Descripción:** Verificar que traceability.md v0.3.18 tiene cadenas completas
+- **Descripción:** Verificar que traceability.md v0.3.19 tiene cadenas completas
   para todas las capacidades. Confirmar que GAP-002, GAP-003, GAP-007 están cerrados
   y que no quedan eslabones PENDIENTE en BR, UC o SPEC para las decisiones resueltas.
 - **Criterio de done:** Ningún REQ-EW-* sin cadena completa; matrices actualizadas.
@@ -420,6 +421,12 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
     genera, y nunca reutiliza requestId.
   - rowVersion y expectedRowVersion cruzan HTTP como string decimal `^[0-9]+$`; la
     frontera convierte a/desde bigint sin JavaScript number.
+  - Dispatch y AcceptCustody success -> 204 No Content; no serializar DomainEvent.
+  - UUID/body/bigint inválidos -> 400 `HTTP_VALIDATION_ERROR`; errors opcional sólo
+    expone field y `REQUIRED|INVALID_FORMAT|INVALID_TYPE|OUT_OF_RANGE`.
+  - Implementar módulo NestJS configurable con resolver y cuatro Use Cases construidos.
+    Tests pueden registrar fakes explícitos; AppModule productivo no registra fakes ni
+    monta el módulo hasta que composition/integration aporte dependencias reales.
   - Errores: RFC7807; sin stack trace, sin nombre DB, sin datos clínicos.
   - Mapear `ApplicationError.code` según ERR-EW-002; `code` es extensión estable.
     Cross-tenant usa 404 `EXPEDIENTE_NOT_FOUND`, nunca un code público específico.
@@ -432,6 +439,12 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
   - POST /dispatch con rowVersion incorrecto -> 409.
   - POST /dispatch con estado incorrecto -> 409.
   - POST /accept-custody success/conflict/invalid-transition.
+  - Dispatch success -> 204 y body vacío.
+  - AcceptCustody success -> 204 y body vacío.
+  - UUID inválido, bigint inválido y campo requerido ausente -> 400
+    `HTTP_VALIDATION_ERROR`; Problem Details no contiene el valor recibido.
+  - El módulo configurable acepta providers de test explícitos y AppModule productivo
+    no registra fake auth/projections.
   - RequestContext se propaga y body/query no pueden falsificar tenant ni trazabilidad.
   - Tenant isolation: Hospital-A no accede a Hospital-B -> 404.
 - **Fuente SDB:** API-001, API-005, API-006, API-011 v0.2.0, AGENTS.md.
@@ -442,10 +455,12 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
   - Schema ExpedienteReadModel: estadoOperativo como enum de 6 valores exactos;
     custodiaActual.aceptadaEn nullable; prestamoActivo.fuenteHabilitante como enum.
   - Endpoints /dispatch y /accept-custody.
+  - Success 204 sin response content para ambos commands.
   - Timeline `{items,nextCursor}`, sin total.
   - rowVersion/expectedRowVersion string decimal `^[0-9]+$`.
   - RFC7807: 401 AUTHENTICATION_REQUIRED; 403 PERMISSION_DENIED o
     INSUFFICIENT_ENABLING_SOURCE; 404 y 409 canónicos.
+  - 400 `HTTP_VALIDATION_ERROR` con errors opcional y field codes cerrados.
   - No publicar los cuatro endpoints diferidos de API-EW-021.
 - **Regla (AGENTS.md, steering/api.md):** Todo cambio de API requiere actualizar OpenAPI.
 - **Fuente SDB:** API-001, API-011 v0.2.0.
@@ -664,7 +679,7 @@ T-23 (CI pipeline) <- todas
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.18"
+spec_version: "0.3.19"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

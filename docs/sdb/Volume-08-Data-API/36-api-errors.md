@@ -62,3 +62,10 @@ La ausencia tenant-scoped usa `EXPEDIENTE_NOT_FOUND`; no existe code público
 Una request no autenticada usa `AUTHENTICATION_REQUIRED`/401 en la frontera API/BFF.
 Un actor autenticado sin permission usa `PERMISSION_DENIED`/403. El primero no forma
 parte de la taxonomía `ApplicationError`.
+
+`HTTP_VALIDATION_ERROR` pertenece a la frontera y usa HTTP 400 para UUID/decimal bigint
+inválidos, campos faltantes, tipos incorrectos y límites fuera de rango cuando exista
+regla. Problem Details usa type `https://sigac/errors/http-validation`, title
+`Invalid request`, detail estable y `errors` opcional con códigos `REQUIRED`,
+`INVALID_FORMAT`, `INVALID_TYPE`, `OUT_OF_RANGE`. Nunca refleja el valor recibido ni
+mensajes default de NestJS. Se distingue de `REQUEST_INVALID_TRANSITION`/409.
