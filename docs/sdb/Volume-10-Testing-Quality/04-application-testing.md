@@ -27,3 +27,9 @@ Para `GetExpediente` y sus puertos de proyección, cubrir al menos:
 - el controller no escribe audit.
 - `ExitEnablingSourceQueryPort` recibe el mismo ExpedienteId/TenantContext, devuelve
   `0..N` y usa `[]` como ausencia.
+- el input público es `{ expedienteId, context: RequestContext }` y los puertos reciben
+  `context.tenant`;
+- `AuditWriter` recibe el `AuditEntry` semántico y el mismo `RequestContext`;
+- `requestId` y `correlationId` se conservan distintos, y `occurredAt` no lo establece
+  el Use Case;
+- success, denied y not-found generan entry append-only sin datos C3.

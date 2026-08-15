@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.3"
+version: "0.3.4"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 traceability_model: "OS-007 / SDD-006"
@@ -16,10 +16,12 @@ decisions_applied:
   - "OQ-EW-DESIGN-004 RESOLVED"
   - "READ-EW-008..012 APPROVED"
   - "AUTH-EW-006/007 APPROVED"
+  - "CTX-EW-001..004 APPROVED"
+  - "AUD-EW-003..006 APPROVED"
 requires:
-  - requirements.md (v0.3.3)
-  - design.md (v0.3.3)
-  - tasks.md (v0.3.3)
+  - requirements.md (v0.3.4)
+  - design.md (v0.3.4)
+  - tasks.md (v0.3.4)
 ---
 
 # Expediente Workspace — Traceability
@@ -205,7 +207,7 @@ requires:
 
 | Eslabón | Referencia | Detalle |
 |---------|-----------|---------|
-| **Source / SDB** | SEC-038, DAT-012, AUD-EW-001/002, NOM-004-SSA3-2012 | AuditWriter append-only; actor y tenant obligatorios |
+| **Source / SDB** | SEC-038, DAT-012, CTX-EW-001..004, AUD-EW-001..006, NOM-004-SSA3-2012 | RequestContext canónico; AuditEntry semántico; AuditWriter append-only |
 | **Business Rule** | "Toda acción registra actor, tenant, recurso y resultado" | — |
 | **REQ** | NFR-EW-003 | — |
 | **API** | Application usa AuditWriter; controller no escribe audit | — |
@@ -339,13 +341,14 @@ requires:
 | 0.3.1 | 2026-08-15 | AUTHORIZATION-DECISION aplicada. AUTH-GAP-001..013 cerrados para T-04; roles, permissions, capabilities, estados contextuales, SM 1-14 y tenant prevalidado formalizados. |
 | 0.3.2 | 2026-08-15 | READ-MODEL-COMPOSITION-DECISION aplicada. OQ-EW-DESIGN-004 resuelta; query ports de proyección y AuditWriter definidos para T-05..T-08. |
 | 0.3.3 | 2026-08-15 | READ-EW-008..012 y AUTH-EW-006/007 aplicadas. ExitEnablingSourceQueryPort 0..N y capabilities por existencia de fuente validada formalizadas. |
+| 0.3.4 | 2026-08-15 | CTX-EW-001..004, READ-EW-011 v2 y AUD-EW-003..006 aplicadas. RequestContext canónico y separación AuditEntry/AuditRecord formalizados. |
 
 ---
 
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.3"
+spec_version: "0.3.4"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

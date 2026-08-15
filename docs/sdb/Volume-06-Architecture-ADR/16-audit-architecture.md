@@ -31,5 +31,17 @@ Audit record candidate:
 ## Write model
 Append-oriented. Application users cannot edit audit rows.
 
+## Application context and port
+
+Los Use Cases auditables reciben el `RequestContext` canónico e inmutable con actor,
+tenant, `requestId`, `correlationId` y `source: WEB|INTERNAL`. La frontera server-side lo
+construye antes de Application.
+
+Application emite un `AuditEntry` semántico (`action`, `resourceType`, `resourceId`,
+`result` y `changeSummary` permitido). `AuditWriter.append(entry, context)` lo enriquece
+como `AuditRecord` completo: actor y tenant desde el contexto, IDs y source desde el
+contexto, y timestamp al hacer append. El puerto no ofrece update/delete.
+
 ## Sensitive values
-Do not log clinical data, tokens, secrets or full payloads unnecessarily.
+Do not log clinical data, tokens, secrets or full payloads unnecessarily. `AuditEntry`
+nunca contiene datos C3.

@@ -27,10 +27,14 @@ Cryptographic chaining is optional and requires separate ADR; not required by de
 ## Enforcement para Expediente Workspace
 
 Los Use Cases escriben mediante el puerto de Application `AuditWriter`; los controllers
-no son propietarios del audit. El contrato sólo permite append y requiere
-`actorRef`, `action`, `resourceType`, `resourceId`, `result`, `occurredAt`, `requestId`,
-`correlationId` cuando aplique, `source` y metadata mínima permitida. `TenantContext` es
-obligatorio en cada append.
+no son propietarios del audit. Application entrega un `AuditEntry` semántico y el
+`RequestContext` canónico. El writer crea el `AuditRecord` completo con `actorRef` y
+tenant desde el contexto, `requestId`, `correlationId` y `source` desde el contexto y
+`occurredAt` establecido al hacer append. El contrato sólo permite append.
+
+`requestId` identifica una ejecución concreta y `correlationId` un flujo lógico; no son
+intercambiables. El contexto se construye y valida en la frontera server-side, nunca
+desde body/query arbitrarios.
 
 Para `GetExpediente`, la acción canónica es `EXPEDIENTE_VIEW`, el recurso es
 `EXPEDIENTE` y los resultados son exactamente `success`, `denied`, `not-found`.

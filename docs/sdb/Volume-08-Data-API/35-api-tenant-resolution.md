@@ -19,7 +19,23 @@ Candidate sources:
 Never:
 `tenant_id` from arbitrary JSON body → database name.
 
-Resolved tenant becomes immutable RequestContext.
+Resolved tenant becomes part of the immutable canonical Application `RequestContext`:
+
+```typescript
+type RequestSource = 'WEB' | 'INTERNAL';
+
+interface RequestContext {
+  readonly actor: ActorContext;
+  readonly tenant: TenantContext;
+  readonly requestId: string;
+  readonly correlationId: string;
+  readonly source: RequestSource;
+}
+```
+
+The server-side boundary constructs it before Application. `requestId` identifies one
+request/execution; `correlationId` relates a logical flow and cannot substitute it.
+Actor, tenant and identifiers never come from arbitrary body/query input.
 
 Antes de invocar `ExpedienteCapabilityService`, el backend valida que el actor pertenece
 al tenant resuelto. El servicio recibe `ActorContext` y `TenantContext` ya validados y no

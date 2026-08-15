@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.3"
+version: "0.3.4"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -22,8 +22,10 @@ decisions_applied:
   - "OQ-EW-DESIGN-004 RESOLVED"
   - "READ-EW-008..012 APPROVED"
   - "AUTH-EW-006/007 APPROVED"
+  - "CTX-EW-001..004 APPROVED"
+  - "AUD-EW-003..006 APPROVED"
 requires:
-  - requirements.md (v0.3.3)
+  - requirements.md (v0.3.4)
 open_questions_blocking: []
 open_questions_non_blocking:
   - OQ-EW-002
@@ -501,36 +503,54 @@ interface FuenteHabilitanteSalidaContext {
   validada: boolean;
 }
 
+type RequestSource = 'WEB' | 'INTERNAL';
+
+interface RequestContext {
+  readonly actor: ActorContext;
+  readonly tenant: TenantContext;
+  readonly requestId: string;
+  readonly correlationId: string;
+  readonly source: RequestSource;
+}
+
+interface AuditEntry {
+  readonly action: string;
+  readonly resourceType: string;
+  readonly resourceId: string;
+  readonly result: 'success' | 'denied' | 'not-found';
+  readonly changeSummary?: Readonly<Record<string, string>>;
+}
+
 interface AuditWriter {
-  append(record: AuditRecord, tenant: TenantContext): Promise<void>;
+  append(entry: AuditEntry, context: RequestContext): Promise<void>;
 }
 ```
 
-Los summaries y `AuditRecord` tienen exactamente los campos definidos en
+`RequestContext`, `AuditEntry`, los summaries y `AuditRecord` tienen exactamente los campos definidos en
 READ-MODEL-COMPOSITION-DECISION. Ausencia: Solicitud/Préstamo `null`; Incidencias y
 fuentes habilitantes `[]`.
 Los query ports no exponen aggregates. `AuditWriter` no ofrece update/delete.
 
 ```
-Input: { expedienteId: UUID, actor: ActorContext, tenant: TenantContext }
+Input: { expedienteId: ExpedienteId, context: RequestContext }
 
 Pasos:
-  1. Verificar EXPEDIENT_VIEW en tenant             -> 403 si no
-  2. TenantContext server-side                      -> nunca del body
-  3. findById(id, tenant)                           -> 404 si no existe
-  4. ActiveLoanQueryPort.findActiveByExpedienteId(id, tenant)
-  5. ActiveRequestQueryPort.findActiveByExpedienteId(id, tenant)
-  6. OpenIncidentsQueryPort.findOpenByExpedienteId(id, tenant)
-  7. ExitEnablingSourceQueryPort.findAvailableByExpediente(id, tenant)
-  8. ExpedienteCapabilityService(estado, solicitud, prestamo, fuentes[], actor)
-  9. AuditWriter.append(EXPEDIENTE_VIEW, success|denied|not-found, tenant)
+  1. Verificar EXPEDIENT_VIEW con context.actor     -> 403 si no
+  2. context construido server-side                 -> nunca del body/query
+  3. findById(id, context.tenant)                   -> 404 si no existe
+  4. ActiveLoanQueryPort.findActiveByExpedienteId(id, context.tenant)
+  5. ActiveRequestQueryPort.findActiveByExpedienteId(id, context.tenant)
+  6. OpenIncidentsQueryPort.findOpenByExpedienteId(id, context.tenant)
+  7. ExitEnablingSourceQueryPort.findAvailableByExpediente(id, context.tenant)
+  8. ExpedienteCapabilityService(..., context.actor, context.tenant)
+  9. AuditWriter.append(AuditEntry, context); writer establece occurredAt
   10. Retornar ExpedienteReadModel con capabilities[]
 ```
 
 ### 7.3 Use Case: DispatchExpediente
 
 ```
-Input: { expedienteId, destinoRef, actor, tenant, rowVersion }
+Input: { expedienteId, destinoRef, rowVersion, context: RequestContext }
 
 Pasos:
   1. Verificar permiso EXPEDIENT_DISPATCH en tenant
@@ -541,13 +561,13 @@ Pasos:
   6. custody_accepted_at -> null
   7. Guardar con row_version+1
   8. Emitir ExpedienteDispatched -> MovimientoExpediente
-  9. INSERT audit_log
+  9. AuditWriter.append(AuditEntry, context)
 ```
 
 ### 7.4 Use Case: AcceptCustody
 
 ```
-Input: { expedienteId, receptorRef, ubicacionDestino, actor, tenant, rowVersion }
+Input: { expedienteId, receptorRef, ubicacionDestino, rowVersion, context: RequestContext }
 
 Pasos:
   1. Verificar permiso CUSTODY_ACCEPT en tenant (actor es receptor autorizado)
@@ -559,7 +579,7 @@ Pasos:
   7. custodio_ref -> receptorRef
   8. Guardar con row_version+1
   9. Emitir CustodyAccepted -> MovimientoExpediente
-  10. INSERT audit_log (acción autenticada y auditable)
+  10. AuditWriter.append(AuditEntry, context)
 ```
 
 ### 7.5 ExpedienteCapabilityService (actualizado)
@@ -661,7 +681,7 @@ por `GetExpediente` (READ-MODEL-COMPOSITION-DECISION).
 ## 12. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.3"
+spec_version: "0.3.4"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

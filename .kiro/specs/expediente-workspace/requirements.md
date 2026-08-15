@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.3"
+version: "0.3.4"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -23,6 +23,8 @@ decisions_applied:
   - "OQ-EW-DESIGN-004 RESOLVED"
   - "READ-EW-008..012 APPROVED"
   - "AUTH-EW-006/007 APPROVED"
+  - "CTX-EW-001..004 APPROVED"
+  - "AUD-EW-003..006 APPROVED"
 ---
 
 # Expediente Workspace — Requirements
@@ -103,7 +105,8 @@ del aggregate, el rol del usuario y el contexto del negocio.
 - **Fuente habilitante disponible:** `GetExpediente` consulta internamente
   `ExitEnablingSourceQueryPort.findAvailableByExpediente(id, tenant)` ->
   `readonly FuenteHabilitanteSalidaContext[]` (`0..N`; ausencia `[]`). Su input público
-  permanece `expedienteId + actor + tenant`.
+  es `{ expedienteId: ExpedienteId; context: RequestContext }`; internamente usa
+  `context.actor` y `context.tenant`.
 
 ### REQ-EW-001A — Contratos de proyección del Workspace
 - **Ownership:** Application de Expediente Workspace es propietario consumidor de
@@ -285,10 +288,13 @@ operativos; `EXPEDIENT_VIEW` no es una capability.
 
 ### NFR-EW-007 — Audit append-only desde Application
 
-Los Use Cases del Workspace consumen `AuditWriter`; el controller no escribe audit. El
-puerto recibe `AuditRecord` y `TenantContext`, sólo permite append y conserva los campos
-DAT-012/SEC-038. Para `GetExpediente`, acción `EXPEDIENTE_VIEW`, recurso `EXPEDIENTE` y
-resultado `success|denied|not-found`. No se registran datos C3.
+Los Use Cases auditables del Workspace reciben el `RequestContext` canónico e inmutable
+con actor, tenant, requestId, correlationId y source (`WEB|INTERNAL`). Consumen
+`AuditWriter.append(AuditEntry, RequestContext)`; el controller no escribe audit. El
+entry contiene sólo intención semántica y el writer completa el `AuditRecord` DAT-012,
+incluido `occurredAt`. Sólo permite append. Para `GetExpediente`, acción
+`EXPEDIENTE_VIEW`, recurso `EXPEDIENTE` y resultado `success|denied|not-found`. No se
+registran datos C3.
 
 ---
 
@@ -480,7 +486,7 @@ Ninguna. OQ-EW-001, OQ-EW-005, OQ-EW-006 y OQ-EW-007 están RESUELTAS.
 ## 7. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.3"
+spec_version: "0.3.4"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

@@ -2,7 +2,42 @@
 
 **Estado:** APPROVED  
 **Fecha:** 2026-08-15  
-**Scope:** Expediente Workspace v0.3.3 / T-04 a T-08
+**Scope:** Expediente Workspace v0.3.4 / T-04 a T-20
+
+## CTX-EW-001 — Contexto canónico de Application
+
+`RequestContext` es el contexto canónico e inmutable de ejecución de Application. Los
+Use Cases reutilizan los tipos canónicos `ActorContext` y `TenantContext`; no definen
+copias locales.
+
+## CTX-EW-002 — Contrato de RequestContext
+
+```typescript
+type RequestSource = 'WEB' | 'INTERNAL';
+
+interface RequestContext {
+  readonly actor: ActorContext;
+  readonly tenant: TenantContext;
+  readonly requestId: string;
+  readonly correlationId: string;
+  readonly source: RequestSource;
+}
+```
+
+`RequestSource` es cerrado para el alcance actual. No se añaden fuentes no respaldadas
+por un flujo aprobado.
+
+## CTX-EW-003 — Identificadores de ejecución y correlación
+
+`requestId` identifica una ejecución/request concreta. `correlationId` relaciona las
+operaciones de un mismo flujo lógico. Son identificadores distintos y ninguno puede
+reutilizarse como sustituto del otro.
+
+## CTX-EW-004 — Construcción server-side
+
+La frontera server-side construye `RequestContext` antes de entrar a Application, una
+vez resueltos y validados actor y tenant. Los Use Cases no toman actor, tenant,
+`requestId` ni `correlationId` desde body o query arbitrarios.
 
 ## READ-EW-001 — Composición server-side
 
@@ -155,11 +190,20 @@ El resultado tiene cardinalidad `0..N`. La ausencia se representa exclusivamente
 habilitante. `ExpedienteCapabilityService` nunca valida agenda, vale ni documentación;
 sólo consume el resultado del puerto. Esta decisión no prescribe adapters concretos.
 
-## READ-EW-011 — Uso en GetExpediente
+## READ-EW-011 v2 — Uso en GetExpediente
 
 `GetExpediente` consulta `ExitEnablingSourceQueryPort` internamente con el mismo
-`ExpedienteId` y `TenantContext` de los demás query ports. Su input público permanece:
-`expedienteId + actor + tenant`.
+`ExpedienteId` y `context.tenant` de los demás query ports. Su input público es:
+
+```typescript
+{
+  expedienteId: ExpedienteId;
+  context: RequestContext;
+}
+```
+
+El Use Case utiliza `context.actor` y `context.tenant` internamente. El mismo patrón se
+aplica a los Use Cases auditables posteriores del Workspace.
 
 ## READ-EW-012 — Evaluación y selección
 
@@ -179,37 +223,80 @@ Además de permission, rol, EstadoOperativo y ausencia de préstamo activo,
 `ORDEN_SUPERIOR` nunca habilita `ABRIR_PRESTAMO` en esta spec, incluso si el provider la
 retorna con `validada: true`. Permanecerá fail-closed hasta contar con su spec específica.
 
-## AUD-EW-001 — AuditWriter
+## AUD-EW-001 — Ownership de AuditWriter
 
-Expediente Workspace es propietario del puerto `AuditWriter` en Application Layer:
+Expediente Workspace es propietario del puerto `AuditWriter` en Application Layer. Su
+contrato queda refinado por `AUD-EW-003..006`.
+
+## AUD-EW-003 — AuditEntry y AuditRecord
+
+`AuditEntry` es la intención semántica producida por Application. `AuditRecord` es el
+registro persistido completo de DAT-012. Application no construye la metadata técnica
+completa de `AuditRecord`.
 
 ```typescript
-interface AuditWriter {
-  append(record: AuditRecord, tenant: TenantContext): Promise<void>;
-}
-
-interface AuditRecord {
-  actorRef: string;
-  action: string;
-  resourceType: string;
-  resourceId: string;
-  result: 'success' | 'denied' | 'not-found';
-  occurredAt: Date;
-  requestId: string;
-  correlationId: string | null;
-  source: string;
-  metadata: Readonly<Record<string, string>> | null;
+interface AuditEntry {
+  readonly action: string;
+  readonly resourceType: string;
+  readonly resourceId: string;
+  readonly result: 'success' | 'denied' | 'not-found';
+  readonly changeSummary?: Readonly<Record<string, string>>;
 }
 ```
 
-El adapter implementa escritura append-only. Actor y tenant son obligatorios; el
-timestamp es server-side. `metadata` sólo admite metadata operacional permitida y nunca
-datos C3, payloads clínicos, tokens o secretos. El puerto no ofrece update ni delete.
+`changeSummary` sólo se incluye cuando la operación y DAT-012 lo permiten. Nunca incluye
+datos C3, payloads clínicos, tokens ni secretos.
+
+## AUD-EW-004 — Contrato de AuditWriter
+
+```typescript
+interface AuditWriter {
+  append(entry: AuditEntry, context: RequestContext): Promise<void>;
+}
+```
+
+## AUD-EW-005 — Enriquecimiento del registro persistido
+
+`AuditWriter` construye el `AuditRecord` persistido combinando:
+
+- `action`, `resourceType`, `resourceId`, `result` y el `changeSummary` permitido desde
+  `AuditEntry`;
+- `actorRef` desde `context.actor`;
+- el tenant/database resuelto desde `context.tenant`;
+- `requestId`, `correlationId` y `source` desde `RequestContext`;
+- `occurredAt`, establecido por `AuditWriter` en el momento de `append`.
+
+`GetExpediente` no establece `occurredAt`. No se introduce un `ClockPort` en este slice;
+la infraestructura podrá emplear posteriormente una fuente temporal testeable. Los
+campos técnicos adicionales permitidos por DAT-012 son responsabilidad del adapter, no
+de Application.
+
+| Campo persistido DAT-012 | Fuente/responsable |
+|---|---|
+| `id` / `audit_id` | `AuditWriter`/adapter al persistir |
+| tenant / database | `context.tenant`; selección server-side database-per-tenant |
+| `actor_ref` | `context.actor.actorId` |
+| `action` | `entry.action` |
+| `resource_type` | `entry.resourceType` |
+| `resource_id` | `entry.resourceId` |
+| `result` | `entry.result` |
+| `occurred_at` | `AuditWriter` al hacer append |
+| `request_id` | `context.requestId` |
+| `correlation_id` | `context.correlationId` |
+| `source` | `context.source` |
+| `change_summary` | `entry.changeSummary`, sólo si está permitido |
+| `source_ip_hash` candidate | adapter, sólo si dispone del dato permitido |
+| `security_context` mínimo | adapter, limitado a metadata técnica permitida |
+
+## AUD-EW-006 — Append-only
+
+`AuditWriter` sólo ofrece `append`; no ofrece update ni delete.
 
 ## AUD-EW-002 — Enforcement en Application
 
 `GetExpediente`, `GetExpedienteTimeline` y los comandos del Workspace consumen
-`AuditWriter`. El controller no escribe audit.
+`AuditWriter` con el `RequestContext` canónico. El controller no escribe audit: la
+frontera server-side sólo construye el contexto.
 
 Para `GetExpediente`:
 

@@ -50,6 +50,12 @@ Debe responder rápidamente: dónde está, quién lo tiene, desde cuándo y qué
 ## Precondición
 Actor autenticado con permiso `EXPEDIENT_VIEW` en el tenant resuelto server-side.
 
+## Input de Application
+
+`GetExpediente` recibe exclusivamente `{ expedienteId: ExpedienteId; context:
+RequestContext }`. La frontera server-side construye el contexto inmutable; Application
+usa `context.actor` y `context.tenant` y no acepta esos valores desde body/query.
+
 ## Composición del read model (READ-EW-001..012)
 
 `GetExpediente` compone server-side un único `ExpedienteReadModel`. Obtiene el Expediente
@@ -79,9 +85,11 @@ de tipo `CONSULTA_PROGRAMADA` o `VALE_ARCHIVO_SM_1_14`. No selecciona la fuente 
 
 ## Audit
 
-El Use Case consume `AuditWriter.append(record, tenant)` desde Application. Registra
-`EXPEDIENTE_VIEW` / `EXPEDIENTE` con resultado exacto `success`, `denied` o `not-found`,
-timestamp server-side y sin datos C3. El controller no escribe audit.
+El Use Case produce un `AuditEntry` semántico y consume
+`AuditWriter.append(entry, context)` desde Application. Registra `EXPEDIENTE_VIEW` /
+`EXPEDIENTE` con resultado exacto `success`, `denied` o `not-found` y sin datos C3. El
+writer añade actor, tenant, request/correlation IDs, source y `occurredAt`; el controller
+no escribe audit.
 
 ## Fuente
 DDD-013, SPEC-009, BIZ-007, DECISION-REGISTER OQ-EW-001, OQ-EW-007,

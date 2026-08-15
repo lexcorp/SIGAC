@@ -35,5 +35,10 @@ READ-EW-008..012 resuelven para T-05 el origen contractual de las fuentes habili
 `ExitEnablingSourceQueryPort` devuelve `0..N` contextos mínimos y el provider determina
 `validada`. La infraestructura concreta de Agenda/SM 1-14 no se decide aquí.
 
+CTX-EW-001..004 y AUD-EW-003..006 resuelven el bloqueo de request/audit context:
+`RequestContext` es el contexto inmutable construido server-side, `GetExpediente` lo
+recibe como input y `AuditWriter` enriquece el `AuditEntry` semántico hasta el
+`AuditRecord` persistido.
+
 Permanecen abiertas `OQ-EW-002`, `OQ-EW-003`, `OQ-EW-004`, las OQs de
 retención/paginación del timeline y el ownership físico de `MovimientoExpediente`.

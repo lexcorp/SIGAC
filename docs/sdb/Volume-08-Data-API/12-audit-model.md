@@ -33,19 +33,25 @@ No UPDATE/DELETE desde rol aplicación.
 
 ## Application port — Expediente Workspace
 
-`AuditWriter.append(AuditRecord, TenantContext): Promise<void>` es el contrato
-append-only consumido por los Use Cases. `AuditRecord` contiene:
+`AuditWriter.append(AuditEntry, RequestContext): Promise<void>` es el contrato
+append-only consumido por los Use Cases. `AuditEntry` es la intención semántica de
+Application y contiene exclusivamente:
 
-- actorRef
 - action
 - resourceType
 - resourceId
 - result: `success | denied | not-found`
-- occurredAt
-- requestId
-- correlationId nullable
-- source
-- metadata de strings nullable, sin datos C3
+- changeSummary opcional, sólo cuando esté permitido
 
-El puerto no ofrece update/delete. Para `GetExpediente`, `action = EXPEDIENTE_VIEW` y
-`resourceType = EXPEDIENTE`.
+`AuditRecord` es el registro persistido completo. `AuditWriter` lo enriquece con:
+
+- actorRef desde `RequestContext.actor`
+- tenant/database desde `RequestContext.tenant`
+- requestId, correlationId y source desde `RequestContext`
+- occurredAt establecido por el writer al hacer append
+- los campos semánticos de `AuditEntry`
+- metadata técnica mínima permitida por DAT-012, a cargo del adapter
+
+El puerto no ofrece update/delete. Application no construye metadata técnica ni
+`occurredAt`; no se exige un `ClockPort` en este slice. Ningún entry/record contiene
+datos C3. Para `GetExpediente`, `action = EXPEDIENTE_VIEW` y `resourceType = EXPEDIENTE`.
