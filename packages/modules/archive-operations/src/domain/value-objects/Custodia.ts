@@ -29,6 +29,11 @@ export interface CustodiaProps {
   readonly acceptedAt: Date | null;
 }
 
+export interface CustodiaEnTrasladoProps {
+  readonly custodianType: string;
+  readonly custodianReference: string;
+}
+
 export class Custodia {
   readonly custodianType: string;
   readonly custodianReference: string;
@@ -45,8 +50,13 @@ export class Custodia {
   }
 
   /** Crea una Custodia en estado de traslado (custodia aún no aceptada en destino). */
-  static enTraslado(props: Omit<CustodiaProps, 'acceptedAt'>): Custodia {
-    return new Custodia({ ...props, acceptedAt: null });
+  static enTraslado(props: CustodiaEnTrasladoProps): Custodia {
+    return new Custodia({
+      ...props,
+      service: null,
+      location: null,
+      acceptedAt: null,
+    });
   }
 
   /** Crea una Custodia con aceptación formal registrada (EN_CONSULTA). */

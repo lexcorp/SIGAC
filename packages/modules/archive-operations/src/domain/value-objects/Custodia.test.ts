@@ -4,8 +4,6 @@ import { Custodia } from './Custodia.js';
 const props = {
   custodianType: 'SERVICIO',
   custodianReference: 'servicio-1',
-  service: 'Consulta externa',
-  location: 'Consultorio 1',
 } as const;
 
 describe('Custodia', () => {
@@ -14,11 +12,18 @@ describe('Custodia', () => {
 
     expect(custodia.acceptedAt).toBeNull();
     expect(custodia.estaAceptada).toBe(false);
+    expect(custodia.service).toBeNull();
+    expect(custodia.location).toBeNull();
   });
 
   it('representa una custodia aceptada con timestamp', () => {
     const acceptedAt = new Date('2026-08-14T12:00:00.000Z');
-    const custodia = Custodia.aceptada({ ...props, acceptedAt });
+    const custodia = Custodia.aceptada({
+      ...props,
+      service: 'Consulta externa',
+      location: 'Consultorio 1',
+      acceptedAt,
+    });
 
     expect(custodia.acceptedAt).toEqual(acceptedAt);
     expect(custodia.estaAceptada).toBe(true);
@@ -26,8 +31,13 @@ describe('Custodia', () => {
 
   it('compara por valor y protege el timestamp frente a mutaciones externas', () => {
     const acceptedAt = new Date('2026-08-14T12:00:00.000Z');
-    const custodia = Custodia.aceptada({ ...props, acceptedAt });
-    const igual = Custodia.aceptada({ ...props, acceptedAt: new Date(acceptedAt) });
+    const acceptedProps = {
+      ...props,
+      service: 'Consulta externa',
+      location: 'Consultorio 1',
+    };
+    const custodia = Custodia.aceptada({ ...acceptedProps, acceptedAt });
+    const igual = Custodia.aceptada({ ...acceptedProps, acceptedAt: new Date(acceptedAt) });
 
     acceptedAt.setUTCFullYear(2030);
     custodia.acceptedAt?.setUTCFullYear(2031);

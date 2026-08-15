@@ -54,8 +54,6 @@ describe('Expediente', () => {
     const custodiaActual = Custodia.enTraslado({
       custodianType: 'MENSAJERO',
       custodianReference: 'mensajero-1',
-      service: 'Consulta externa',
-      location: null,
     });
 
     const current = Expediente.rehydrate(
@@ -112,8 +110,6 @@ describe('Expediente', () => {
     const custodiaActual = Custodia.enTraslado({
       custodianType: 'MENSAJERO',
       custodianReference: 'mensajero-1',
-      service: 'Consulta externa',
-      location: null,
     });
 
     expect(() =>
@@ -152,6 +148,112 @@ describe('Expediente', () => {
 
     expect(current.estadoOperativo).toBe('NO_LOCALIZADO');
     expect(current.estadoOperativo).not.toBe('EXTRAVIADO');
+  });
+
+  it('despacha APARTADO a EN_TRASLADO y produce el evento canónico', () => {
+    const origin = Ubicacion.create({ id: 'origen', codigo: 'A-01', descripcion: 'Anaquel' });
+    const destination = Ubicacion.create({
+      id: 'destino',
+      codigo: 'C-10',
+      descripcion: 'Consultorio 10',
+    });
+    const occurredAt = new Date('2026-08-15T15:00:00.000Z');
+    const expediente = Expediente.rehydrate(
+      snapshot({ estadoOperativo: 'APARTADO', ubicacionActual: origin, rowVersion: 7n }),
+    );
+
+    const event = expediente.dispatch({
+      destination,
+      intendedCustodian: { type: 'RECEPTOR', reference: 'receptor-7' },
+      businessReference: { type: 'SOLICITUD', id: 'solicitud-1' },
+      occurredAt,
+    });
+    const current = expediente.snapshot();
+
+    expect(current.estadoOperativo).toBe('EN_TRASLADO');
+    expect(current.ubicacionActual).toBe(destination);
+    expect(current.rowVersion).toBe(8n);
+    expect(current.custodiaActual).toMatchObject({
+      custodianType: 'RECEPTOR',
+      custodianReference: 'receptor-7',
+      service: null,
+      location: null,
+    });
+    expect(current.custodiaActual?.acceptedAt).toBeNull();
+    expect(event).toEqual({
+      name: 'ExpedienteDispatched',
+      occurredAt,
+      payload: {
+        expedienteId: current.id,
+        originLocation: origin,
+        destinationLocation: destination,
+        originCustodianRef: null,
+        intendedCustodian: { type: 'RECEPTOR', reference: 'receptor-7' },
+        businessReferenceType: 'SOLICITUD',
+        businessReferenceId: 'solicitud-1',
+      },
+    });
+    expect(event.occurredAt).toBe(occurredAt);
+  });
+
+  it('deriva origen y custodio anterior del aggregate', () => {
+    const origin = Ubicacion.create({ id: 'origen', codigo: 'A-01', descripcion: 'Anaquel' });
+    const previousCustody = Custodia.from({
+      custodianType: 'ARCHIVO',
+      custodianReference: 'archivo-1',
+      service: null,
+      location: 'origen',
+      acceptedAt: null,
+    });
+    const expediente = Expediente.rehydrate(
+      snapshot({
+        estadoOperativo: 'APARTADO',
+        ubicacionActual: origin,
+        custodiaActual: previousCustody,
+      }),
+    );
+    const destination = Ubicacion.create({ id: 'destino', codigo: 'C-1', descripcion: 'Destino' });
+
+    const event = expediente.dispatch({
+      destination,
+      intendedCustodian: { type: 'RECEPTOR', reference: 'receptor-1' },
+      businessReference: { type: 'SOLICITUD', id: null },
+      occurredAt: new Date('2026-08-15T15:00:00.000Z'),
+    });
+
+    expect(event.payload.originLocation).toBe(origin);
+    expect(event.payload.originCustodianRef).toBe('archivo-1');
+  });
+
+  it('rechaza dispatch fuera de APARTADO sin cambiar el aggregate', () => {
+    const expediente = Expediente.rehydrate(snapshot({ estadoOperativo: 'DISPONIBLE' }));
+    const before = expediente.snapshot();
+
+    expect(() =>
+      expediente.dispatch({
+        destination: Ubicacion.create({ id: 'destino', codigo: 'C-1', descripcion: 'Destino' }),
+        intendedCustodian: { type: 'RECEPTOR', reference: 'receptor-1' },
+        businessReference: { type: 'SOLICITUD', id: null },
+        occurredAt: new Date('2026-08-15T15:00:00.000Z'),
+      }),
+    ).toThrow(/estado APARTADO/);
+    expect(expediente.snapshot()).toEqual(before);
+  });
+
+  it.each([
+    { type: '', reference: 'receptor-1' },
+    { type: 'RECEPTOR', reference: '   ' },
+  ])('rechaza custodio previsto incompleto: $type/$reference', (intendedCustodian) => {
+    const expediente = Expediente.rehydrate(snapshot({ estadoOperativo: 'APARTADO' }));
+
+    expect(() =>
+      expediente.dispatch({
+        destination: Ubicacion.create({ id: 'destino', codigo: 'C-1', descripcion: 'Destino' }),
+        intendedCustodian,
+        businessReference: { type: 'SOLICITUD', id: null },
+        occurredAt: new Date('2026-08-15T15:00:00.000Z'),
+      }),
+    ).toThrow(/obligatorio/);
   });
 
   it('no admite campos clínicos en su contrato público ni los conserva en runtime', () => {

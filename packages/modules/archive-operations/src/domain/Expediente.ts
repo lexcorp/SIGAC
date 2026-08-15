@@ -1,4 +1,4 @@
-import { DomainError } from '@sigac/domain-kernel';
+import { DomainError, type DomainEvent } from '@sigac/domain-kernel';
 import type {
   Custodia,
   EstadoOperativo,
@@ -6,7 +6,7 @@ import type {
   ExpedienteNumero,
   Ubicacion,
 } from './value-objects/index.js';
-import { parseEstadoOperativo } from './value-objects/index.js';
+import { Custodia as CustodiaValue, parseEstadoOperativo } from './value-objects/index.js';
 
 /** Referencia operativa mínima aprobada; no contiene información clínica. */
 export interface PacienteReferencia {
@@ -30,9 +30,40 @@ export interface ExpedienteSnapshot {
   readonly rowVersion: bigint;
 }
 
+export interface IntendedCustodian {
+  readonly type: string;
+  readonly reference: string;
+}
+
+export interface BusinessReference {
+  readonly type: string;
+  readonly id: string | null;
+}
+
+export interface ExpedienteDispatchedPayload {
+  readonly expedienteId: ExpedienteId;
+  readonly originLocation: Ubicacion | null;
+  readonly destinationLocation: Ubicacion;
+  readonly originCustodianRef: string | null;
+  readonly intendedCustodian: IntendedCustodian;
+  readonly businessReferenceType: string;
+  readonly businessReferenceId: string | null;
+}
+
+export type ExpedienteDispatched = DomainEvent<ExpedienteDispatchedPayload> & {
+  readonly name: 'ExpedienteDispatched';
+};
+
+export interface DispatchExpedienteTransitionInput {
+  readonly destination: Ubicacion;
+  readonly intendedCustodian: IntendedCustodian;
+  readonly businessReference: BusinessReference;
+  readonly occurredAt: Date;
+}
+
 /** Aggregate root que representa la situación operativa actual de un expediente físico. */
 export class Expediente {
-  private constructor(private readonly state: ExpedienteSnapshot) {}
+  private constructor(private state: ExpedienteSnapshot) {}
 
   /** Rehidrata el aggregate aplicando las invariantes vigentes. */
   static rehydrate(snapshot: ExpedienteSnapshot): Expediente {
@@ -60,6 +91,56 @@ export class Expediente {
       ...this.state,
       pacienteReferencia: Object.freeze({ ...this.state.pacienteReferencia }),
     });
+  }
+
+  dispatch(input: DispatchExpedienteTransitionInput): ExpedienteDispatched {
+    if (this.state.estadoOperativo !== 'APARTADO') {
+      throw new DomainError(
+        'EXPEDIENTE_DISPATCH_ESTADO_INVALIDO',
+        'DispatchExpediente requiere un Expediente en estado APARTADO.',
+      );
+    }
+
+    Expediente.assertRequiredText(input.intendedCustodian.type, 'type');
+    Expediente.assertRequiredText(input.intendedCustodian.reference, 'reference');
+
+    const originLocation = this.state.ubicacionActual;
+    const originCustodianRef = this.state.custodiaActual?.custodianReference ?? null;
+    const custodiaActual = CustodiaValue.enTraslado({
+      custodianType: input.intendedCustodian.type,
+      custodianReference: input.intendedCustodian.reference,
+    });
+
+    this.state = {
+      ...this.state,
+      estadoOperativo: 'EN_TRASLADO',
+      ubicacionActual: input.destination,
+      custodiaActual,
+      rowVersion: this.state.rowVersion + 1n,
+    };
+
+    return {
+      name: 'ExpedienteDispatched',
+      occurredAt: input.occurredAt,
+      payload: {
+        expedienteId: this.state.id,
+        originLocation,
+        destinationLocation: input.destination,
+        originCustodianRef,
+        intendedCustodian: Object.freeze({ ...input.intendedCustodian }),
+        businessReferenceType: input.businessReference.type,
+        businessReferenceId: input.businessReference.id,
+      },
+    };
+  }
+
+  private static assertRequiredText(value: string, field: string): void {
+    if (value.trim().length === 0) {
+      throw new DomainError(
+        'CUSTODIO_PREVISTO_INVALIDO',
+        `intendedCustodian.${field} es obligatorio y no puede estar vacío.`,
+      );
+    }
   }
 
   private static assertSituacionOperativaCoherente(

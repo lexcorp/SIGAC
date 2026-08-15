@@ -1,6 +1,12 @@
 import type { RequestContext } from '@sigac/tenant';
 
-export const AUDIT_RESULTS = ['success', 'denied', 'not-found'] as const;
+export const AUDIT_RESULTS = [
+  'success',
+  'denied',
+  'not-found',
+  'conflict',
+  'invalid-transition',
+] as const;
 export type AuditResult = (typeof AUDIT_RESULTS)[number];
 
 export interface AuditEntry {

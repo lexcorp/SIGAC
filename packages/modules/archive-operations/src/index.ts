@@ -8,3 +8,6 @@ export * from './application/AuditWriter.js';
 export * from './application/ExpedienteWorkspaceQueryPorts.js';
 export * from './application/ExpedienteTimelineQueryPort.js';
 export * from './application/GetExpedienteTimeline.js';
+export * from './application/MovimientoExpedienteWriter.js';
+export * from './application/ArchiveOperationsUnitOfWork.js';
+export * from './application/DispatchExpediente.js';
