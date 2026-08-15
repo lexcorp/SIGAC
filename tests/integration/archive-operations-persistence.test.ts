@@ -1,0 +1,332 @@
+import { randomUUID } from 'node:crypto';
+import { readdir, readFile } from 'node:fs/promises';
+import {
+  AcceptCustody,
+  ApplicationError,
+  DispatchExpediente,
+  ExpedienteId,
+  ExpedienteNumero,
+  Ubicacion,
+} from '../../packages/modules/archive-operations/src/index.js';
+import {
+  PostgresArchiveOperationsUnitOfWork,
+  PostgresAuditWriter,
+  PostgresExpedienteRepository,
+  PostgresExpedienteTimelineQueryPort,
+  PostgresMovimientoExpedienteWriter,
+  TenantDatabaseRouter,
+  TenantDatabaseRoutingError,
+} from '../../packages/platform/database/src/index.js';
+import type { RequestContext, TenantContext } from '../../packages/platform/tenant/src/index.js';
+import { Client } from 'pg';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+
+const adminUrl = process.env.SIGAC_POSTGRES_ADMIN_URL ??
+  'postgresql://sigac:sigac_dev_only@localhost:5432/postgres';
+const suffix = randomUUID().replaceAll('-', '');
+const databaseNames = [`sigac_t09_a_${suffix}`, `sigac_t09_b_${suffix}`] as const;
+const locationA = '10000000-0000-4000-8000-000000000001';
+const locationB = '10000000-0000-4000-8000-000000000002';
+const expedienteA = '20000000-0000-4000-8000-000000000001';
+const expedienteB = '20000000-0000-4000-8000-000000000002';
+const duplicateA = '20000000-0000-4000-8000-000000000003';
+
+function databaseUrl(name: string): string {
+  const url = new URL(adminUrl);
+  url.pathname = `/${name}`;
+  return url.toString();
+}
+
+function tenant(index: 0 | 1): TenantContext {
+  return {
+    tenantId: `tenant-${index + 1}`,
+    slug: `hospital-${index + 1}`,
+    hospitalId: `hospital-${index + 1}`,
+    databaseName: databaseNames[index],
+    timezone: 'America/Mexico_City',
+  };
+}
+
+function context(index: 0 | 1, permissions: readonly string[]): RequestContext {
+  return {
+    tenant: tenant(index),
+    actor: {
+      actorId: `actor-${index + 1}`,
+      roles: new Set(['ARCHIVISTA']),
+      permissions: new Set(permissions),
+      tenantIds: new Set([`tenant-${index + 1}`]),
+    },
+    requestId: `request-${index + 1}`,
+    correlationId: `correlation-${index + 1}`,
+    source: 'WEB',
+  };
+}
+
+async function applyMigrations(client: Client): Promise<void> {
+  const directory = new URL('../../migrations/tenant/', import.meta.url);
+  const files = (await readdir(directory)).filter((file) => file.endsWith('.sql')).sort();
+  for (const file of files) {
+    const sql = await readFile(new URL(file, directory), 'utf8');
+    for (const statement of sql.split('--> statement-breakpoint')) {
+      if (statement.trim()) await client.query(statement);
+    }
+  }
+}
+
+async function seed(client: Client, id: string, state: string, duplicate = false): Promise<void> {
+  await client.query(
+    `INSERT INTO expedientes (
+      id, expediente_numero, expediente_numero_normalizado,
+      paciente_id_institucional, paciente_curp, paciente_nombre_operativo,
+      paciente_numero_issste, estado_operativo, ubicacion_actual_id,
+      custodio_tipo, custodio_ref, custodio_servicio, custodio_location,
+      custodio_accepted_at, row_version
+    ) VALUES ($1, 'PERR810604/10', 'PERR81060410', 'INST-1', 'CURP-1',
+      'OPERATIVO', 'ISSSTE-1', $2, $3, $4, $5, NULL, NULL, NULL, 0)`,
+    [id, state, locationA, state === 'EN_TRASLADO' ? 'SERVICIO' : null,
+      state === 'EN_TRASLADO' ? 'receptor-previsto' : null],
+  );
+  if (duplicate) await seed(client, duplicateA, state, false);
+}
+
+describe('T-09 PostgreSQL tenant infrastructure', () => {
+  const admin = new Client({ connectionString: adminUrl });
+  const clients = databaseNames.map((name) => new Client({ connectionString: databaseUrl(name) }));
+  const router = new TenantDatabaseRouter([
+    { tenantId: 'tenant-1', databaseName: databaseNames[0], connectionString: databaseUrl(databaseNames[0]) },
+    { tenantId: 'tenant-2', databaseName: databaseNames[1], connectionString: databaseUrl(databaseNames[1]) },
+  ]);
+
+  beforeAll(async () => {
+    await admin.connect();
+    for (const databaseName of databaseNames) await admin.query(`CREATE DATABASE "${databaseName}"`);
+    for (const client of clients) {
+      await client.connect();
+      await applyMigrations(client);
+      await client.query(
+        `INSERT INTO ubicaciones (id, codigo, descripcion) VALUES
+          ($1, 'ARCHIVO', 'Archivo clínico'), ($2, 'CONS-1', 'Consultorio uno')`,
+        [locationA, locationB],
+      );
+    }
+    await seed(clients[0]!, expedienteA, 'APARTADO', true);
+    await seed(clients[1]!, expedienteB, 'APARTADO');
+  });
+
+  afterAll(async () => {
+    await router.close();
+    for (const client of clients) await client.end();
+    for (const databaseName of databaseNames) await admin.query(`DROP DATABASE "${databaseName}"`);
+    await admin.end();
+  });
+
+  it('aplica secuencialmente audit_log con el DDL canónico', async () => {
+    const columns = await clients[0]!.query<{ column_name: string }>(
+      `SELECT column_name FROM information_schema.columns WHERE table_name = 'audit_log' ORDER BY ordinal_position`,
+    );
+    expect(columns.rows.map((row) => row.column_name)).toEqual([
+      'id', 'actor_ref', 'action', 'resource_type', 'resource_id', 'result',
+      'request_id', 'correlation_id', 'source', 'occurred_at', 'change_summary', 'security_context',
+    ]);
+    const indexes = await clients[0]!.query(`SELECT indexname FROM pg_indexes WHERE tablename='audit_log'`);
+    expect(indexes.rows).toHaveLength(1);
+    expect(columns.rows.some((row) => ['tenant_id', 'source_ip_hash', 'created_at'].includes(row.column_name)))
+      .toBe(false);
+    const foreignKeys = await clients[0]!.query(
+      `SELECT constraint_name FROM information_schema.table_constraints
+       WHERE table_name='audit_log' AND constraint_type='FOREIGN KEY'`,
+    );
+    expect(foreignKeys.rows).toEqual([]);
+    await expect(clients[0]!.query(
+      `INSERT INTO audit_log (id, actor_ref, action, resource_type, resource_id, result,
+       request_id, correlation_id, source, occurred_at)
+       VALUES ($1, 'a', 'A', 'R', '1', 'unknown', 'r', 'c', 'WEB', now())`, [randomUUID()],
+    )).rejects.toMatchObject({ code: '23514' });
+    await expect(clients[0]!.query(
+      `INSERT INTO audit_log (id, actor_ref, action, resource_type, resource_id, result,
+       request_id, correlation_id, source, occurred_at)
+       VALUES ($1, 'a', 'A', 'R', '1', 'success', 'r', 'c', 'MOBILE', now())`, [randomUUID()],
+    )).rejects.toMatchObject({ code: '23514' });
+  });
+
+  it('enruta por allow-list y no permite cambiar databaseName', async () => {
+    await expect(router.withClient({ ...tenant(0), databaseName: databaseNames[1] }, async () => null))
+      .rejects.toBeInstanceOf(TenantDatabaseRoutingError);
+    const countA = await router.withClient(tenant(0), ({ client }) => client.query(`SELECT count(*) FROM expedientes`));
+    const countB = await router.withClient(tenant(1), ({ client }) => client.query(`SELECT count(*) FROM expedientes`));
+    expect(Number(countA.rows[0].count)).toBe(2);
+    expect(Number(countB.rows[0].count)).toBe(1);
+  });
+
+  it('rehidrata VO, hospital del tenant, bigint y búsquedas 0/1/N sin cruce tenant', async () => {
+    const repository = new PostgresExpedienteRepository(router);
+    const found = await repository.findById(ExpedienteId.parse(expedienteA), tenant(0));
+    expect(found?.snapshot()).toMatchObject({ hospitalId: 'hospital-1', rowVersion: 0n });
+    expect(found?.snapshot().ubicacionActual?.descripcion).toBe('Archivo clínico');
+    expect(found?.snapshot().custodiaActual).toBeNull();
+    await expect(repository.findById(ExpedienteId.parse(expedienteA), tenant(1))).resolves.toBeNull();
+    await expect(repository.findByNumero(ExpedienteNumero.parse('PERR810604-10'), tenant(0)))
+      .resolves.toHaveLength(2);
+    await expect(repository.findByNumero(ExpedienteNumero.parse('PERR81060410'), tenant(1)))
+      .resolves.toHaveLength(1);
+    await expect(repository.findByNumero(ExpedienteNumero.parse('ABCD123456/20'), tenant(0)))
+      .resolves.toEqual([]);
+  });
+
+  it('aplica optimistic locking en save', async () => {
+    const repository = new PostgresExpedienteRepository(router);
+    const aggregate = await repository.findById(ExpedienteId.parse(expedienteA), tenant(0));
+    aggregate!.dispatch({
+      destination: Ubicacion.create({ id: locationB, codigo: 'CONS-1', descripcion: 'Consultorio uno' }),
+      intendedCustodian: { type: 'SERVICIO', reference: 'receptor-1' },
+      businessReference: { type: 'VALE', id: null }, occurredAt: new Date(),
+    });
+    await clients[0]!.query(`UPDATE expedientes SET row_version = 7 WHERE id = $1`, [expedienteA]);
+    await expect(repository.save(aggregate!, tenant(0))).rejects.toMatchObject({
+      code: 'OPTIMISTIC_LOCK_CONFLICT',
+    });
+    await clients[0]!.query(`UPDATE expedientes SET row_version = 0 WHERE id = $1`, [expedienteA]);
+  });
+
+  it('persiste movimiento y pagina timeline por cursor determinista', async () => {
+    const writer = new PostgresMovimientoExpedienteWriter(router);
+    const id = ExpedienteId.parse(expedienteA);
+    for (const occurredAt of [new Date('2026-01-01T00:00:00Z'), new Date('2026-01-02T00:00:00Z')]) {
+      await writer.append({
+        expedienteId: id, movementType: 'DISPATCHED', originLocation: locationA,
+        destinationLocation: locationB, originCustodianRef: null,
+        destinationCustodianRef: 'receptor-1', businessReferenceType: 'VALE',
+        businessReferenceId: 'ref-text', occurredAt, actorRef: 'actor-1',
+        source: 'WEB', correlationId: 'correlation-1',
+      }, tenant(0));
+    }
+    const timeline = new PostgresExpedienteTimelineQueryPort(router);
+    const first = await timeline.findByExpediente(id, { limit: 1 }, tenant(0));
+    const second = await timeline.findByExpediente(id, { limit: 1, cursor: first.nextCursor! }, tenant(0));
+    expect(first.items[0]).toMatchObject({ destinationLocation: locationB, businessReferenceId: 'ref-text' });
+    expect(first.items[0]!.occurredAt.toISOString()).toBe('2026-01-02T00:00:00.000Z');
+    expect(first.nextCursor).not.toBeNull();
+    expect(second.items).toHaveLength(1);
+    expect(second.items[0]!.movimientoId).not.toBe(first.items[0]!.movimientoId);
+  });
+
+  it('escribe audit standalone y enriquece desde RequestContext', async () => {
+    const writer = new PostgresAuditWriter(router, undefined, { assurance: 'server-validated' });
+    await writer.append({
+      action: 'EXPEDIENTE_VIEW', resourceType: 'EXPEDIENTE', resourceId: expedienteA,
+      result: 'success', changeSummary: { field: 'estado' },
+    }, context(0, ['EXPEDIENT_VIEW']));
+    const result = await clients[0]!.query(`SELECT * FROM audit_log WHERE action='EXPEDIENTE_VIEW'`);
+    expect(result.rows[0]).toMatchObject({
+      actor_ref: 'actor-1', request_id: 'request-1', correlation_id: 'correlation-1',
+      source: 'WEB', change_summary: { field: 'estado' },
+      security_context: { assurance: 'server-validated' },
+    });
+  });
+
+  it('confirma Dispatch aggregate + Movimiento + audit en una sola transacción', async () => {
+    const useCase = new DispatchExpediente({
+      unitOfWork: new PostgresArchiveOperationsUnitOfWork(router),
+      auditWriter: new PostgresAuditWriter(router),
+    });
+    await useCase.execute({
+      expedienteId: ExpedienteId.parse(expedienteA),
+      destination: Ubicacion.create({ id: locationB, codigo: 'CONS-1', descripcion: 'Consultorio uno' }),
+      intendedCustodian: { type: 'SERVICIO', reference: 'receptor-1' },
+      businessReference: { type: 'VALE', id: 'vale-1' }, expectedRowVersion: 0n,
+      context: context(0, ['EXPEDIENT_DISPATCH']),
+    });
+    const state = await clients[0]!.query(`SELECT estado_operativo, row_version, custodio_ref,
+      custodio_servicio, custodio_location, custodio_accepted_at FROM expedientes WHERE id=$1`, [expedienteA]);
+    const movement = await clients[0]!.query(`SELECT occurred_at FROM movimientos_expediente WHERE expediente_id=$1 AND movement_type='DISPATCHED' ORDER BY recorded_at DESC LIMIT 1`, [expedienteA]);
+    const audit = await clients[0]!.query(`SELECT result FROM audit_log WHERE action='EXPEDIENTE_DISPATCH'`);
+    expect(state.rows[0]).toMatchObject({
+      estado_operativo: 'EN_TRASLADO', row_version: '1', custodio_ref: 'receptor-1',
+      custodio_servicio: null, custodio_location: null, custodio_accepted_at: null,
+    });
+    expect(movement.rows).toHaveLength(1);
+    expect(audit.rows).toContainEqual({ result: 'success' });
+  });
+
+  it('hace rollback total cuando falla movimiento o audit dentro de la UoW', async () => {
+    const id = ExpedienteId.parse(duplicateA);
+    const uow = new PostgresArchiveOperationsUnitOfWork(router);
+    await expect(uow.execute(context(0, []), async (tx) => {
+      const aggregate = await tx.expedienteRepository.findById(id, tenant(0));
+      aggregate!.dispatch({
+        destination: Ubicacion.create({ id: locationB, codigo: 'CONS-1', descripcion: 'Consultorio uno' }),
+        intendedCustodian: { type: 'SERVICIO', reference: 'receptor-x' },
+        businessReference: { type: 'VALE', id: null }, occurredAt: tx.operationOccurredAt,
+      });
+      await tx.expedienteRepository.save(aggregate!, tenant(0));
+      await tx.movimientoWriter.append({
+        expedienteId: id, movementType: 'DISPATCHED', originLocation: locationA,
+        destinationLocation: 'not-a-uuid', originCustodianRef: null,
+        destinationCustodianRef: 'receptor-x', businessReferenceType: 'VALE',
+        businessReferenceId: null, occurredAt: tx.operationOccurredAt,
+        actorRef: 'actor-1', source: 'WEB', correlationId: 'correlation-1',
+      }, tenant(0));
+    })).rejects.toThrow();
+    const persisted = await clients[0]!.query(`SELECT estado_operativo, row_version FROM expedientes WHERE id=$1`, [duplicateA]);
+    expect(persisted.rows[0]).toMatchObject({ estado_operativo: 'APARTADO', row_version: '0' });
+
+    const useCase = new DispatchExpediente({
+      unitOfWork: new PostgresArchiveOperationsUnitOfWork(router, { unsupported: 1n }),
+      auditWriter: new PostgresAuditWriter(router),
+    });
+    await expect(useCase.execute({
+      expedienteId: id,
+      destination: Ubicacion.create({ id: locationB, codigo: 'CONS-1', descripcion: 'Consultorio uno' }),
+      intendedCustodian: { type: 'SERVICIO', reference: 'receptor-x' },
+      businessReference: { type: 'VALE', id: null }, expectedRowVersion: 0n,
+      context: context(0, ['EXPEDIENT_DISPATCH']),
+    })).rejects.toThrow();
+    const afterAuditFailure = await clients[0]!.query(
+      `SELECT estado_operativo, row_version FROM expedientes WHERE id=$1`, [duplicateA],
+    );
+    const movements = await clients[0]!.query(
+      `SELECT count(*) FROM movimientos_expediente WHERE expediente_id=$1`, [duplicateA],
+    );
+    expect(afterAuditFailure.rows[0]).toMatchObject({ estado_operativo: 'APARTADO', row_version: '0' });
+    expect(movements.rows[0].count).toBe('0');
+  });
+
+  it('acepta custodia atómicamente usando el mismo patrón transaccional', async () => {
+    const useCase = new AcceptCustody({
+      unitOfWork: new PostgresArchiveOperationsUnitOfWork(router),
+      auditWriter: new PostgresAuditWriter(router),
+    });
+    await useCase.execute({
+      expedienteId: ExpedienteId.parse(expedienteA),
+      receptor: { type: 'MEDICO', reference: 'receptor-efectivo', service: 'CONSULTA' },
+      ubicacionDestino: Ubicacion.create({ id: locationB, codigo: 'CONS-1', descripcion: 'Consultorio uno' }),
+      businessReference: { type: 'VALE', id: 'vale-1' }, expectedRowVersion: 1n,
+      context: context(0, ['CUSTODY_ACCEPT']),
+    });
+    const state = await clients[0]!.query(`SELECT estado_operativo, custodio_ref, custodio_location, row_version FROM expedientes WHERE id=$1`, [expedienteA]);
+    const audit = await clients[0]!.query(`SELECT result FROM audit_log WHERE action='CUSTODY_ACCEPTED'`);
+    expect(state.rows[0]).toMatchObject({
+      estado_operativo: 'EN_CONSULTA', custodio_ref: 'receptor-efectivo',
+      custodio_location: locationB, row_version: '2',
+    });
+    expect(audit.rows).toContainEqual({ result: 'success' });
+  });
+
+  it('audita fallos fuera de la UoW en una transacción tenant-local independiente', async () => {
+    const useCase = new DispatchExpediente({
+      unitOfWork: new PostgresArchiveOperationsUnitOfWork(router),
+      auditWriter: new PostgresAuditWriter(router),
+    });
+    await expect(useCase.execute({
+      expedienteId: ExpedienteId.parse(expedienteB),
+      destination: Ubicacion.create({ id: locationB, codigo: 'CONS-1', descripcion: 'Consultorio uno' }),
+      intendedCustodian: { type: 'SERVICIO', reference: 'r' },
+      businessReference: { type: 'VALE', id: null }, expectedRowVersion: 0n,
+      context: context(0, []),
+    })).rejects.toBeInstanceOf(ApplicationError);
+    const audit = await clients[0]!.query(`SELECT result FROM audit_log WHERE resource_id=$1`, [expedienteB]);
+    expect(audit.rows).toContainEqual({ result: 'denied' });
+    const otherTenantAudit = await clients[1]!.query(`SELECT count(*) FROM audit_log`);
+    expect(otherTenantAudit.rows[0].count).toBe('0');
+  });
+});

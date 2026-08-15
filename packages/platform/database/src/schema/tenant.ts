@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { bigint, check, index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { bigint, check, index, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 export const ubicaciones = pgTable('ubicaciones', {
   id: uuid('id').primaryKey(),
@@ -59,5 +59,30 @@ export const movimientosExpediente = pgTable(
   },
   (table) => [
     check('movimientos_expediente_source_check', sql`${table.source} IN ('WEB', 'INTERNAL')`),
+  ],
+);
+
+export const auditLog = pgTable(
+  'audit_log',
+  {
+    id: uuid('id').primaryKey(),
+    actorRef: text('actor_ref').notNull(),
+    action: text('action').notNull(),
+    resourceType: text('resource_type').notNull(),
+    resourceId: text('resource_id').notNull(),
+    result: text('result').notNull(),
+    requestId: text('request_id').notNull(),
+    correlationId: text('correlation_id').notNull(),
+    source: text('source').notNull(),
+    occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull(),
+    changeSummary: jsonb('change_summary').$type<Readonly<Record<string, string>>>(),
+    securityContext: jsonb('security_context').$type<Readonly<Record<string, unknown>>>(),
+  },
+  (table) => [
+    check(
+      'audit_log_result_check',
+      sql`${table.result} IN ('success', 'denied', 'not-found', 'conflict', 'invalid-transition')`,
+    ),
+    check('audit_log_source_check', sql`${table.source} IN ('WEB', 'INTERNAL')`),
   ],
 );

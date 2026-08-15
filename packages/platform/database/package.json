@@ -13,6 +13,8 @@
     "lint": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@sigac/archive-operations": "workspace:*",
+    "@sigac/tenant": "workspace:*",
     "drizzle-orm": "0.45.2",
     "pg": "latest"
   },
