@@ -31,3 +31,7 @@ Para Expediente Workspace v0.3.15, la migración tenant aplica el DDL de
 POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014: elimina el UNIQUE previo de
 `expediente_numero`, usa `row_version BIGINT DEFAULT 0` y crea/completa `ubicaciones`,
 `expedientes` y `movimientos_expediente`. No modifica `audit_log` ni crea `hospital_id`.
+
+Security / Audit agrega en una migración tenant posterior su tabla `audit_log`; no
+reescribe la migración inicial T-10. Esa migración queda bloqueada por AUD-DB-GAP hasta
+que DAT-012 defina tipos y nullability completos.

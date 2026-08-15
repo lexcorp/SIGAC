@@ -35,3 +35,8 @@ T-10 está ready mediante POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014: nombr
 físicos, DDL, nullability, índices, CHECKs, FKs, tenant/HospitalId y mapping VO ↔ DB
 quedan definidos. OQ-DAT-004 está RESOLVED; no quedan gaps bloqueantes conocidos para
 la migración.
+
+T-09 tiene definidos routing, transaction binding, ownership de audit_log, UoW y
+operationOccurredAt mediante TX-EW-001..012. Permanece **NOT READY** por AUD-DB-GAP:
+DAT-012 no define todavía el DDL completo de audit_log necesario para su migration y
+AuditWriter PostgreSQL.

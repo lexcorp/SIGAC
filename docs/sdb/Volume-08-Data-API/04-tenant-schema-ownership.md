@@ -23,4 +23,9 @@ architecture:
 | reporting_audit | audit_log, outbox_events |
 | identity_access | user_refs, role_assignments (si no se delega totalmente) |
 
+`audit_log` reside físicamente en cada database tenant para integridad transaccional,
+pero su ownership sigue siendo `reporting_audit`/Security Audit. El registry Drizzle
+tenant puede componer schemas exportados por distintos propietarios sin trasladar
+ownership ni habilitar SQL cross-module directo.
+
 Un módulo no escribe tablas propiedad de otro mediante SQL directo.

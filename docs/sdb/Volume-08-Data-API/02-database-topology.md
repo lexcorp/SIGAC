@@ -29,3 +29,8 @@ Tenant registry, routing, global configuration mínima y estado de migraciones.
 
 ## Tenant DB
 Expedientes, solicitudes, preparación, préstamos, incidencias, movimientos, auditoría, outbox y catálogos propios.
+
+`audit_log` es propiedad lógica de Security / Audit pero se almacena tenant-local. El
+`TenantDatabaseRouter` selecciona la database desde TenantContext validado; la
+infraestructura puede abrir una transacción compartida para writers de distintos
+módulos propietarios sin transferir ownership.

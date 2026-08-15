@@ -34,3 +34,14 @@ aggregate no lo genera y no se introduce event factory/envelope diferido para T-
 Ante optimistic lock mismatch, la transacción mutante hace rollback completo. Después
 del rollback se registra audit `conflict` fuera de esa UoW; no se persiste cambio de
 aggregate, Movimiento ni audit success.
+
+## Infraestructura tenant y audit
+
+`TenantDatabaseRouter` resuelve un pool allow-listed desde TenantContext validado. La
+UoW abre BEGIN en esa database y construye Repository, MovimientoWriter y AuditWriter
+transaction-bound sobre el mismo handle. Cualquier fallo produce ROLLBACK ALL.
+
+Los audits `denied|not-found|conflict|invalid-transition` usan el mismo port AuditWriter
+en una transacción tenant-local independiente, después del rollback cuando corresponda.
+No se usan dos conexiones para simular atomicidad ni distributed transactions. La UoW
+genera un único operationOccurredAt al inicio, sin ClockPort.

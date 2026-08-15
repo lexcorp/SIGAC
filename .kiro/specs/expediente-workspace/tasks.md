@@ -1,11 +1,11 @@
 ---
 spec: expediente-workspace
-version: "0.3.15"
+version: "0.3.16"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 requires:
-  - requirements.md (v0.3.15)
-  - design.md (v0.3.15)
+  - requirements.md (v0.3.16)
+  - design.md (v0.3.16)
 decisions_applied:
   - "OQ-EW-001 RESOLVED"
   - "OQ-EW-005 RESOLVED"
@@ -30,6 +30,7 @@ decisions_applied:
   - "DSP-EW-014..016 APPROVED"
   - "CST-EW-001..010 APPROVED; CST-GAP-001/002 CLOSED"
   - "POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014 APPROVED"
+  - "TENANT-TRANSACTION-AUDIT-DECISION TX-EW-001..012 APPROVED; AUD-DB-GAP BLOCKING"
 ready_gate: "READY-GATE.md — todos los ítems deben estar marcados antes de iniciar T-01"
 done_gate: "OS-018 — spec + tests + API/migrations + auth/tenant/audit + traceability"
 ---
@@ -64,7 +65,7 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
 ## Grupo 0 — Trazabilidad
 
 ### T-00 Completar traceability.md
-- **Descripción:** Verificar que traceability.md v0.3.15 tiene cadenas completas
+- **Descripción:** Verificar que traceability.md v0.3.16 tiene cadenas completas
   para todas las capacidades. Confirmar que GAP-002, GAP-003, GAP-007 están cerrados
   y que no quedan eslabones PENDIENTE en BR, UC o SPEC para las decisiones resueltas.
 - **Criterio de done:** Ningún REQ-EW-* sin cadena completa; matrices actualizadas.
@@ -355,6 +356,13 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
     `Ubicacion {id,codigo,descripcion}`.
   - Rehidrata las cuatro columnas de PacienteReferencia, las cinco de Custodia y
     rowVersion como bigint; HospitalId procede de TenantContext.
+  - Implementa/reutiliza `TenantDatabaseRouter` en platform/database: sólo TenantContext
+    validado, pools allow-listed, sin tipos DB hacia Application.
+  - Implementa `PostgresArchiveOperationsUnitOfWork` sobre una única transaction tenant.
+    Repository, MovimientoWriter y AuditWriter transaction-bound comparten el handle;
+    operationOccurredAt se crea una vez.
+  - Security / Audit proporciona el binder de AuditWriter; Archive Operations no
+    ejecuta SQL directo contra audit_log. Audits de fallo usan transaction standalone.
   - Sin lógica de negocio en el adapter.
 - **Tests requeridos (Vitest + PostgreSQL real):**
   - findByNumero con / -> normaliza y encuentra.
@@ -364,8 +372,11 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
   - Tenant-A no ve expediente de Tenant-B.
   - save con rowVersion incorrecto -> error de concurrencia.
 - **Fuente SDB:** DAT-006 v0.2.0, DAT-016 v0.2.0, SEC-032, AGENTS.md,
-  POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014.
+  POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014,
+  TENANT-TRANSACTION-AUDIT-DECISION TX-EW-001..012, DAT-012, DAT-020.
 - **Dependencias:** T-03, T-10 (migración de esquema).
+- **Bloqueo vigente:** `AUD-DB-GAP`; no iniciar adapter audit/UoW hasta que DAT-012
+  defina el DDL completo y exista su migration tenant posterior propietaria.
 
 ### T-10 Migración de esquema
 - **Descripción:** Migración para tablas `expediente` y `movimientos_expediente`.
@@ -643,8 +654,9 @@ T-23 (CI pipeline) <- todas
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.15"
-blocking_open_questions: []
+spec_version: "0.3.16"
+blocking_open_questions:
+  - AUD-DB-GAP
 non_blocking_open_questions:
   - OQ-EW-002
   - OQ-EW-003
@@ -656,5 +668,5 @@ non_blocking_open_questions:
   - OQ-EW-DESIGN-002
   - OQ-EW-DESIGN-005
 contradictions_found: []
-implementation_ready: true
+implementation_ready: false
 ```

@@ -27,3 +27,8 @@ Controls:
 - exports scoped to tenant;
 - migration runner validates target tenant;
 - backup files named/scoped securely.
+
+El componente canónico `TenantDatabaseRouter` vive en `packages/platform/database`.
+Recibe únicamente TenantContext ya validado, valida la ruta contra el registro
+server-side y mantiene pools separados. No realiza autorización ni acepta database o
+connection string desde input arbitrario.

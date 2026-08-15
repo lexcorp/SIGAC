@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.15"
+version: "0.3.16"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 traceability_model: "OS-007 / SDD-006"
@@ -29,10 +29,11 @@ decisions_applied:
   - "DSP-EW-014..016 APPROVED"
   - "CST-EW-001..010 APPROVED; CST-GAP-001/002 CLOSED"
   - "POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014 APPROVED"
+  - "TENANT-TRANSACTION-AUDIT-DECISION TX-EW-001..012 APPROVED; AUD-DB-GAP BLOCKING"
 requires:
-  - requirements.md (v0.3.15)
-  - design.md (v0.3.15)
-  - tasks.md (v0.3.15)
+  - requirements.md (v0.3.16)
+  - design.md (v0.3.16)
+  - tasks.md (v0.3.16)
 ---
 
 # Expediente Workspace — Traceability
@@ -218,7 +219,7 @@ requires:
 
 | Eslabón | Referencia | Detalle |
 |---------|-----------|---------|
-| **Source / SDB** | SEC-038, DAT-012, CTX-EW-001..004, AUD-EW-001..006, NOM-004-SSA3-2012 | RequestContext canónico; AuditEntry semántico; AuditWriter append-only |
+| **Source / SDB** | SEC-038, DAT-012, DAT-020, CTX-EW-001..004, AUD-EW-001..006, TX-EW-001..012, NOM-004-SSA3-2012 | RequestContext canónico; AuditEntry semántico; AuditWriter append-only y transaction-bound en infraestructura |
 | **Business Rule** | "Toda acción registra actor, tenant, recurso y resultado" | — |
 | **REQ** | NFR-EW-003 | — |
 | **API** | Application usa AuditWriter; controller no escribe audit | — |
@@ -339,6 +340,7 @@ requires:
 | GAP-008 | Codificación de ubicaciones temporales | OQ-EW-008 | Abierto; categoría genérica provisional |
 | GAP-009 | SLA de performance (<= 1 s) | NFR-EW-001 | Pendiente UAT con carga real |
 | GAP-010 | Política de retención del timeline | OQ-EW-010 | Abierto; sin límite provisional |
+| AUD-DB-GAP | DDL incompleto de audit_log bloquea AuditWriter/UoW PostgreSQL | DAT-012, TX-EW-011 | BLOCKING para T-09 |
 
 ---
 
@@ -364,14 +366,16 @@ requires:
 | 0.3.13 | 2026-08-15 | CST-EW-001..010 formalizadas; CST-GAP-001/002 bloquean business reference y audit de T-08. |
 | 0.3.14 | 2026-08-15 | CST-GAP-001/002 cerrados: businessReference explícita y audit CUSTODY_ACCEPTED formalizados. |
 | 0.3.15 | 2026-08-15 | DB-EW-001..014 aprobadas: DDL PostgreSQL tenant, nombres físicos, PacienteReferencia, Ubicacion, Custodia inline, bigint, Movimiento, FKs y mapping Repository definidos; T-10 listo. |
+| 0.3.16 | 2026-08-15 | TX-EW-001..012 aprobadas: TenantDatabaseRouter, transaction-bound AuditWriter, UoW tenant y audit local formalizados; AUD-DB-GAP bloquea T-09. |
 
 ---
 
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.15"
-blocking_open_questions: []
+spec_version: "0.3.16"
+blocking_open_questions:
+  - AUD-DB-GAP
 non_blocking_open_questions:
   - OQ-EW-002
   - OQ-EW-003
@@ -380,5 +384,5 @@ non_blocking_open_questions:
   - OQ-EW-009
   - OQ-EW-010
 contradictions_found: []
-implementation_ready: true
+implementation_ready: false
 ```

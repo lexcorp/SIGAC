@@ -70,3 +70,9 @@ operationOccurredAt. Update aggregate + append movimiento + audit success compar
 transacción PostgreSQL ALL OR NOTHING. Dominio no conoce transacciones.
 Application pasa ese instante explícitamente a `Expediente.dispatch`; conforme
 DOM-EVENT-001, el aggregate no genera timestamps ni obtiene un Clock.
+
+La implementación PostgreSQL usa `TenantDatabaseRouter` de `packages/platform/database`
+para resolver el pool desde un TenantContext previamente validado. La UoW abre una sola
+transacción y construye Repository, MovimientoWriter y un AuditWriter ligado al mismo
+handle mediante infraestructura Security / Audit. Los tipos de DB no cruzan hacia
+Application. Fuente: TENANT-TRANSACTION-AUDIT-DECISION TX-EW-001..012.

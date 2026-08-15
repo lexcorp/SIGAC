@@ -22,3 +22,8 @@ baseline:
 - schema migrations controlled;
 - backup access restricted;
 - audit privileged DB access at platform level where available.
+
+`audit_log` pertenece a Security / Audit y reside en cada database tenant para permitir
+audit success atómico con mutaciones operacionales. Security / Audit proporciona el
+AuditWriter transaction-bound; los módulos operacionales no escriben SQL directo en
+`audit_log`. El audit standalone de fallos también usa una transacción tenant-local.

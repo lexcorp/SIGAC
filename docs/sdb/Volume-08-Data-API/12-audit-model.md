@@ -31,6 +31,19 @@ Fields:
 No payload clínico completo.
 No UPDATE/DELETE desde rol aplicación.
 
+## Ownership y storage transaccional
+
+Security / Audit es propietario lógico de `audit_log`. La tabla existe físicamente en
+cada tenant database para participar en la misma transacción PostgreSQL que una mutación
+operacional exitosa. Archive Operations no ejecuta SQL directo sobre ella. Un binder de
+infraestructura Audit produce un AuditWriter ligado a un transaction handle existente;
+el port Application no cambia.
+
+La migración de `audit_log` es una migración tenant posterior propiedad de Security /
+Audit y no reescribe T-10. **AUD-DB-GAP:** este documento aún no fija todos los tipos y
+nullability del DDL (incluidos campos candidatos); la migración y adapter permanecen
+bloqueados hasta completar ese contrato físico, sin inferencias.
+
 ## Application port — Expediente Workspace
 
 `AuditWriter.append(AuditEntry, RequestContext): Promise<void>` es el contrato

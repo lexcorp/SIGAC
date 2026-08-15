@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.15"
+version: "0.3.16"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -36,6 +36,7 @@ decisions_applied:
   - "DSP-EW-014..016 APPROVED"
   - "CST-EW-001..010 APPROVED; CST-GAP-001/002 CLOSED"
   - "POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014 APPROVED"
+  - "TENANT-TRANSACTION-AUDIT-DECISION TX-EW-001..012 APPROVED; AUD-DB-GAP BLOCKING"
 ---
 
 # Expediente Workspace — Requirements
@@ -382,6 +383,15 @@ indexa únicamente su forma normalizada con btree no unique. Movimiento usa TEXT
 para business reference/correlation y conserva `audit_log` completamente separado.
 Fuente: POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014, DAT-006, DAT-011.
 
+### NFR-EW-010 — Routing y transacción tenant
+
+`TenantDatabaseRouter` en `packages/platform/database` resuelve un pool allow-listed
+desde TenantContext validado, sin autorización ni input HTTP arbitrario. Una UoW
+mutante usa una sola transacción tenant para save Expediente, append Movimiento y audit
+success mediante AuditWriter transaction-bound. Cualquier fallo hace rollback total.
+Los audits de fallo usan el mismo port en una transacción tenant-local independiente.
+Fuente: TX-EW-001..012, DAT-020, SEC-032.
+
 ---
 
 ## 5. Criterios de aceptación
@@ -554,7 +564,9 @@ And foco siempre visible
 
 ### Bloqueantes para implementación
 
-Ninguna. OQ-EW-001, OQ-EW-005, OQ-EW-006 y OQ-EW-007 están RESUELTAS.
+`AUD-DB-GAP`: DAT-012 no define tipos/nullability completos de audit_log; bloquea T-09,
+su AuditWriter PostgreSQL y las pruebas de atomicidad. Las demás OQs históricamente
+bloqueantes permanecen resueltas.
 
 ### No bloqueantes (decisión provisional disponible)
 
@@ -572,8 +584,9 @@ Ninguna. OQ-EW-001, OQ-EW-005, OQ-EW-006 y OQ-EW-007 están RESUELTAS.
 ## 7. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.15"
-blocking_open_questions: []
+spec_version: "0.3.16"
+blocking_open_questions:
+  - AUD-DB-GAP
 non_blocking_open_questions:
   - OQ-EW-002
   - OQ-EW-003
@@ -582,5 +595,5 @@ non_blocking_open_questions:
   - OQ-EW-009
   - OQ-EW-010
 contradictions_found: []
-implementation_ready: true
+implementation_ready: false
 ```

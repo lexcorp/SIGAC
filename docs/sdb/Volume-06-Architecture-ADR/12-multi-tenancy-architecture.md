@@ -39,3 +39,10 @@ Where shared tables are unavoidable, PostgreSQL Row-Level Security may be used i
 
 ## Cost
 More database lifecycle/migration automation is required.
+
+## TenantDatabaseRouter
+
+`packages/platform/database` resuelve pools exclusivamente desde TenantContext validado
+y un registro allow-listed. No autoriza actores, no recibe rutas desde HTTP y no expone
+tipos PostgreSQL/Drizzle a Application. Una operación mutante abre como máximo una
+transacción en una única database tenant; no hay transacciones cross-tenant.

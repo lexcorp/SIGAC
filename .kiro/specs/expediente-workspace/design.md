@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.15"
+version: "0.3.16"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -35,9 +35,11 @@ decisions_applied:
   - "DSP-EW-014..016 APPROVED"
   - "CST-EW-001..010 APPROVED; CST-GAP-001/002 CLOSED"
   - "POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014 APPROVED"
+  - "TENANT-TRANSACTION-AUDIT-DECISION TX-EW-001..012 APPROVED; AUD-DB-GAP BLOCKING"
 requires:
-  - requirements.md (v0.3.15)
-open_questions_blocking: []
+  - requirements.md (v0.3.16)
+open_questions_blocking:
+  - AUD-DB-GAP
 open_questions_non_blocking:
   - OQ-EW-002
   - OQ-EW-003
@@ -216,6 +218,26 @@ audit_log
 ```
 
 Acceso de la aplicación: INSERT únicamente.
+
+Ownership lógico: Security / Audit. Storage físico: cada tenant database. Su schema se
+compone en platform/database sin transferir ownership. Un binder de infraestructura
+crea AuditWriter ligado a la transacción existente; Archive Operations no ejecuta SQL
+directo en audit_log. El DDL exacto permanece bloqueado por AUD-DB-GAP.
+
+### 3.6 TenantDatabaseRouter y UoW PostgreSQL
+
+```text
+TenantContext validado
+  → TenantDatabaseRouter (pool allow-listed)
+  → BEGIN tenant-local
+  → transactional Repository + MovimientoWriter + AuditWriter
+  → COMMIT | ROLLBACK ALL
+```
+
+`PostgresArchiveOperationsUnitOfWork` implementa la interface Application existente y
+expone además un único operationOccurredAt. Los handles Drizzle/PostgreSQL permanecen en
+Infrastructure. Audit standalone abre su propia transacción tenant-local después del
+rollback cuando corresponde. No existen distributed/cross-tenant transactions.
 
 ---
 
@@ -814,8 +836,9 @@ por `GetExpediente` (READ-MODEL-COMPOSITION-DECISION).
 ## 12. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.15"
-blocking_open_questions: []
+spec_version: "0.3.16"
+blocking_open_questions:
+  - AUD-DB-GAP
 non_blocking_open_questions:
   - OQ-EW-002
   - OQ-EW-003
@@ -827,5 +850,5 @@ non_blocking_open_questions:
   - OQ-EW-DESIGN-002
   - OQ-EW-DESIGN-005
 contradictions_found: []
-implementation_ready: true
+implementation_ready: false
 ```
