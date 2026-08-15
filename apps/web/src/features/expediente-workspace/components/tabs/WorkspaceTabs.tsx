@@ -1,5 +1,5 @@
 import { useId, useState, type KeyboardEvent, type ReactNode } from 'react';
-import type { ExpedienteReadModel, MovimientoExpedienteSummary } from '../../types/expediente.types';
+import type { ExpedienteAuditEntrySummary, ExpedienteReadModel, MovimientoExpedienteSummary } from '../../types/expediente.types';
 import { AuditoriaTab } from './AuditoriaTab';
 import { IncidenciasTab } from './IncidenciasTab';
 import { MovimientosTab } from './MovimientosTab';
@@ -18,6 +18,12 @@ export function WorkspaceTabs(props: {
   readonly timelineLoadingMore?: boolean;
   readonly onLoadMore: () => void;
   readonly auditAuthorized?: boolean;
+  readonly auditItems?: readonly ExpedienteAuditEntrySummary[];
+  readonly auditLoading?: boolean;
+  readonly auditError?: boolean;
+  readonly auditNextCursor?: string | null;
+  readonly auditLoadingMore?: boolean;
+  readonly onAuditLoadMore?: () => void;
 }) {
   const tabs: readonly { id: TabId; label: string; content: ReactNode }[] = [
     { id: 'resumen', label: 'Resumen', content: <ResumenTab expediente={props.expediente} /> },
@@ -25,7 +31,7 @@ export function WorkspaceTabs(props: {
     { id: 'solicitudes', label: 'Solicitudes', content: <SolicitudesTab solicitud={props.expediente.solicitudActiva} /> },
     { id: 'prestamos', label: 'Préstamos', content: <PrestamosTab prestamo={props.expediente.prestamoActivo} /> },
     { id: 'incidencias', label: 'Incidencias', content: <IncidenciasTab incidencias={props.expediente.incidenciasAbiertas} /> },
-    ...(props.auditAuthorized ? [{ id: 'auditoria' as const, label: 'Auditoría', content: <AuditoriaTab /> }] : []),
+    ...(props.auditAuthorized ? [{ id: 'auditoria' as const, label: 'Auditoría', content: <AuditoriaTab items={props.auditItems ?? []} loading={props.auditLoading} error={props.auditError} nextCursor={props.auditNextCursor ?? null} loadingMore={props.auditLoadingMore} onLoadMore={props.onAuditLoadMore ?? (() => undefined)} /> }] : []),
   ];
   const [active, setActive] = useState<TabId>('resumen');
   const prefix = useId();

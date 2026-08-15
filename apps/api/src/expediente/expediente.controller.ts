@@ -16,6 +16,7 @@ import {
   type DispatchExpediente,
   type GetExpediente,
   type GetExpedienteTimeline,
+  type GetExpedienteAudit,
   type SearchExpedientesByNumero,
 } from '@sigac/archive-operations';
 import { ApiProblemMapper } from './api-errors.js';
@@ -42,6 +43,8 @@ export class ExpedienteController {
     private readonly getExpedienteUseCase: GetExpediente,
     @Inject(EXPEDIENTE_API_TOKENS.getExpedienteTimeline)
     private readonly getExpedienteTimelineUseCase: GetExpedienteTimeline,
+    @Inject(EXPEDIENTE_API_TOKENS.getExpedienteAudit)
+    private readonly getExpedienteAuditUseCase: GetExpedienteAudit,
     @Inject(EXPEDIENTE_API_TOKENS.searchExpedientesByNumero)
     private readonly searchExpedientesByNumeroUseCase: SearchExpedientesByNumero,
     @Inject(EXPEDIENTE_API_TOKENS.dispatchExpediente)
@@ -97,6 +100,21 @@ export class ExpedienteController {
         context,
       });
       return toJsonValue(result);
+    });
+  }
+
+  @Get(':id/audit')
+  async getAudit(
+    @Param('id') id: string,
+    @Query('cursor') cursor: string | undefined,
+    @Query('limit') limit: string | undefined,
+    @Req() request: unknown,
+  ): Promise<unknown> {
+    return this.execute(async () => {
+      const expedienteId = ExpedienteId.parse(parseUuid(id));
+      const pagination = { ...(cursor === undefined ? {} : { cursor }), limit: parseTimelineLimit(limit) };
+      const context = await this.requestContextResolver.resolve({ nativeRequest: request });
+      return toJsonValue(await this.getExpedienteAuditUseCase.execute({ expedienteId, pagination, context }));
     });
   }
 

@@ -13,3 +13,8 @@ export * from './application/ArchiveOperationsUnitOfWork.js';
 export * from './application/DispatchExpediente.js';
 export * from './application/AcceptCustody.js';
 export * from './application/SearchExpedientesByNumero.js';
+export * from './application/ExpedienteAuditQueryPort.js';
+export * from './application/GetExpedienteAudit.js';
+export * from './application/UbicacionesQueryPort.js';
+export * from './application/ListUbicaciones.js';
+export * from './application/GetSessionAuthorization.js';

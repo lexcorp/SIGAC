@@ -5,3 +5,5 @@ export * from './archive-operations/PostgresExpedienteRepository.js';
 export * from './archive-operations/PostgresMovimientoExpedienteWriter.js';
 export * from './archive-operations/PostgresExpedienteTimelineQueryPort.js';
 export * from './archive-operations/PostgresArchiveOperationsUnitOfWork.js';
+export * from './archive-operations/PostgresExpedienteAuditQueryPort.js';
+export * from './archive-operations/PostgresUbicacionesQueryPort.js';

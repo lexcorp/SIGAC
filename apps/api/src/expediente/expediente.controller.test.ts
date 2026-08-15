@@ -5,6 +5,9 @@ import {
   type DispatchExpediente,
   type GetExpediente,
   type GetExpedienteTimeline,
+  type GetExpedienteAudit,
+  type GetSessionAuthorization,
+  type ListUbicaciones,
   type SearchExpedientesByNumero,
 } from '@sigac/archive-operations';
 import type { RequestContext } from '@sigac/tenant';
@@ -18,6 +21,7 @@ import {
 import type { AuthenticatedRequestContextResolver } from './expediente-api.contracts.js';
 import { ExpedienteApiModule } from './expediente-api.module.js';
 import { ExpedienteController } from './expediente.controller.js';
+import { SessionController, UbicacionesController } from './support.controller.js';
 
 const expedienteId = '9b2d3958-f383-4c53-9041-09172fdd408f';
 const locationId = '11111111-1111-4111-8111-111111111111';
@@ -88,6 +92,9 @@ function setup(options: {
   const getExpedienteTimeline = {
     execute: vi.fn().mockResolvedValue(options.timelineResult ?? { items: [], nextCursor: null }),
   };
+  const getExpedienteAudit = { execute: vi.fn().mockResolvedValue({ items: [], nextCursor: null }) };
+  const getSessionAuthorization = { execute: vi.fn().mockReturnValue({ actorId: 'actor-trusted', permissions: [] }) };
+  const listUbicaciones = { execute: vi.fn().mockResolvedValue([]) };
   const searchExpedientesByNumero = {
     execute: vi.fn().mockResolvedValue(options.searchResult ?? []),
   };
@@ -97,6 +104,7 @@ function setup(options: {
     resolver,
     getExpediente as unknown as GetExpediente,
     getExpedienteTimeline as unknown as GetExpedienteTimeline,
+    getExpedienteAudit as unknown as GetExpedienteAudit,
     searchExpedientesByNumero as unknown as SearchExpedientesByNumero,
     dispatchExpediente as unknown as DispatchExpediente,
     acceptCustody as unknown as AcceptCustody,
@@ -107,6 +115,9 @@ function setup(options: {
     resolver,
     getExpediente,
     getExpedienteTimeline,
+    getExpedienteAudit,
+    getSessionAuthorization,
+    listUbicaciones,
     searchExpedientesByNumero,
     dispatchExpediente,
     acceptCustody,
@@ -254,6 +265,37 @@ describe('ExpedienteController T-11', () => {
     });
   });
 
+  it('audit conserva cursor opaco, serializa fechas y propaga contexto', async () => {
+    const { controller, getExpedienteAudit } = setup();
+    getExpedienteAudit.execute.mockResolvedValue({
+      items: [{ auditId: 'a1', action: 'EXPEDIENTE_VIEW', result: 'success', actorRef: 'actor', occurredAt: new Date('2026-08-15T12:00:00Z'), source: 'WEB', requestId: 'r', correlationId: 'c' }],
+      nextCursor: 'opaque-next',
+    });
+    await expect(controller.getAudit(expedienteId, 'opaque-current', '10', {})).resolves.toEqual({
+      items: [{ auditId: 'a1', action: 'EXPEDIENTE_VIEW', result: 'success', actorRef: 'actor', occurredAt: '2026-08-15T12:00:00.000Z', source: 'WEB', requestId: 'r', correlationId: 'c' }],
+      nextCursor: 'opaque-next',
+    });
+    expect(getExpedienteAudit.execute).toHaveBeenCalledWith({
+      expedienteId: expect.objectContaining({ value: expedienteId }), pagination: { cursor: 'opaque-current', limit: 10 }, context: trustedContext,
+    });
+  });
+
+  it.each([
+    ['PERMISSION_DENIED', 403],
+    ['EXPEDIENTE_NOT_FOUND', 404],
+  ] as const)('audit mapea %s a %s', async (code, status) => {
+    const { controller, getExpedienteAudit } = setup();
+    getExpedienteAudit.execute.mockRejectedValue(new ApplicationError(code, 'internal'));
+    await expectProblem(controller.getAudit(expedienteId, undefined, '25', {}), status, code);
+  });
+
+  it('audit retorna empty y 401 sin autenticación', async () => {
+    const ok = setup();
+    await expect(ok.controller.getAudit(expedienteId, undefined, '25', {})).resolves.toEqual({ items: [], nextCursor: null });
+    const unauthenticated = setup({ resolve: vi.fn().mockRejectedValue(new AuthenticationRequiredError()) });
+    await expectProblem(unauthenticated.controller.getAudit(expedienteId, undefined, '25', {}), 401, 'AUTHENTICATION_REQUIRED');
+  });
+
   it('Dispatch convierte bigint, usa context trusted y retorna body vacío', async () => {
     const { controller, dispatchExpediente } = setup();
     await expect(controller.dispatch(expedienteId, dispatchBody(), {})).resolves.toBeUndefined();
@@ -365,13 +407,41 @@ describe('ExpedienteController T-11', () => {
       requestContextResolver: setupResult.resolver,
       getExpediente: setupResult.getExpediente as unknown as GetExpediente,
       getExpedienteTimeline: setupResult.getExpedienteTimeline as unknown as GetExpedienteTimeline,
+      getExpedienteAudit: setupResult.getExpedienteAudit as unknown as GetExpedienteAudit,
+      getSessionAuthorization: setupResult.getSessionAuthorization as unknown as GetSessionAuthorization,
+      listUbicaciones: setupResult.listUbicaciones as unknown as ListUbicaciones,
       searchExpedientesByNumero: setupResult.searchExpedientesByNumero as unknown as SearchExpedientesByNumero,
       dispatchExpediente: setupResult.dispatchExpediente as unknown as DispatchExpediente,
       acceptCustody: setupResult.acceptCustody as unknown as AcceptCustody,
     });
     expect(dynamicModule.controllers).toContain(ExpedienteController);
-    expect(dynamicModule.providers).toHaveLength(7);
+    expect(dynamicModule.providers).toHaveLength(10);
     expect(Reflect.getMetadata('imports', AppModule) ?? []).not.toContain(ExpedienteApiModule);
     expect(JSON.stringify(Reflect.getMetadata('providers', AppModule) ?? [])).not.toContain('fake');
+  });
+});
+
+describe('support controllers T-21A', () => {
+  const mapper = new ApiProblemMapper();
+  const resolver = { resolve: vi.fn().mockResolvedValue(trustedContext) };
+
+  it('session requiere autenticación y expone sólo actorId + permissions', async () => {
+    const useCase = { execute: vi.fn().mockReturnValue({ actorId: 'actor-trusted', permissions: ['EXPEDIENT_AUDIT_VIEW'] }) };
+    const controller = new SessionController(resolver, useCase as unknown as GetSessionAuthorization, mapper);
+    await expect(controller.get({})).resolves.toEqual({ actorId: 'actor-trusted', permissions: ['EXPEDIENT_AUDIT_VIEW'] });
+    resolver.resolve.mockRejectedValueOnce(new AuthenticationRequiredError());
+    await expectProblem(controller.get({}), 401, 'AUTHENTICATION_REQUIRED');
+  });
+
+  it('ubicaciones envuelve empty/N y mapea permission denied', async () => {
+    const useCase = { execute: vi.fn().mockResolvedValue([]) };
+    const controller = new UbicacionesController(resolver, useCase as unknown as ListUbicaciones, mapper);
+    await expect(controller.list({})).resolves.toEqual({ items: [] });
+    useCase.execute.mockResolvedValue([{ id: locationId, codigo: 'CONS-1', descripcion: 'Consultorio' }]);
+    await expect(controller.list({})).resolves.toEqual({ items: [{ id: locationId, codigo: 'CONS-1', descripcion: 'Consultorio' }] });
+    useCase.execute.mockRejectedValueOnce(new ApplicationError('PERMISSION_DENIED', 'internal'));
+    await expectProblem(controller.list({}), 403, 'PERMISSION_DENIED');
+    resolver.resolve.mockRejectedValueOnce(new AuthenticationRequiredError());
+    await expectProblem(controller.list({}), 401, 'AUTHENTICATION_REQUIRED');
   });
 });

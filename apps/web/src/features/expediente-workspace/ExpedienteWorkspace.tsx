@@ -2,13 +2,19 @@ import { useCallback, useState, type FormEvent } from 'react';
 import type { ExpedienteCapability } from './types/expediente.types';
 import { ExpedienteApiError } from './api/expedienteApi';
 import { CommandBar } from './components/CommandBar';
+import { AcceptCustodyDialog } from './components/AcceptCustodyDialog';
 import { DisambiguationList } from './components/DisambiguationList';
+import { DispatchExpedienteDialog } from './components/DispatchExpedienteDialog';
 import { ExpedienteHeader } from './components/ExpedienteHeader';
 import { WorkspaceTabs } from './components/tabs/WorkspaceTabs';
 import { useCapabilities } from './hooks/useCapabilities';
 import { useExpediente } from './hooks/useExpediente';
+import { useExpedienteAudit } from './hooks/useExpedienteAudit';
+import { useExpedienteCommands } from './hooks/useExpedienteCommands';
 import { useExpedienteSearch } from './hooks/useExpedienteSearch';
 import { useExpedienteTimeline } from './hooks/useExpedienteTimeline';
+import { useSessionAuthorization } from './hooks/useSessionAuthorization';
+import { useUbicaciones } from './hooks/useUbicaciones';
 
 export function ExpedienteWorkspace(props: {
   readonly onCommand?: (capability: ExpedienteCapability) => void;
@@ -16,18 +22,32 @@ export function ExpedienteWorkspace(props: {
   const [numeroInput, setNumeroInput] = useState('');
   const [submittedNumero, setSubmittedNumero] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [openDialog, setOpenDialog] = useState<'dispatch' | 'accept-custody' | null>(null);
   const selectSingle = useCallback((id: string) => setSelectedId(id), []);
   const search = useExpedienteSearch(submittedNumero, selectSingle);
   const expediente = useExpediente(selectedId);
   const timeline = useExpedienteTimeline(selectedId);
+  const session = useSessionAuthorization();
+  const auditAuthorized = session.data?.permissions.includes('EXPEDIENT_AUDIT_VIEW') ?? false;
+  const audit = useExpedienteAudit(selectedId, auditAuthorized);
   const capabilities = useCapabilities(expediente.data);
+  const commands = useExpedienteCommands(selectedId ?? '', expediente.data?.rowVersion ?? '0');
+  const locations = useUbicaciones(openDialog !== null);
   const movimientos = timeline.data?.pages.flatMap((page) => page.items) ?? [];
   const nextCursor = timeline.data?.pages.at(-1)?.nextCursor ?? null;
+  const auditItems = audit.data?.pages.flatMap((page) => page.items) ?? [];
+  const auditNextCursor = audit.data?.pages.at(-1)?.nextCursor ?? null;
 
   function submit(event: FormEvent) {
     event.preventDefault();
     setSelectedId(null);
     setSubmittedNumero(numeroInput);
+  }
+
+  function handleCommand(capability: ExpedienteCapability) {
+    if (capability === 'DISPATCH') setOpenDialog('dispatch');
+    else if (capability === 'ACCEPT_CUSTODY') setOpenDialog('accept-custody');
+    else props.onCommand?.(capability);
   }
 
   return (
@@ -61,7 +81,7 @@ export function ExpedienteWorkspace(props: {
       {expediente.data ? (
         <>
           <ExpedienteHeader expediente={expediente.data} />
-          <CommandBar capabilities={capabilities} onCommand={(capability) => props.onCommand?.(capability)} />
+          <CommandBar capabilities={capabilities} onCommand={handleCommand} />
           <WorkspaceTabs
             expediente={expediente.data}
             movimientos={movimientos}
@@ -70,7 +90,30 @@ export function ExpedienteWorkspace(props: {
             timelineNextCursor={nextCursor}
             timelineLoadingMore={timeline.isFetchingNextPage}
             onLoadMore={() => { void timeline.fetchNextPage(); }}
+            auditAuthorized={auditAuthorized}
+            auditItems={auditItems}
+            auditLoading={audit.isLoading}
+            auditError={audit.isError}
+            auditNextCursor={auditNextCursor}
+            auditLoadingMore={audit.isFetchingNextPage}
+            onAuditLoadMore={() => { void audit.fetchNextPage(); }}
           />
+          {openDialog && locations.isLoading ? <div aria-busy="true">Cargando ubicaciones…</div> : null}
+          {openDialog && locations.isError ? <ErrorRegion error={locations.error} /> : null}
+          {openDialog === 'dispatch' && locations.data ? <DispatchExpedienteDialog
+            locations={locations.data.items}
+            rowVersion={expediente.data.rowVersion}
+            pending={commands.dispatchMutation.isPending}
+            onClose={() => setOpenDialog(null)}
+            onSubmit={(input) => commands.dispatchMutation.mutateAsync(input)}
+          /> : null}
+          {openDialog === 'accept-custody' && locations.data ? <AcceptCustodyDialog
+            locations={locations.data.items}
+            rowVersion={expediente.data.rowVersion}
+            pending={commands.acceptCustodyMutation.isPending}
+            onClose={() => setOpenDialog(null)}
+            onSubmit={(input) => commands.acceptCustodyMutation.mutateAsync(input)}
+          /> : null}
         </>
       ) : null}
     </main>

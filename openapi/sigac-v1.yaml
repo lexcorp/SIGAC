@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: SIGAC API
-  version: 0.3.20
+  version: 0.3.23
 servers:
   - url: /api/v1
 paths:
@@ -11,6 +11,27 @@ paths:
       responses:
         '200':
           description: API health
+  /session:
+    get:
+      operationId: getSessionAuthorization
+      responses:
+        '200':
+          description: Authorization projection for the authenticated actor
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessionAuthorizationReadModel' }
+        '401': { $ref: '#/components/responses/AuthenticationRequired' }
+  /ubicaciones:
+    get:
+      operationId: listUbicaciones
+      responses:
+        '200':
+          description: Operational locations in the active tenant; an empty catalog returns an empty items array.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UbicacionesResponse' }
+        '401': { $ref: '#/components/responses/AuthenticationRequired' }
+        '403': { $ref: '#/components/responses/PermissionDenied' }
   /expedientes:
     get:
       operationId: searchExpedientesByNumero
@@ -67,6 +88,30 @@ paths:
         '401': { $ref: '#/components/responses/AuthenticationRequired' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/ExpedienteNotFound' }
+  /expedientes/{id}/audit:
+    get:
+      operationId: getExpedienteAudit
+      parameters:
+        - $ref: '#/components/parameters/ExpedienteId'
+        - in: query
+          name: cursor
+          required: false
+          description: Opaque cursor returned by the preceding audit page.
+          schema: { type: string }
+        - in: query
+          name: limit
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: Sanitized audit entries ordered by occurredAt and auditId descending
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExpedienteAuditPage' }
+        '400': { $ref: '#/components/responses/HttpValidationError' }
+        '401': { $ref: '#/components/responses/AuthenticationRequired' }
+        '403': { $ref: '#/components/responses/PermissionDenied' }
+        '404': { $ref: '#/components/responses/ExpedienteNotFound' }
   /expedientes/{id}/dispatch:
     post:
       operationId: dispatchExpediente
@@ -111,6 +156,18 @@ components:
       required: true
       schema: { type: string, format: uuid }
   schemas:
+    Permission:
+      type: string
+      enum: [REQUEST_CREATE, REQUEST_ASSIGN, SEARCH_START, SEARCH_MARK_LOCATED, SEARCH_MARK_NOT_LOCATED, PREPARATION_MARK_READY, CUSTODY_TRANSFER, EXPEDIENT_DISPATCH, CUSTODY_ACCEPT, LOAN_OPEN, LOAN_RENEW, RETURN_RECEIVE, REARCHIVE_CONFIRM, INCIDENT_OPEN, INCIDENT_RESOLVE, EXPEDIENT_VIEW, EXPEDIENT_AUDIT_VIEW, LOCATION_VIEW, REPORT_VIEW, ADMIN_CONFIGURE]
+    SessionAuthorizationReadModel:
+      type: object
+      additionalProperties: false
+      required: [actorId, permissions]
+      properties:
+        actorId: { type: string }
+        permissions:
+          type: array
+          items: { $ref: '#/components/schemas/Permission' }
     DecimalBigint:
       type: string
       pattern: '^[0-9]+$'
@@ -126,6 +183,22 @@ components:
         id: { type: string, format: uuid }
         codigo: { type: string }
         descripcion: { type: string }
+    UbicacionOption:
+      type: object
+      additionalProperties: false
+      required: [id, codigo, descripcion]
+      properties:
+        id: { type: string, format: uuid }
+        codigo: { type: string }
+        descripcion: { type: string }
+    UbicacionesResponse:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/UbicacionOption' }
     ExpedienteSearchPaciente:
       type: object
       additionalProperties: false
@@ -283,6 +356,28 @@ components:
         items:
           type: array
           items: { $ref: '#/components/schemas/MovimientoExpedienteSummary' }
+        nextCursor: { type: [string, 'null'] }
+    ExpedienteAuditEntrySummary:
+      type: object
+      additionalProperties: false
+      required: [auditId, action, result, actorRef, occurredAt, source, requestId, correlationId]
+      properties:
+        auditId: { type: string, format: uuid }
+        action: { type: string }
+        result: { type: string, enum: [success, denied, not-found, conflict, invalid-transition] }
+        actorRef: { type: string }
+        occurredAt: { type: string, format: date-time }
+        source: { type: string, enum: [WEB, INTERNAL] }
+        requestId: { type: string }
+        correlationId: { type: string }
+    ExpedienteAuditPage:
+      type: object
+      additionalProperties: false
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/ExpedienteAuditEntrySummary' }
         nextCursor: { type: [string, 'null'] }
     BusinessReference:
       type: object

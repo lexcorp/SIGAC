@@ -15,6 +15,19 @@ export const EXPEDIENTE_CAPABILITIES = [
 ] as const;
 export type ExpedienteCapability = (typeof EXPEDIENTE_CAPABILITIES)[number];
 
+export type Permission =
+  | 'REQUEST_CREATE' | 'REQUEST_ASSIGN' | 'SEARCH_START' | 'SEARCH_MARK_LOCATED'
+  | 'SEARCH_MARK_NOT_LOCATED' | 'PREPARATION_MARK_READY' | 'CUSTODY_TRANSFER'
+  | 'EXPEDIENT_DISPATCH' | 'CUSTODY_ACCEPT' | 'LOAN_OPEN' | 'LOAN_RENEW'
+  | 'RETURN_RECEIVE' | 'REARCHIVE_CONFIRM' | 'INCIDENT_OPEN' | 'INCIDENT_RESOLVE'
+  | 'EXPEDIENT_VIEW' | 'EXPEDIENT_AUDIT_VIEW' | 'LOCATION_VIEW' | 'REPORT_VIEW'
+  | 'ADMIN_CONFIGURE';
+
+export interface SessionAuthorizationReadModel {
+  readonly actorId: string;
+  readonly permissions: readonly Permission[];
+}
+
 export interface UbicacionDto {
   readonly id: string;
   readonly codigo: string;
@@ -100,6 +113,25 @@ export interface TimelinePage {
   readonly items: readonly MovimientoExpedienteSummary[];
   readonly nextCursor: string | null;
 }
+
+export interface ExpedienteAuditEntrySummary {
+  readonly auditId: string;
+  readonly action: string;
+  readonly result: 'success' | 'denied' | 'not-found' | 'conflict' | 'invalid-transition';
+  readonly actorRef: string;
+  readonly occurredAt: string;
+  readonly source: 'WEB' | 'INTERNAL';
+  readonly requestId: string;
+  readonly correlationId: string;
+}
+
+export interface ExpedienteAuditPage {
+  readonly items: readonly ExpedienteAuditEntrySummary[];
+  readonly nextCursor: string | null;
+}
+
+export type UbicacionOption = UbicacionDto;
+export interface UbicacionesResponse { readonly items: readonly UbicacionOption[] }
 
 export interface DispatchRequest {
   readonly destination: UbicacionDto;

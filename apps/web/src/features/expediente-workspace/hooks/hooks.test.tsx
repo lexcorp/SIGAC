@@ -9,6 +9,8 @@ import { expedienteQueryKey } from './useExpediente';
 import { useExpedienteCommands } from './useExpedienteCommands';
 import { useExpedienteSearch } from './useExpedienteSearch';
 import { useExpedienteTimeline } from './useExpedienteTimeline';
+import { useExpedienteAudit } from './useExpedienteAudit';
+import { useSessionAuthorization } from './useSessionAuthorization';
 
 function harness() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
@@ -50,6 +52,30 @@ it('useExpedienteTimeline reenvía el cursor opaco sin interpretarlo', async () 
   await waitFor(() => expect(result.current.isSuccess).toBe(true));
   await act(async () => { await result.current.fetchNextPage(); });
   expect(getTimeline).toHaveBeenNthCalledWith(2, 'exp-1', { limit: 25, cursor: 'opaque.cursor/value' });
+});
+
+it('useExpedienteAudit permanece fail-closed y reenvía el cursor opaco al autorizarse', async () => {
+  const api = new ExpedienteApi();
+  const getAudit = vi.spyOn(api, 'getAudit')
+    .mockResolvedValueOnce({ items: [], nextCursor: 'opaque.audit/value' })
+    .mockResolvedValueOnce({ items: [], nextCursor: null });
+  const { wrapper } = harness();
+  const { result, rerender } = renderHook(({ authorized }) => useExpedienteAudit('exp-1', authorized, 25, api), { initialProps: { authorized: false }, wrapper });
+  expect(result.current.fetchStatus).toBe('idle');
+  expect(getAudit).not.toHaveBeenCalled();
+  rerender({ authorized: true });
+  await waitFor(() => expect(result.current.isSuccess).toBe(true));
+  await act(async () => { await result.current.fetchNextPage(); });
+  expect(getAudit).toHaveBeenNthCalledWith(2, 'exp-1', { limit: 25, cursor: 'opaque.audit/value' });
+});
+
+it('useSessionAuthorization consume únicamente el read model server-derived', async () => {
+  const api = new ExpedienteApi();
+  vi.spyOn(api, 'getSession').mockResolvedValue({ actorId: 'actor-1', permissions: ['EXPEDIENT_AUDIT_VIEW'] });
+  const { wrapper } = harness();
+  const { result } = renderHook(() => useSessionAuthorization(api), { wrapper });
+  await waitFor(() => expect(result.current.data).toEqual({ actorId: 'actor-1', permissions: ['EXPEDIENT_AUDIT_VIEW'] }));
+  expect(result.current.data).not.toHaveProperty('roles');
 });
 
 describe('useExpedienteCommands', () => {

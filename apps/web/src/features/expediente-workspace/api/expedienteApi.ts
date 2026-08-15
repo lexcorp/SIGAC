@@ -5,6 +5,9 @@ import type {
   ExpedienteSearchResponse,
   ProblemDetails,
   TimelinePage,
+  ExpedienteAuditPage,
+  SessionAuthorizationReadModel,
+  UbicacionesResponse,
 } from '../types/expediente.types';
 
 type Fetcher = typeof fetch;
@@ -38,6 +41,20 @@ export class ExpedienteApi {
     const params = new URLSearchParams({ limit: String(input.limit) });
     if (input.cursor !== undefined) params.set('cursor', input.cursor);
     return this.get(`/api/v1/expedientes/${encodeURIComponent(expedienteId)}/timeline?${params}`);
+  }
+
+  getSession(): Promise<SessionAuthorizationReadModel> {
+    return this.get('/api/v1/session');
+  }
+
+  listUbicaciones(): Promise<UbicacionesResponse> {
+    return this.get('/api/v1/ubicaciones');
+  }
+
+  getAudit(expedienteId: string, input: { readonly limit: number; readonly cursor?: string }): Promise<ExpedienteAuditPage> {
+    const params = new URLSearchParams({ limit: String(input.limit) });
+    if (input.cursor !== undefined) params.set('cursor', input.cursor);
+    return this.get(`/api/v1/expedientes/${encodeURIComponent(expedienteId)}/audit?${params}`);
   }
 
   dispatch(expedienteId: string, body: DispatchRequest): Promise<void> {

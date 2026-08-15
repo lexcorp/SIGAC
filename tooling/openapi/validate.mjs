@@ -14,14 +14,32 @@ assert.deepEqual(expedientePaths, [
   '/expedientes',
   '/expedientes/{id}',
   '/expedientes/{id}/timeline',
+  '/expedientes/{id}/audit',
   '/expedientes/{id}/dispatch',
   '/expedientes/{id}/accept-custody',
-], 'Expediente Workspace must expose exactly the five approved paths');
+], 'Expediente Workspace must expose exactly the six approved Expediente paths');
 
 for (const operationId of ['searchExpedientesByNumero', 'getExpediente', 'getExpedienteTimeline',
-  'dispatchExpediente', 'acceptCustody']) {
+  'getExpedienteAudit', 'dispatchExpediente', 'acceptCustody', 'getSessionAuthorization',
+  'listUbicaciones']) {
   includes(`operationId: ${operationId}`, `Missing operation ${operationId}`);
 }
+
+includes('  /session:', 'Session endpoint is required');
+includes('  /ubicaciones:', 'Ubicaciones endpoint is required');
+const sessionSchema = contract.match(/    SessionAuthorizationReadModel:\n([\s\S]*?)    DecimalBigint:/)?.[1] ?? '';
+assert.match(sessionSchema, /required: \[actorId, permissions\]/, 'Session exposes actorId and permissions');
+for (const forbidden of ['roles', 'tenantIds', 'capabilities', 'claims', 'databaseName']) {
+  assert.doesNotMatch(sessionSchema, new RegExp(`\\b${forbidden}\\b`), `Session must not expose ${forbidden}`);
+}
+const auditSchema = contract.match(/    ExpedienteAuditEntrySummary:\n([\s\S]*?)    ExpedienteAuditPage:/)?.[1] ?? '';
+assert.match(auditSchema, /required: \[auditId, action, result, actorRef, occurredAt, source, requestId, correlationId\]/,
+  'Audit summary must contain exactly sanitized fields');
+for (const forbidden of ['changeSummary', 'securityContext', 'tenant', 'source_ip_hash']) {
+  assert.doesNotMatch(auditSchema, new RegExp(`\\b${forbidden}\\b`), `Audit must not expose ${forbidden}`);
+}
+const locationsSchema = contract.match(/    UbicacionOption:\n([\s\S]*?)    UbicacionesResponse:/)?.[1] ?? '';
+assert.match(locationsSchema, /required: \[id, codigo, descripcion\]/, 'UbicacionOption exact fields');
 
 const searchPathBlock = contract.match(/  \/expedientes:\n([\s\S]*?)  \/expedientes\/\{id\}:/)?.[1] ?? '';
 assert.match(searchPathBlock, /name: numero\n\s+required: true/, 'Search numero query must be required');

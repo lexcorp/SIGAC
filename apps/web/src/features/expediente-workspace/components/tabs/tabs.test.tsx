@@ -48,4 +48,16 @@ describe('tabs del Workspace', () => {
     await userEvent.keyboard('{ArrowRight}');
     expect(screen.getByRole('tab', { name: 'Movimientos' })).toHaveFocus();
   });
+
+  it('muestra Auditoría sólo con autorización server-derived y mantiene el cursor opaco', async () => {
+    const loadMore = vi.fn();
+    render(<WorkspaceTabs expediente={readModel()} movimientos={[]} timelineNextCursor={null} onLoadMore={vi.fn()}
+      auditAuthorized auditItems={[{ auditId: 'a1', action: 'EXPEDIENTE_VIEW', result: 'success', actorRef: 'actor', occurredAt: '2026-08-15T12:00:00Z', source: 'WEB', requestId: 'r1', correlationId: 'c1' }]}
+      auditNextCursor="opaque.audit.cursor" onAuditLoadMore={loadMore} />);
+    await userEvent.click(screen.getByRole('tab', { name: 'Auditoría' }));
+    expect(screen.getByText('EXPEDIENTE_VIEW')).toBeInTheDocument();
+    expect(screen.queryByText(/securityContext|changeSummary/)).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /Cargar más auditoría/ }));
+    expect(loadMore).toHaveBeenCalledOnce();
+  });
 });

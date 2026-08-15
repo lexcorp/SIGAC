@@ -7,6 +7,8 @@ import { CommandBar } from './CommandBar';
 import { ConflictBanner } from './ConflictBanner';
 import { DisambiguationList } from './DisambiguationList';
 import { ExpedienteHeader } from './ExpedienteHeader';
+import { DispatchExpedienteDialog } from './DispatchExpedienteDialog';
+import { AcceptCustodyDialog } from './AcceptCustodyDialog';
 
 describe('ExpedienteHeader', () => {
   it.each(ESTADOS_OPERATIVOS)('renderiza el estado canónico %s', (estado) => {
@@ -82,4 +84,34 @@ it('mantiene visible el conflicto hasta que el usuario solicita recarga', async 
   expect(screen.getByRole('alert')).toHaveTextContent('El expediente cambió');
   await userEvent.click(screen.getByRole('button', { name: 'Recargar' }));
   expect(reload).toHaveBeenCalledOnce();
+});
+
+describe('command dialogs T-21A', () => {
+  const locations = [{ id: '11111111-1111-4111-8111-111111111111', codigo: 'CONS-1', descripcion: 'Consultorio' }];
+
+  it('Dispatch selecciona ubicación, preserva rowVersion string y emite payload exacto', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined); const onClose = vi.fn();
+    const { container } = render(<DispatchExpedienteDialog locations={locations} rowVersion="9007199254740993" onSubmit={onSubmit} onClose={onClose} />);
+    await userEvent.selectOptions(screen.getByLabelText('Destino'), locations[0]!.id);
+    await userEvent.type(screen.getByLabelText('Tipo de custodio previsto'), 'SERVICIO');
+    await userEvent.type(screen.getByLabelText('Referencia de custodio previsto'), 'receptor-1');
+    await userEvent.type(screen.getByLabelText('Tipo de referencia de negocio'), 'VALE');
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar despacho' }));
+    expect(onSubmit).toHaveBeenCalledWith({ destination: locations[0], intendedCustodian: { type: 'SERVICIO', reference: 'receptor-1' }, businessReference: { type: 'VALE', id: null } });
+    expect(container.querySelector('input[name="expectedRowVersion"]')).toHaveValue('9007199254740993');
+    expect(screen.queryByRole('textbox', { name: /UUID/i })).not.toBeInTheDocument();
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it('AcceptCustody usa receptor efectivo, service nullable y cierra después de success', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined); const onClose = vi.fn();
+    render(<AcceptCustodyDialog locations={locations} rowVersion="43" onSubmit={onSubmit} onClose={onClose} />);
+    await userEvent.type(screen.getByLabelText('Receptor tipo'), 'MEDICO');
+    await userEvent.type(screen.getByLabelText('Receptor referencia'), 'receptor-2');
+    await userEvent.selectOptions(screen.getByLabelText('Ubicación destino'), locations[0]!.id);
+    await userEvent.type(screen.getByLabelText('Tipo de referencia de negocio'), 'VALE');
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar recepción' }));
+    expect(onSubmit).toHaveBeenCalledWith({ receptor: { type: 'MEDICO', reference: 'receptor-2', service: null }, ubicacionDestino: locations[0], businessReference: { type: 'VALE', id: null } });
+    expect(onClose).toHaveBeenCalledOnce();
+  });
 });
