@@ -158,6 +158,9 @@ importers:
       '@sigac/domain-kernel':
         specifier: workspace:*
         version: link:../../domain-kernel
+      '@sigac/tenant':
+        specifier: workspace:*
+        version: link:../../platform/tenant
     devDependencies:
       typescript:
         specifier: latest

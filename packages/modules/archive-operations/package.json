@@ -13,7 +13,8 @@
     "lint": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@sigac/domain-kernel": "workspace:*"
+    "@sigac/domain-kernel": "workspace:*",
+    "@sigac/tenant": "workspace:*"
   },
   "devDependencies": {
     "typescript": "latest",
