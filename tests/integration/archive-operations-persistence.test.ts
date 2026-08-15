@@ -13,8 +13,10 @@ import {
   PostgresArchiveOperationsUnitOfWork,
   PostgresAuditWriter,
   PostgresExpedienteRepository,
+  PostgresExpedienteAuditQueryPort,
   PostgresExpedienteTimelineQueryPort,
   PostgresMovimientoExpedienteWriter,
+  PostgresUbicacionesQueryPort,
   TenantDatabaseRouter,
   TenantDatabaseRoutingError,
 } from '../../packages/platform/database/src/index.js';
@@ -393,5 +395,47 @@ describe('T-09 PostgreSQL tenant infrastructure', () => {
     expect(persisted.rows.map((row) => row.result)).toEqual([
       'conflict', 'denied', 'invalid-transition', 'not-found', 'success',
     ]);
+  });
+
+  it('consulta Audit por expediente/tenant con orden y cursor deterministas y read model sanitizado', async () => {
+    const occurredAt = '2026-08-15T12:00:00.000Z';
+    const auditResource = '20000000-0000-4000-8000-000000000099';
+    const auditIds = ['f0000000-0000-4000-8000-000000000002', 'f0000000-0000-4000-8000-000000000001'];
+    for (const [index, auditId] of auditIds.entries()) {
+      await clients[0]!.query(
+        `INSERT INTO audit_log (id, actor_ref, action, resource_type, resource_id, result,
+          request_id, correlation_id, source, occurred_at, change_summary, security_context)
+         VALUES ($1, 'actor-audit', $2, 'EXPEDIENTE', $3, 'success', 'request-audit',
+          'correlation-audit', 'WEB', $4, '{"hidden":"value"}', '{"hidden":"value"}')`,
+        [auditId, `AUDIT_${index}`, auditResource, occurredAt],
+      );
+    }
+    await clients[0]!.query(
+      `INSERT INTO audit_log (id, actor_ref, action, resource_type, resource_id, result,
+       request_id, correlation_id, source, occurred_at)
+       VALUES ($1, 'actor-audit', 'OTHER_RESOURCE', 'EXPEDIENTE', $2, 'success', 'r', 'c', 'WEB', $3)`,
+      ['f0000000-0000-4000-8000-000000000003', duplicateA, occurredAt],
+    );
+    const query = new PostgresExpedienteAuditQueryPort(router);
+    const first = await query.findByExpediente(ExpedienteId.parse(auditResource), { limit: 1 }, tenant(0));
+    const second = await query.findByExpediente(ExpedienteId.parse(auditResource), { limit: 1, cursor: first.nextCursor! }, tenant(0));
+    expect(first.items[0]!.auditId).toBe(auditIds[0]);
+    expect(second.items[0]!.auditId).toBe(auditIds[1]);
+    expect(Object.keys(first.items[0]!)).toEqual(['auditId', 'action', 'result', 'actorRef', 'occurredAt', 'source', 'requestId', 'correlationId']);
+    await expect(query.findByExpediente(ExpedienteId.parse(auditResource), { limit: 10 }, tenant(1)))
+      .resolves.toEqual({ items: [], nextCursor: null });
+  });
+
+  it('lista ubicaciones únicamente desde la tenant database y conserva empty/N', async () => {
+    const tenantOnlyLocation = '10000000-0000-4000-8000-000000000003';
+    await clients[0]!.query(`INSERT INTO ubicaciones (id, codigo, descripcion) VALUES ($1, 'T1', 'Sólo tenant uno')`, [tenantOnlyLocation]);
+    const query = new PostgresUbicacionesQueryPort(router);
+    const tenantOne = await query.findAll(tenant(0));
+    const tenantTwo = await query.findAll(tenant(1));
+    expect(tenantOne).toContainEqual({ id: tenantOnlyLocation, codigo: 'T1', descripcion: 'Sólo tenant uno' });
+    expect(tenantTwo).not.toContainEqual(expect.objectContaining({ id: tenantOnlyLocation }));
+    await clients[1]!.query(`DELETE FROM expedientes`);
+    await clients[1]!.query(`DELETE FROM ubicaciones`);
+    await expect(query.findAll(tenant(1))).resolves.toEqual([]);
   });
 });

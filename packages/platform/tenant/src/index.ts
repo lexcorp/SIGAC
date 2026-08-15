@@ -6,6 +6,21 @@ export interface TenantContext {
   readonly timezone: string;
 }
 
+export const PERMISSIONS = [
+  'REQUEST_CREATE', 'REQUEST_ASSIGN', 'SEARCH_START', 'SEARCH_MARK_LOCATED',
+  'SEARCH_MARK_NOT_LOCATED', 'PREPARATION_MARK_READY', 'CUSTODY_TRANSFER',
+  'EXPEDIENT_DISPATCH', 'CUSTODY_ACCEPT', 'LOAN_OPEN', 'LOAN_RENEW',
+  'RETURN_RECEIVE', 'REARCHIVE_CONFIRM', 'INCIDENT_OPEN', 'INCIDENT_RESOLVE',
+  'EXPEDIENT_VIEW', 'EXPEDIENT_AUDIT_VIEW', 'LOCATION_VIEW', 'REPORT_VIEW',
+  'ADMIN_CONFIGURE',
+] as const;
+
+export type Permission = (typeof PERMISSIONS)[number];
+
+export function isPermission(value: string): value is Permission {
+  return (PERMISSIONS as readonly string[]).includes(value);
+}
+
 export interface ActorContext {
   readonly actorId: string;
   readonly roles: ReadonlySet<string>;
