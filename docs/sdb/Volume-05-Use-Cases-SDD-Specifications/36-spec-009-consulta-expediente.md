@@ -21,6 +21,13 @@ FR-VIEW-001 Búsqueda por número de expediente con resultado 0..N.
   - Si N = 1: abre workspace directamente.
   - Si N > 1: muestra lista con datos mínimos de desambiguación (nombre, CURP, núm. ISSSTE);
     nunca selecciona automáticamente (INV-EXP-003, BR-017).
+  - Application usa `SearchExpedientesByNumero` con `ExpedienteNumero` y
+    `RequestContext`; autoriza `EXPEDIENT_VIEW` y consulta el Repository tenant-scoped.
+  - El resultado es `readonly ExpedienteSearchItem[]`; el summary contiene sólo ID y
+    número del Expediente, los cuatro campos canónicos de PacienteReferencia,
+    EstadoOperativo y Ubicacion nullable.
+  - Una búsqueda válida audita `EXPEDIENTE_SEARCH/EXPEDIENTE/{numeroNormalizado}` como
+    success incluso con cero resultados, sin datos C3 en changeSummary.
 
 FR-VIEW-002 Situación actual del expediente: `EstadoOperativo` con los valores aceptados
   (DISPONIBLE, APARTADO, EN_TRASLADO, EN_CONSULTA, NO_LOCALIZADO, EXTRAVIADO).
@@ -108,9 +115,10 @@ And la custodia no muestra acceptedAt hasta que CustodyAccepted ocurra
 UC-018, DDD-013, BIZ-007, DECISION-REGISTER OQ-EW-001, OQ-EW-007,
 DEC-EW-STATE-001, READ-MODEL-COMPOSITION-DECISION.
 
-## API slice v0.3.19
+## API slice v0.3.20
 
-La búsqueda 0..N continúa siendo requisito funcional, pero se difiere de T-11 hasta
-definir `SearchExpedientesByNumero` (o nombre canónico equivalente). El controller no
-consume `ExpedienteRepository` directamente. T-11 sólo publica GetExpediente,
-GetExpedienteTimeline, DispatchExpediente y AcceptCustody.
+La búsqueda 0..N está respaldada por `SearchExpedientesByNumero` y se publica como
+`GET /api/v1/expedientes?numero={numero}`. Retorna siempre `{ items: [...] }`, sin
+respuesta singular, total ni paginación. `numero` es obligatorio; ausencia, vacío o
+valor inválido produce `HTTP_VALIDATION_ERROR`/400. El controller no consume
+`ExpedienteRepository` directamente.

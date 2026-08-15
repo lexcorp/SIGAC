@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.19"
+version: "0.3.20"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -40,6 +40,7 @@ decisions_applied:
   - "AUDIT-PHYSICAL-MODEL-DECISION AUD-DB-EW-001..013 APPROVED; AUD-DB-GAP CLOSED"
   - "HTTP-REQUEST-CONTEXT-DECISION HTTP-EW-001, API-BIGINT-001, API-EW-021 APPROVED"
   - "HTTP-COMMAND-CONTRACT-DECISION API-EW-024..026, API-EW-030 APPROVED"
+  - "EXPEDIENT-SEARCH-DECISION SEARCH-EW-001..010 APPROVED"
 ---
 
 # Expediente Workspace — Requirements
@@ -156,6 +157,16 @@ del aggregate, el rol del usuario y el contexto del negocio.
     NUNCA se selecciona automáticamente.
 - **Regla (BR-017, INV-EXP-003):** expedienteNumero no es único globalmente.
   La identidad técnica es ExpedienteId UUID.
+- **Application:** `SearchExpedientesByNumero` recibe `ExpedienteNumero` y
+  `RequestContext`, exige `EXPEDIENT_VIEW` y usa exclusivamente
+  `ExpedienteRepository.findByNumero(numero, context.tenant)`.
+- **Output:** `readonly ExpedienteSearchItem[]`; cada item contiene exclusivamente
+  `expedienteId`, `expedienteNumero`, `paciente` (`idInstitucional`, `curp`,
+  `nombreOperativo`, `numeroIssste`), `estadoOperativo` y `ubicacion` nullable.
+- **HTTP:** respuesta 200 `{ items: ExpedienteSearchItem[] }`, sin total ni paginación.
+  Número ausente, vacío o inválido -> `HTTP_VALIDATION_ERROR`/400.
+- **Audit:** `EXPEDIENTE_SEARCH/EXPEDIENTE/{numeroNormalizado}` con `success` para 0..N;
+  cero no es not-found y changeSummary no contiene datos/resultados sensibles.
 - **Fuente SDB:** SPEC-009 FR-VIEW-001, API-011, DAT-016, BIZ-016/017,
   DECISION-REGISTER OQ-EW-001, OQ-EW-007.
 
@@ -413,9 +424,10 @@ requestId.
 Application conserva `rowVersion` y `expectedRowVersion` como `bigint`; JSON/OpenAPI los
 representa como string decimal con patrón `^[0-9]+$`, sin usar JavaScript `number`.
 
-T-11 sólo expone GetExpediente, GetExpedienteTimeline, DispatchExpediente y
-AcceptCustody. Búsqueda por número, current-custody, active-loan y rearchive quedan
-diferidos hasta contar con Use Case Application canónico. Request no autenticada usa
+T-11 estableció el boundary base para GetExpediente, GetExpedienteTimeline,
+DispatchExpediente y AcceptCustody. SEARCH-EW-001..010 aprueba la extensión con
+SearchExpedientesByNumero; current-custody, active-loan y rearchive permanecen
+diferidos. Request no autenticada usa
 `AUTHENTICATION_REQUIRED`/401; actor autenticado sin permission usa
 `PERMISSION_DENIED`/403.
 
@@ -622,7 +634,7 @@ Ninguna. `AUD-DB-GAP` y las OQs históricamente bloqueantes están cerradas.
 ## 7. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.19"
+spec_version: "0.3.20"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

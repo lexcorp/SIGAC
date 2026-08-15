@@ -62,6 +62,14 @@ persistencia implementa el port. El contrato no consulta ni devuelve `audit_log`
 
 Controllers no contienen reglas de negocio. Repositories implementan ports definidos hacia el interior.
 
+## Expediente search boundary
+
+`SearchExpedientesByNumero` pertenece a Application de Archive Operations. Recibe el VO
+`ExpedienteNumero` y `RequestContext`, autoriza `EXPEDIENT_VIEW` y usa
+`ExpedienteRepository.findByNumero(numero, context.tenant)`. Mapea los aggregates a
+`ExpedienteSearchItem` mínimos y 0..N. El controller sólo invoca el Use Case; no conoce
+Repository ni implementa normalización, autorización o tenant routing.
+
 ## Archive Operations Unit of Work
 
 Los commands mutantes usan `ArchiveOperationsUnitOfWork` tenant-scoped. El callback

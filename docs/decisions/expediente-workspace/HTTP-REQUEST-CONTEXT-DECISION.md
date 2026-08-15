@@ -56,10 +56,11 @@ T-11 queda limitado a:
 - `POST /api/v1/expedientes/{id}/dispatch` → `DispatchExpediente`;
 - `POST /api/v1/expedientes/{id}/accept-custody` → `AcceptCustody`.
 
-Se difieren búsqueda por número, `current-custody`, `active-loan` y `rearchive` hasta
-que exista un Use Case Application canónico. La búsqueda requerirá
-`SearchExpedientesByNumero` o un nombre equivalente aprobado, mantendrá 0..N y nunca
-será implementada mediante acceso directo del controller a `findByNumero`.
+En el scope base T-11 se difirieron búsqueda por número, `current-custody`, `active-loan`
+y `rearchive` hasta contar con Use Cases Application. SEARCH-EW-001..010 aprueba ahora
+`SearchExpedientesByNumero` y su extensión T-12A; los otros tres continúan diferidos.
+La búsqueda mantiene 0..N y nunca se implementa mediante acceso directo del controller
+a `findByNumero`.
 
 ## Authentication y RFC7807
 
@@ -81,3 +82,9 @@ existencia cross-tenant.
 API-EW-024..026 y API-EW-030, definidos en
 `HTTP-COMMAND-CONTRACT-DECISION.md`, completan success 204, validación HTTP 400 y el
 módulo configurable requerido por T-11. No alteran el contrato de RequestContext.
+
+## Extensión v0.3.20
+
+`EXPEDIENT-SEARCH-DECISION.md` añade el Use Case y endpoint de búsqueda sin alterar la
+resolución server-side de RequestContext. `numero` es dato funcional de búsqueda; nunca
+selecciona tenant, actor ni conexión.

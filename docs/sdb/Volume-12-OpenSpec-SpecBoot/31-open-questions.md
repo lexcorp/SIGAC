@@ -80,14 +80,19 @@ storage tenant-local de audit_log, AuditWriter transaction-bound, UoW y audit st
 AUD-DB-EW-001..013 cierra `AUD-DB-GAP`: DDL, checks, mapping, exclusión de
 source_ip_hash y migration ownership quedan definidos. T-09 está ready.
 
-## HTTP boundary T-11 (v0.3.18–0.3.19)
+## HTTP boundary T-11 y search extension (v0.3.18–0.3.20)
 
 HTTP-EW-001, API-BIGINT-001 y API-EW-021 cierran los cuatro bloqueos conocidos:
 RequestContext autenticado server-side, tenant membership/tracing, representación
-decimal de bigint y scope de controller limitado a Use Cases existentes. La búsqueda
-por número y los sub-recursos/command sin Use Case se difieren explícitamente y no son
-gaps bloqueantes de T-11. No quedan OQs bloqueantes conocidas para T-11.
+decimal de bigint y scope base de controller limitado a Use Cases existentes. Los
+sub-recursos/commands sin Use Case siguen diferidos. No quedan OQs bloqueantes conocidas
+para T-11.
 
 API-EW-024..026 y API-EW-030 cierran adicionalmente los outcomes HTTP de commands, la
 taxonomía de validación y el wiring configurable. El montaje productivo se difiere a la
 task de composition/integration si aún faltan adapters reales; no es gap de T-11.
+
+SEARCH-EW-001..010 aprueba `SearchExpedientesByNumero`, summary 0..N, permission/audit,
+endpoint `{items}`, validación y UX. T-12A implementa Application, API y OpenAPI antes
+de T-13/T-15. El STOP documental de T-13 queda resuelto sin inventar acceso directo del
+controller al Repository.

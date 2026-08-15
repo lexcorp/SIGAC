@@ -56,6 +56,15 @@ Para `GetExpedienteTimeline`, cubrir al menos:
 - página vacía y página no vacía producen audit `success` sobre resourceType EXPEDIENTE;
 - auditar la consulta no crea MovimientoExpediente.
 
+Para `SearchExpedientesByNumero`, cubrir al menos:
+- input con `ExpedienteNumero` y `RequestContext` canónicos;
+- variantes `/`, `-` y sin separador delegadas al VO;
+- Repository invocado con `context.tenant` y resultados 0, 1 y N;
+- output summary exacto, sin aggregates ni campos adicionales;
+- falta de `EXPEDIENT_VIEW` -> `PERMISSION_DENIED` sin consultar Repository;
+- audit `EXPEDIENTE_SEARCH/EXPEDIENTE/{numeroNormalizado}` success para 0..N;
+- audit sin nombres, CURP, número ISSSTE, IDs/cantidad de resultados ni otros datos C3.
+
 Para Dispatch, cubrir permission/tenant/not-found, expectedRowVersion, transición,
 payload/evento, Movimiento DAT-011 sin C3, timestamps no-client y atomicidad rollback de
 aggregate+movimiento+audit. Cubrir intendedCustodian type/reference obligatorios/no

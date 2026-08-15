@@ -2,7 +2,7 @@
 
 Verificar OpenAPI, schemas, Problem Details, auth, status codes, pagination, idempotency y compatibilidad.
 
-Para T-11/T-12 de Expediente Workspace se verifica:
+Para el scope base T-11/T-12 de Expediente Workspace se verifica:
 
 - sólo las cuatro rutas respaldadas por GetExpediente, GetExpedienteTimeline,
   DispatchExpediente y AcceptCustody;
@@ -16,3 +16,8 @@ Además, Dispatch y AcceptCustody success retornan 204 con body vacío; UUID, bi
 campos inválidos retornan 400 `HTTP_VALIDATION_ERROR` sin reflejar valores; y el módulo
 configurable acepta providers de test explícitos mientras `AppModule` productivo no
 registra fake auth/projections.
+
+Para la extensión SEARCH-EW-006..008 se verifica GET `/expedientes?numero=` requerido,
+respuesta `{ items: [...] }` 0..N sin `total`/paginación, 400 para ausente/vacío/inválido,
+403 sin `EXPEDIENT_VIEW`, tenant server-side y controller delegado exclusivamente al
+Use Case. OpenAPI no declara unicidad del número.

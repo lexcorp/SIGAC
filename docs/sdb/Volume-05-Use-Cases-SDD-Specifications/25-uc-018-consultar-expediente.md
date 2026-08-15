@@ -40,6 +40,21 @@ físico: dónde está, quién lo tiene, desde cuándo y qué ocurrió.
 - Se aceptan variantes de separador (`/`, `-`, sin separador) para búsqueda;
   la presentación usa `/` como forma preferente.
 
+### Use Case SearchExpedientesByNumero (SEARCH-EW-001..005)
+
+`SearchExpedientesByNumero` recibe `{ numero: ExpedienteNumero; context:
+RequestContext }`, exige `EXPEDIENT_VIEW` y usa exclusivamente
+`ExpedienteRepository.findByNumero(numero, context.tenant)`. Retorna
+`readonly ExpedienteSearchItem[]` (0..N). Cada item contiene `expedienteId`,
+`expedienteNumero`, `estadoOperativo`, `ubicacion` nullable y `paciente` con exactamente
+`idInstitucional`, `curp`, `nombreOperativo` y `numeroIssste`. No retorna aggregates ni
+datos adicionales del Workspace.
+
+Una búsqueda válida con cero o N resultados audita
+`EXPEDIENTE_SEARCH/EXPEDIENTE/{numeroNormalizado}` con resultado `success`. Cero no es
+not-found y el audit no registra datos del paciente, IDs/cantidad de resultados ni
+otros datos C3. Falta de permission produce `PERMISSION_DENIED`.
+
 ## UX principle
 Debe responder rápidamente: dónde está, quién lo tiene, desde cuándo y qué puedo hacer.
 
@@ -158,12 +173,16 @@ no escribe audit.
 DDD-013, SPEC-009, BIZ-007, DECISION-REGISTER OQ-EW-001, OQ-EW-007,
 DEC-EW-STATE-001, READ-MODEL-COMPOSITION-DECISION.
 
-## Frontera HTTP (HTTP-EW-001, API-EW-021)
+## Frontera HTTP (HTTP-EW-001, API-EW-021, SEARCH-EW-006..008)
 
-La frontera autenticada construye el `RequestContext` antes de Application. Para este
-slice, T-11 sólo expone consulta por id, timeline, Dispatch y AcceptCustody porque son
-las operaciones con Use Case canónico existente. Búsqueda por número, current-custody,
-active-loan y rearchive quedan diferidos; el controller no accede al Repository.
+La frontera autenticada construye el `RequestContext` antes de Application. La extensión
+de búsqueda publica `GET /api/v1/expedientes?numero={numero}` respaldado únicamente por
+`SearchExpedientesByNumero`; current-custody, active-loan y rearchive permanecen
+diferidos. El controller nunca accede al Repository.
+
+La respuesta de búsqueda es `{ items: readonly ExpedienteSearchItem[] }`, sin `total`
+ni paginación. `numero` ausente, vacío o inválido produce
+`HTTP_VALIDATION_ERROR`/400; la normalización pertenece al VO.
 
 En JSON, `rowVersion` y `expectedRowVersion` son strings decimales; Application conserva
 `bigint`.

@@ -1,11 +1,11 @@
 ---
 spec: expediente-workspace
-version: "0.3.19"
+version: "0.3.20"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 requires:
-  - requirements.md (v0.3.19)
-  - design.md (v0.3.19)
+  - requirements.md (v0.3.20)
+  - design.md (v0.3.20)
 decisions_applied:
   - "OQ-EW-001 RESOLVED"
   - "OQ-EW-005 RESOLVED"
@@ -34,6 +34,7 @@ decisions_applied:
   - "AUDIT-PHYSICAL-MODEL-DECISION AUD-DB-EW-001..013 APPROVED; AUD-DB-GAP CLOSED"
   - "HTTP-REQUEST-CONTEXT-DECISION HTTP-EW-001, API-BIGINT-001, API-EW-021 APPROVED"
   - "HTTP-COMMAND-CONTRACT-DECISION API-EW-024..026, API-EW-030 APPROVED"
+  - "EXPEDIENT-SEARCH-DECISION SEARCH-EW-001..010 APPROVED"
 ready_gate: "READY-GATE.md — todos los ítems deben estar marcados antes de iniciar T-01"
 done_gate: "OS-018 — spec + tests + API/migrations + auth/tenant/audit + traceability"
 ---
@@ -68,7 +69,7 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
 ## Grupo 0 — Trazabilidad
 
 ### T-00 Completar traceability.md
-- **Descripción:** Verificar que traceability.md v0.3.19 tiene cadenas completas
+- **Descripción:** Verificar que traceability.md v0.3.20 tiene cadenas completas
   para todas las capacidades. Confirmar que GAP-002, GAP-003, GAP-007 están cerrados
   y que no quedan eslabones PENDIENTE en BR, UC o SPEC para las decisiones resueltas.
 - **Criterio de done:** Ningún REQ-EW-* sin cadena completa; matrices actualizadas.
@@ -411,8 +412,8 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
   - GET /api/v1/expedientes/:id/timeline -> GetExpedienteTimeline.
   - POST /api/v1/expedientes/:id/dispatch -> DispatchExpediente.
   - POST /api/v1/expedientes/:id/accept-custody -> AcceptCustody.
-  - Diferidos: búsqueda por número (requiere SearchExpedientesByNumero o nombre
-    equivalente), current-custody, active-loan y rearchive hasta contar con Use Case.
+  - Scope base completado: búsqueda por número se añade únicamente mediante T-12A;
+    current-custody, active-loan y rearchive siguen diferidos hasta contar con Use Case.
   - El controller NO escribe repositorios directamente.
   - Un resolver de infraestructura autenticado construye un único `RequestContext`
     (`WEB`) por request. Tenant trusted/allow-listed debe pertenecer a actor.tenantIds;
@@ -461,10 +462,37 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
   - RFC7807: 401 AUTHENTICATION_REQUIRED; 403 PERMISSION_DENIED o
     INSUFFICIENT_ENABLING_SOURCE; 404 y 409 canónicos.
   - 400 `HTTP_VALIDATION_ERROR` con errors opcional y field codes cerrados.
-  - No publicar los cuatro endpoints diferidos de API-EW-021.
+  - En T-12 base no publicar endpoints sin Use Case; la búsqueda se incorpora después
+    mediante T-12A. current-custody, active-loan y rearchive continúan diferidos.
 - **Regla (AGENTS.md, steering/api.md):** Todo cambio de API requiere actualizar OpenAPI.
 - **Fuente SDB:** API-001, API-011 v0.2.0.
 - **Dependencias:** T-11.
+
+### T-12A Implementar búsqueda canónica por número y sincronizar boundaries
+- **Descripción:** Extensión trazable sin renumerar tasks completadas. Ejecutar en orden:
+  1. Application: implementar `SearchExpedientesByNumero` con input
+     `{ numero: ExpedienteNumero; context: RequestContext }`, permiso
+     `EXPEDIENT_VIEW`, `ExpedienteRepository.findByNumero(numero, context.tenant)` y
+     output `readonly ExpedienteSearchItem[]` 0..N. El summary contiene únicamente
+     expedienteId, expedienteNumero, PacienteReferencia canónica, EstadoOperativo y
+     Ubicacion nullable.
+  2. Audit: `EXPEDIENTE_SEARCH/EXPEDIENTE/{numeroNormalizado}`, success para 0..N y sin
+     datos/resultados C3 en changeSummary.
+  3. API: extender el módulo configurable/controller con el Use Case y publicar
+     `GET /api/v1/expedientes?numero={numero}`. `numero` requerido; ausente/vacío/VO
+     inválido -> 400 `HTTP_VALIDATION_ERROR`. Controller no accede al Repository.
+  4. HTTP response: `{ items: readonly ExpedienteSearchItem[] }`; sin singular, total
+     ni paginación.
+  5. OpenAPI: documentar endpoint, query requerido, schemas y 400/401/403; no marcar
+     expedienteNumero unique.
+- **Tests requeridos:**
+  - Application 0/1/N, normalización por VO, permission, tenant propagation y audit.
+  - API 200 `{items:[]|[...]}`, 400 ausente/vacío/inválido y 403 sin permission.
+  - Controller delega sólo al Use Case; tenant/context no proceden del query.
+  - Contract gate mantiene paridad OpenAPI y ausencia de `total`/paginación/unique.
+- **Fuente:** EXPEDIENT-SEARCH-DECISION SEARCH-EW-001..010, UC-018, SPEC-009,
+  API-011, SEC-017, SEC-038.
+- **Dependencias:** T-03, T-09, T-11, T-12.
 
 ---
 
@@ -474,13 +502,13 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
 - **Descripción:** Crear estructura de `apps/web/src/features/expediente-workspace/`
   definida en design.md §6.
   - `useExpedienteSearch`: normaliza separadores del input antes de llamar al API;
-    retorna {data[], total, isDisambiguating: total > 1}.
+    consume `{items}` y retorna `{items, isDisambiguating: items.length > 1}`.
   - `useExpediente`: fetch + cache; invalida en 409.
   - `useExpedienteTimeline`: fetch paginado DAT-011.
   - `useCapabilities`: derivado del read model; no calcula dominio.
   - Tipos derivados del OpenAPI contract generado.
 - **Fuente SDB:** DEL-002, INT-001.
-- **Dependencias:** T-12.
+- **Dependencias:** T-12A.
 
 ### T-14 Implementar ExpedienteHeader
 - **Descripción:** Renderiza el bloque above the fold.
@@ -644,13 +672,14 @@ T-01 (VOs)
       T-09 (adapter) <- T-10 (migración)
       T-06 (timeline UC)
       T-04 (capabilities) <- T-05 (GetExpediente UC)
-        T-11 (controller) <- T-12 (OpenAPI)
-          T-13 (FE estructura)
-            T-14 (Header)
-            T-15 (DisambiguationList)
-            T-16 (CommandBar)
-              T-17 (Tabs)
-                T-18 (Concurrency UX)
+        T-11 (controller) <- T-12 (OpenAPI base)
+          T-12A (Search Application -> API -> OpenAPI)
+            T-13 (FE estructura)
+              T-14 (Header)
+              T-15 (DisambiguationList)
+              T-16 (CommandBar)
+                T-17 (Tabs)
+                  T-18 (Concurrency UX)
 
 T-19 (auth/tenant tests) <- T-05, T-07, T-08, T-11
 T-20 (audit trail) <- T-05, T-07, T-08, T-11
@@ -679,7 +708,7 @@ T-23 (CI pipeline) <- todas
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.19"
+spec_version: "0.3.20"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

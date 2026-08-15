@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.19"
+version: "0.3.20"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 traceability_model: "OS-007 / SDD-006"
@@ -33,10 +33,11 @@ decisions_applied:
   - "AUDIT-PHYSICAL-MODEL-DECISION AUD-DB-EW-001..013 APPROVED; AUD-DB-GAP CLOSED"
   - "HTTP-REQUEST-CONTEXT-DECISION HTTP-EW-001, API-BIGINT-001, API-EW-021 APPROVED"
   - "HTTP-COMMAND-CONTRACT-DECISION API-EW-024..026, API-EW-030 APPROVED"
+  - "EXPEDIENT-SEARCH-DECISION SEARCH-EW-001..010 APPROVED"
 requires:
-  - requirements.md (v0.3.19)
-  - design.md (v0.3.19)
-  - tasks.md (v0.3.19)
+  - requirements.md (v0.3.20)
+  - design.md (v0.3.20)
+  - tasks.md (v0.3.20)
 ---
 
 # Expediente Workspace — Traceability
@@ -74,12 +75,12 @@ requires:
 | **Source / SDB** | SRC-INT-002, SRC-INT-003, DECISION-REGISTER OQ-EW-001/OQ-EW-007, DB-EW-001..014 | Formato RFC_BASE_10+SEP+COD_2; múltiples derechohabientes; índice normalizado no unique |
 | **Business Rule** | BR-016 (formato), BR-017 (no único; desambiguación), INV-EXP-003 | No asumir unicidad; nunca auto-seleccionar si N>1 |
 | **Workflow** | WF (Read Models) | — |
-| **Use Case** | UC-018 v0.2.0 | Búsqueda 0..N; desambiguación manual |
+| **Use Case** | UC-018 v0.2.0 / SearchExpedientesByNumero | ExpedienteNumero + RequestContext; output 0..N; EXPEDIENT_VIEW; audit success |
 | **SPEC** | SPEC-009 v0.2.0 FR-VIEW-001 | 0..N; variantes de separador; desambiguación |
 | **REQ** | REQ-EW-002 | Búsqueda 0..N; normalización; desambiguación |
-| **API** | GET /api/v1/expedientes?numero= -> {data[], total} (API-011 v0.2.0) | Diferido de T-11 hasta SearchExpedientesByNumero; contrato 0..N permanece canónico |
+| **API** | GET /api/v1/expedientes?numero= -> {items[]} (API-011, SEARCH-EW-006/007) | Activo después de T-12A; sin total/paginación; numero requerido |
 | **UI** | useExpedienteSearch (normaliza), DisambiguationList (N>1), apertura directa (N=1) | design.md §5.3, APP-003 v0.2.0 |
-| **Test** | AC-EW-002/003/004; T-09/T-10 y task posterior de Search/T-15/T-21/T-22 | Migración y Repository PostgreSQL ya cubren normalización 0..N; API espera Use Case canónico |
+| **Test** | AC-EW-002/003/004; T-09/T-10/T-12A/T-15/T-21/T-22 | Application/API/OpenAPI, normalización y desambiguación 0..N |
 
 ---
 
@@ -375,13 +376,14 @@ requires:
 | 0.3.17 | 2026-08-15 | AUD-DB-EW-001..013 aprobadas: DDL audit_log, checks, mapping, exclusión source_ip_hash y migration ownership definidos; AUD-DB-GAP cerrado. |
 | 0.3.18 | 2026-08-15 | HTTP-EW-001, API-BIGINT-001 y API-EW-021 aprobadas: resolver HTTP autenticado, tenant membership/tracing, bigint decimal, scope T-11 y 401/403 formalizados. |
 | 0.3.19 | 2026-08-15 | API-EW-024..026/API-EW-030 aprobadas: command success 204, HTTP validation 400 y módulo API configurable/composition ownership definidos. |
+| 0.3.20 | 2026-08-15 | SEARCH-EW-001..010 aprobadas: Use Case SearchExpedientesByNumero, summary 0..N, audit, endpoint `{items}`, validación, UX y T-12A formalizados. |
 
 ---
 
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.19"
+spec_version: "0.3.20"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

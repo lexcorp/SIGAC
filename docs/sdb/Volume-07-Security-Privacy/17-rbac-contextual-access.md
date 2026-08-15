@@ -52,6 +52,10 @@ Un Expediente fuera del tenant activo se trata como `EXPEDIENTE_NOT_FOUND`/404. 
 publica un código `CROSS_TENANT_*` ni se revela la existencia en otro tenant; cualquier
 señal interna del intento pertenece a security/audit.
 
+La búsqueda por número requiere la permission existente `EXPEDIENT_VIEW`; no se crea
+`EXPEDIENT_SEARCH`. `SearchExpedientesByNumero` recibe `RequestContext` server-side y
+consulta sólo `context.tenant`. Falta de permission produce `PERMISSION_DENIED`/403.
+
 ## Aplicación a préstamos/salidas (OQ-EW-005)
 - `CONSULTA_PROGRAMADA`: el rol Archivo/Jefatura es suficiente; no se requiere
   verificación de actor emisor adicional.

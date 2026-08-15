@@ -116,3 +116,15 @@ Cuando dos o más derechohabientes del mismo tipo pueden compartir el mismo núm
 - Nunca abrir arbitrariamente una coincidencia cuando existan varias.
 - La identidad técnica primaria será `ExpedienteId` (UUID interno).
 - Las restricciones físicas de unicidad se definirán después de perfilar los datos reales de SIMEF.
+
+---
+
+## SEARCH-EW-001..010 — Búsqueda canónica por número
+**Estado:** APPROVED
+
+Se aprueba `SearchExpedientesByNumero` como Use Case Application con
+`ExpedienteNumero`, `RequestContext`, `EXPEDIENT_VIEW` y Repository tenant-scoped. Su
+resultado es una proyección mínima 0..N; el endpoint retorna `{items}` y el flujo UI es
+0 vacío, 1 apertura directa, N>1 selección manual. Audit usa `EXPEDIENTE_SEARCH` con
+success para cero o N resultados. Contrato completo en
+`EXPEDIENT-SEARCH-DECISION.md`.

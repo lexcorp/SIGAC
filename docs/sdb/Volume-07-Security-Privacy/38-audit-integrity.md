@@ -45,6 +45,11 @@ Para `GetExpedienteTimeline`, la acción es `EXPEDIENTE_TIMELINE_VIEW`, el recur
 ausencia tenant-scoped se registra `not-found`. Página vacía o no vacía de un Expediente
 existente se registra `success`. El audit no crea ni se mezcla con movimientos.
 
+Para `SearchExpedientesByNumero`, la acción es `EXPEDIENTE_SEARCH`, el recurso es
+`EXPEDIENTE` y resourceId es el `ExpedienteNumero` normalizado. Una búsqueda válida con
+0..N resultados usa `success`; cero resultados no usa `not-found`. El changeSummary no
+registra nombres, CURP, número ISSSTE, IDs/cantidad de resultados ni otros datos C3.
+
 Para Dispatch, acción `EXPEDIENTE_DISPATCH`, recurso `EXPEDIENTE`, ID expedienteId.
 Success es atómico con aggregate/movimiento; denied/not-found se escriben sin mutación.
 Optimistic lock mismatch se registra como `conflict`, fuera de la UoW mutante y después

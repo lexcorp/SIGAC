@@ -49,3 +49,8 @@ T-09 tiene definidos routing, transaction binding, ownership de audit_log, UoW y
 operationOccurredAt mediante TX-EW-001..012. AUD-DB-EW-001..013 cierra AUD-DB-GAP con
 DDL, mapping y migration ownership completos. T-09 está ready y no tiene gaps
 bloqueantes conocidos.
+
+Para la búsqueda, SEARCH-EW-001..010 define Use Case, summary 0..N, Repository
+tenant-scoped, `EXPEDIENT_VIEW`, audit, endpoint, response `{items}`, validación y UX
+0/1/N. La task T-12A debe implementar en orden Application → API → OpenAPI antes de
+reactivar T-13/T-15. No quedan gaps documentales bloqueantes para esa implementación.

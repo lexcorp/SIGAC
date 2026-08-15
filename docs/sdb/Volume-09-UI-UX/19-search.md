@@ -15,3 +15,12 @@ Search field supports expediente number, patient/reference identifiers and suppo
 
 Results grouped by resource when useful.
 Recent searches are local/user-scoped only if privacy policy permits.
+
+## Expediente Workspace v0.3.20
+
+La búsqueda por número consume exclusivamente
+`GET /api/v1/expedientes?numero={numero}` y su wrapper `{ items }`. El frontend puede
+normalizar separadores para presentación/envío, pero el VO server-side conserva la
+autoridad canónica. Flujo obligatorio: 0 items muestra estado vacío; 1 item abre el
+Workspace; N > 1 muestra `DisambiguationList` y exige selección manual. Nunca se
+auto-selecciona entre múltiples coincidencias.

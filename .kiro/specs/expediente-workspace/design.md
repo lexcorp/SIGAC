@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.19"
+version: "0.3.20"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -39,8 +39,9 @@ decisions_applied:
   - "AUDIT-PHYSICAL-MODEL-DECISION AUD-DB-EW-001..013 APPROVED; AUD-DB-GAP CLOSED"
   - "HTTP-REQUEST-CONTEXT-DECISION HTTP-EW-001, API-BIGINT-001, API-EW-021 APPROVED"
   - "HTTP-COMMAND-CONTRACT-DECISION API-EW-024..026, API-EW-030 APPROVED"
+  - "EXPEDIENT-SEARCH-DECISION SEARCH-EW-001..010 APPROVED"
 requires:
-  - requirements.md (v0.3.19)
+  - requirements.md (v0.3.20)
 open_questions_blocking: []
 open_questions_non_blocking:
   - OQ-EW-002
@@ -254,7 +255,7 @@ API-011 conserva el mapa futuro, pero el scope implementable de T-11 está marca
 |--------|------|-----------|------|
 | GET | /api/v1/expedientes/{id} | Read model completo por ExpedienteId UUID | Vigente |
 | GET | /api/v1/expedientes/{id}/timeline | Historial de movimientos operativos | Vigente |
-| GET | /api/v1/expedientes?numero={n} | Búsqueda — devuelve colección 0..N | Diferido: requiere SearchExpedientesByNumero |
+| GET | /api/v1/expedientes?numero={n} | Búsqueda — devuelve colección 0..N | Vigente tras T-12A |
 | GET | /api/v1/expedientes/{id}/current-custody | Custodia actual | Diferido: sin Use Case |
 | GET | /api/v1/expedientes/{id}/active-loan | Préstamo activo si existe | Diferido: sin Use Case |
 
@@ -263,20 +264,29 @@ API-011 conserva el mapa futuro, pero el scope implementable de T-11 está marca
 ```jsonc
 // GET /api/v1/expedientes?numero=PERR810604/10
 {
-  "data": [
+  "items": [
     {
-      "id": "uuid",
+      "expedienteId": "uuid",
       "expedienteNumero": "PERR810604/10",
-      "pacienteRef": { "displayLabel": "..." },
+      "paciente": {
+        "idInstitucional": "...",
+        "curp": "...",
+        "nombreOperativo": "...",
+        "numeroIssste": "..."
+      },
       "estadoOperativo": "DISPONIBLE",
-      "ubicacionActual": { ... }
+      "ubicacion": { "id": "uuid", "codigo": "...", "descripcion": "..." }
     }
-  ],
-  "total": 1
+  ]
 }
-// N=0 -> data:[], total:0, HTTP 200
+// N=0 -> items:[], HTTP 200
 // N>1 -> array con datos de desambiguación; cliente NO elige automáticamente
 ```
+
+`SearchExpedientesByNumero` recibe `{numero: ExpedienteNumero, context}` y retorna
+`readonly ExpedienteSearchItem[]`. El controller sólo invoca el Use Case. La respuesta
+HTTP no contiene `total` ni paginación. La búsqueda exige `EXPEDIENT_VIEW`, usa tenant
+server-side y audita `EXPEDIENTE_SEARCH` con success para 0..N.
 
 ### 4.3 Comandos de transición de estado
 
@@ -865,7 +875,7 @@ por `GetExpediente` (READ-MODEL-COMPOSITION-DECISION).
 ## 12. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.19"
+spec_version: "0.3.20"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

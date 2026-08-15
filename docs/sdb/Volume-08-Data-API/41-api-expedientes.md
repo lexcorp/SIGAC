@@ -26,7 +26,7 @@ architecture:
 | `POST` | `/api/v1/expedientes/{id}/accept-custody` | `AcceptCustody` → `EN_CONSULTA` |
 | `POST` | `/api/v1/expedientes/{id}/rearchive` | `ConfirmRearchive` → `DISPONIBLE` |
 
-### Scope T-11 (API-EW-021)
+### Scope base T-11 y extensión SEARCH-EW-006
 
 El catálogo anterior incluye operaciones futuras. T-11 publica exclusivamente las rutas
 con Use Case Application canónico existente:
@@ -36,9 +36,9 @@ con Use Case Application canónico existente:
 - `POST /api/v1/expedientes/{id}/dispatch`;
 - `POST /api/v1/expedientes/{id}/accept-custody`.
 
-La búsqueda por número, `current-custody`, `active-loan` y `rearchive` permanecen
-diferidos. Búsqueda requiere `SearchExpedientesByNumero` o nombre canónico equivalente.
-El controller no consume Repository directamente.
+La extensión v0.3.20 activa la búsqueda por número mediante el Use Case canónico
+`SearchExpedientesByNumero`. `current-custody`, `active-loan` y `rearchive` permanecen
+diferidos. El controller no consume Repository directamente.
 
 ## Command success (API-EW-024/025)
 
@@ -78,30 +78,37 @@ Expediente en el tenant activo. Falta de permission -> 403 `PERMISSION_DENIED`; 
 
 ## Búsqueda por número — colección (OQ-EW-001/007 RESOLVED)
 
-`GET /api/v1/expedientes?numero={n}` devuelve siempre un array:
+`GET /api/v1/expedientes?numero={n}` devuelve siempre un wrapper de colección:
 
 ```jsonc
 // Respuesta — colección
 {
-  "data": [
+  "items": [
     {
-      "id": "uuid",
+      "expedienteId": "uuid",
       "expedienteNumero": "PERR810604/10",
-      "pacienteRef": { "displayLabel": "..." },
+      "paciente": {
+        "idInstitucional": "...",
+        "curp": "...",
+        "nombreOperativo": "...",
+        "numeroIssste": "..."
+      },
       "estadoOperativo": "DISPONIBLE",
-      "ubicacionActual": { ... }
+      "ubicacion": { "id": "uuid", "codigo": "...", "descripcion": "..." }
     }
-    // ... más resultados si N > 1
   ],
-  "total": 2
 }
 ```
 
-- N = 0 → `data: []`, `total: 0`; HTTP 200 (no 404).
-- N = 1 → `data: [...]`, `total: 1`; el cliente puede navegar directamente.
-- N > 1 → `data: [...]`, `total: N`; el cliente **debe** presentar desambiguación.
+- N = 0 → `items: []`; HTTP 200 (no 404).
+- N = 1 → `items: [...]`; el cliente puede navegar directamente.
+- N > 1 → `items: [...]`; el cliente **debe** presentar desambiguación.
 
-El parámetro `numero` se normaliza internamente (sin separador) antes de la búsqueda.
+No hay respuesta singular, `total` ni paginación. `numero` es obligatorio; ausencia,
+vacío o VO inválido produce `HTTP_VALIDATION_ERROR`/400. `ExpedienteNumero` normaliza
+las variantes `/`, `-` o sin separador. El Use Case exige `EXPEDIENT_VIEW`, opera en
+`RequestContext.tenant` y audita `EXPEDIENTE_SEARCH/EXPEDIENTE/{numeroNormalizado}` con
+success para 0..N.
 
 ## Read model — response body (`GET /expedientes/{id}`)
 
@@ -171,4 +178,5 @@ del response body: alimenta `capabilities[]`. El provider determina `validada`; 
 expone evidencia de Agenda o SM 1-14.
 
 ## Fuente
-DECISION-REGISTER OQ-EW-001, OQ-EW-006, OQ-EW-007, DEC-EW-STATE-001, DAT-006, DAT-016.
+DECISION-REGISTER OQ-EW-001, OQ-EW-006, OQ-EW-007, DEC-EW-STATE-001, DAT-006, DAT-016,
+EXPEDIENT-SEARCH-DECISION SEARCH-EW-001..010.

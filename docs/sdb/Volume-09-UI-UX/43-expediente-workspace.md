@@ -68,6 +68,10 @@ Cuando la búsqueda por número devuelve **N > 1** resultados:
 Cuando N = 0: estado vacío descriptivo.
 Cuando N = 1: abre el workspace directamente.
 
+El contrato activo es `GET /api/v1/expedientes?numero={numero}` con respuesta
+`{ items: ExpedienteSearchItem[] }`. No existe `total` ni paginación. Los items usan
+exclusivamente los campos mínimos aprobados por SEARCH-EW-002.
+
 ## Privacidad
 - Número de expediente y datos de paciente no aparecen en `document.title`,
   URL visible, toasts ni nombres de archivo exportado.
