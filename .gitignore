@@ -10,3 +10,6 @@ test-results/
 .nx/cache/
 .tmp/
 *.log
+
+# Nx local workspace cache
+.nx/workspace-data/
