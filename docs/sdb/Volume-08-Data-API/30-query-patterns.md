@@ -40,3 +40,11 @@ expone evidencia completa. El provider determina `validada`; no se especifica aq
 adapter concreto.
 
 Los contratos exactos están en READ-MODEL-COMPOSITION-DECISION READ-EW-003..012.
+
+### Timeline de Expediente
+
+`ExpedienteTimelineQueryPort.findByExpediente(ExpedienteId, TimelinePagination,
+TenantContext)` pertenece a Application de Archive Operations. Usa cursor opaco
+`occurredAt + movimientoId`, orden `occurredAt DESC, movimientoId DESC` y devuelve
+`TimelinePage { items, nextCursor }`. Ausencia: `[]/null`; no retorna `total` ni agrega
+filas de audit.

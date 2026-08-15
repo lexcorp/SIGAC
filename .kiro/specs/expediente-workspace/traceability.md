@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.5"
+version: "0.3.6"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 traceability_model: "OS-007 / SDD-006"
@@ -20,10 +20,13 @@ decisions_applied:
   - "AUD-EW-003..006 APPROVED"
   - "READ-EW-013 APPROVED"
   - "ERR-EW-001..004 APPROVED"
+  - "TL-EW-001..010 APPROVED"
+  - "OQ-EW-DESIGN-003 RESOLVED"
+  - "OQ-DOM-001 RESOLVED"
 requires:
-  - requirements.md (v0.3.5)
-  - design.md (v0.3.5)
-  - tasks.md (v0.3.5)
+  - requirements.md (v0.3.6)
+  - design.md (v0.3.6)
+  - tasks.md (v0.3.6)
 ---
 
 # Expediente Workspace — Traceability
@@ -144,7 +147,7 @@ requires:
 | **Use Case** | UC-018 v0.2.0 (historial relevante) | — |
 | **SPEC** | SPEC-009 v0.2.0 FR-VIEW-007 | Trayectoria física/operativa |
 | **REQ** | REQ-EW-008 | Historial separado de audit |
-| **API** | GET /api/v1/expedientes/{id}/timeline | Paginado por occurred_at DESC |
+| **API** | GET /api/v1/expedientes/{id}/timeline | Cursor opaco; occurredAt DESC, movimientoId DESC; items/nextCursor, sin total |
 | **UI** | MovimientosTab (design.md §5.2); muestra DISPATCHED, CUSTODY_ACCEPTED | — |
 | **Test** | AC-EW-015; T-06/T-17/T-21 | Unit GetTimeline; Integration no-mezcla; Component MovimientosTab |
 
@@ -267,7 +270,7 @@ requires:
 | REQ-EW-005 | TR-001, TR-006 | Cubierto |
 | REQ-EW-006 | TR-001 | Cubierto |
 | REQ-EW-007 | TR-001, TR-014 | Cubierto (OQ-EW-004 no bloqueante) |
-| REQ-EW-008 | TR-007 | Cubierto (OQ-DOM-001 no bloqueante) |
+| REQ-EW-008 | TR-007 | Cubierto — OQ-DOM-001 y OQ-EW-DESIGN-003 resueltas |
 | REQ-EW-009 | TR-008 | Cubierto — OQ-EW-005 RESUELTA |
 | REQ-EW-010 | TR-006 | Cubierto — OQ-EW-005 RESUELTA |
 | REQ-EW-011 | TR-004 | Cubierto — OQ-EW-006 RESUELTA |
@@ -326,7 +329,7 @@ requires:
 | GAP-001 | Condición exacta de MarkNotLocated -> Incidencia automática | OQ-EW-004 | Abierto; no automático hasta resolución |
 | GAP-004 | Campo de pacienteRef.displayLabel en read model | OQ-EW-002 | Abierto; usar nombre corto operativo provisional |
 | GAP-005 | Permiso exacto del tab Auditoría | OQ-EW-003 | Abierto; fuera de capabilities operativas; no bloquea T-04 |
-| GAP-006 | Schema de MovimientoExpediente (módulo o dedicado) | OQ-DOM-001 | Abierto; schema expediente provisional |
+| GAP-006 | Schema de MovimientoExpediente (módulo o dedicado) | OQ-DOM-001 | CERRADO — Archive Operations, schema tenant junto con Expediente |
 | GAP-008 | Codificación de ubicaciones temporales | OQ-EW-008 | Abierto; categoría genérica provisional |
 | GAP-009 | SLA de performance (<= 1 s) | NFR-EW-001 | Pendiente UAT con carga real |
 | GAP-010 | Política de retención del timeline | OQ-EW-010 | Abierto; sin límite provisional |
@@ -345,13 +348,14 @@ requires:
 | 0.3.3 | 2026-08-15 | READ-EW-008..012 y AUTH-EW-006/007 aplicadas. ExitEnablingSourceQueryPort 0..N y capabilities por existencia de fuente validada formalizadas. |
 | 0.3.4 | 2026-08-15 | CTX-EW-001..004, READ-EW-011 v2 y AUD-EW-003..006 aplicadas. RequestContext canónico y separación AuditEntry/AuditRecord formalizados. |
 | 0.3.5 | 2026-08-15 | READ-EW-013 y ERR-EW-001..004 aplicadas. updatedAt eliminado; taxonomía ApplicationError, RFC7807 y no divulgación cross-tenant formalizadas. |
+| 0.3.6 | 2026-08-15 | TL-EW-001..010 aplicadas. Cursor timeline y query port definidos; OQ-EW-DESIGN-003/OQ-DOM-001 cerradas; OQ-EW-010 permanece abierta. |
 
 ---
 
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.5"
+spec_version: "0.3.6"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

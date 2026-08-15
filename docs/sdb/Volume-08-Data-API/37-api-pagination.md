@@ -22,3 +22,8 @@ Response:
 Offset pagination acceptable for small reference catalogs.
 
 Server enforces max page size.
+
+Para Expediente Timeline el contrato específico es `{ items, nextCursor }`; no exige
+`hasMore` ni `total`. El cursor opaco representa `occurredAt + movimientoId`. El orden es
+`occurredAt DESC, movimientoId DESC`. No hay un máximo numérico canónico aprobado, por
+lo que este slice no inventa uno.

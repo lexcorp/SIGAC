@@ -2,7 +2,7 @@
 
 **Estado:** APPROVED  
 **Fecha:** 2026-08-15  
-**Scope:** Expediente Workspace v0.3.5 / T-04 a T-20
+**Scope:** Expediente Workspace v0.3.6 / T-04 a T-20
 
 ## CTX-EW-001 — Contexto canónico de Application
 
@@ -381,8 +381,107 @@ una extensión estable, por ejemplo:
 El Problem Details no contiene datos sensibles, stack trace, nombres de base de datos
 ni información sobre existencia cross-tenant. Esta decisión no implementa el mapper.
 
+## TL-EW-001 — Pagination
+
+`GetExpedienteTimeline` usa cursor-based pagination. El orden canónico y determinista es
+`occurredAt DESC, movimientoId DESC`. Esto cierra `OQ-EW-DESIGN-003`.
+
+## TL-EW-002 — Cursor
+
+El cursor es opaco para API/UI y representa conceptualmente la tupla
+`occurredAt + movimientoId`. El frontend no interpreta ni construye su encoding interno.
+
+## TL-EW-003 — Input
+
+```typescript
+interface TimelinePagination {
+  readonly cursor?: string;
+  readonly limit: number;
+}
+
+interface GetExpedienteTimelineInput {
+  readonly expedienteId: ExpedienteId;
+  readonly pagination: TimelinePagination;
+  readonly context: RequestContext;
+}
+```
+
+API-007 exige un máximo server-side, pero el SDB no define un valor numérico. Esta
+decisión no inventa uno.
+
+## TL-EW-004 — Query port
+
+Application de Archive Operations posee el port consumidor:
+
+```typescript
+interface ExpedienteTimelineQueryPort {
+  findByExpediente(
+    expedienteId: ExpedienteId,
+    pagination: TimelinePagination,
+    tenant: TenantContext,
+  ): Promise<TimelinePage>;
+}
+```
+
+## TL-EW-005 — Result
+
+```typescript
+interface TimelinePage {
+  readonly items: readonly MovimientoExpedienteSummary[];
+  readonly nextCursor: string | null;
+}
+```
+
+Ausencia: `{ items: [], nextCursor: null }`. Cursor pagination no exige `total` ni
+`hasMore`; la presencia de `nextCursor` expresa que existe una página siguiente.
+
+## TL-EW-006 — MovimientoExpedienteSummary
+
+```typescript
+interface MovimientoExpedienteSummary {
+  readonly movimientoId: string;
+  readonly movementType: string;
+  readonly originLocation: string | null;
+  readonly destinationLocation: string | null;
+  readonly originCustodianRef: string | null;
+  readonly destinationCustodianRef: string | null;
+  readonly businessReferenceType: string;
+  readonly businessReferenceId: string | null;
+  readonly occurredAt: Date;
+  readonly recordedAt: Date;
+  readonly actorRef: string;
+  readonly source: string;
+  readonly correlationId: string | null;
+}
+```
+
+Los campos derivan de DDD-020/DAT-011. No existe actualmente un enum canónico para
+`movementType`, `businessReferenceType` o `source`; se conservan como strings y no se
+inventan catálogos. El summary no contiene datos clínicos.
+
+## TL-EW-007 — Ownership
+
+`MovimientoExpediente` pertenece lógica y físicamente al módulo Expediente / Archive
+Operations y se persiste junto con Expediente en el schema de cada tenant. Esto cierra
+`OQ-DOM-001`. Es append-oriented y permanece absolutamente separado de `audit_log`.
+
+## TL-EW-008 — Authorization y tenant
+
+`GetExpedienteTimeline` requiere `EXPEDIENT_VIEW` y recibe el `RequestContext` canónico.
+El query port recibe exclusivamente `context.tenant`. Una ausencia tenant-scoped usa
+`EXPEDIENTE_NOT_FOUND` y no revela existencia en otro tenant.
+
+## TL-EW-009 — Audit
+
+El Use Case registra el acceso mediante `AuditWriter`. Ninguna entrada de `audit_log`
+forma parte de `TimelinePage.items`; Movimiento y Audit son modelos distintos.
+
+## TL-EW-010 — Retention
+
+`OQ-EW-010` permanece abierta. T-06 no define ni ejecuta retención: devuelve únicamente
+los movimientos disponibles bajo la política vigente.
+
 ## OQs
 
 `OQ-EW-DESIGN-004` queda RESOLVED. Permanecen abiertas `OQ-EW-002`, `OQ-EW-003`,
-`OQ-EW-004`, las decisiones de retención/paginación del timeline y el ownership físico
-de `MovimientoExpediente`.
+`OQ-EW-004` y la decisión de retención del timeline (`OQ-EW-010`).

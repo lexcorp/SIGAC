@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.5"
+version: "0.3.6"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -27,6 +27,9 @@ decisions_applied:
   - "AUD-EW-003..006 APPROVED"
   - "READ-EW-013 APPROVED"
   - "ERR-EW-001..004 APPROVED"
+  - "TL-EW-001..010 APPROVED"
+  - "OQ-EW-DESIGN-003 RESOLVED"
+  - "OQ-DOM-001 RESOLVED"
 ---
 
 # Expediente Workspace — Requirements
@@ -180,6 +183,14 @@ del aggregate, el rol del usuario y el contexto del negocio.
 - **Resultado:** Tab Movimientos con trayectoria física/operativa cronológica.
   Incluye ExpedienteDispatched y CustodyAccepted.
 - **Regla:** MovimientoExpediente != audit_log. No mezclar con eventos técnicos.
+- **Ownership:** módulo Expediente / Archive Operations; persistencia junto con
+  Expediente en cada schema tenant.
+- **Paginación:** cursor opaco; orden `occurredAt DESC, movimientoId DESC`; respuesta
+  `{ items, nextCursor }`, sin `total`; ausencia `{ items: [], nextCursor: null }`.
+- **Seguridad:** requiere `EXPEDIENT_VIEW`, RequestContext y `context.tenant`; acceso
+  auditado sin incluir audit entries en los items.
+- **Retención:** OQ-EW-010 permanece abierta; el Use Case sólo devuelve movimientos
+  disponibles y no elimina ni decide retención.
 - **Fuente SDB:** SPEC-009 FR-VIEW-007, DDD-020, DAT-011, API-011.
 
 ### REQ-EW-009 — Barra de comandos contextual
@@ -500,7 +511,7 @@ Ninguna. OQ-EW-001, OQ-EW-005, OQ-EW-006 y OQ-EW-007 están RESUELTAS.
 ## 7. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.5"
+spec_version: "0.3.6"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

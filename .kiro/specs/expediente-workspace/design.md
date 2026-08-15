@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.5"
+version: "0.3.6"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -26,8 +26,11 @@ decisions_applied:
   - "AUD-EW-003..006 APPROVED"
   - "READ-EW-013 APPROVED"
   - "ERR-EW-001..004 APPROVED"
+  - "TL-EW-001..010 APPROVED"
+  - "OQ-EW-DESIGN-003 RESOLVED"
+  - "OQ-DOM-001 RESOLVED"
 requires:
-  - requirements.md (v0.3.5)
+  - requirements.md (v0.3.6)
 open_questions_blocking: []
 open_questions_non_blocking:
   - OQ-EW-002
@@ -38,7 +41,6 @@ open_questions_non_blocking:
   - OQ-EW-010
   - OQ-EW-DESIGN-001
   - OQ-EW-DESIGN-002
-  - OQ-EW-DESIGN-003
   - OQ-EW-DESIGN-005
 ---
 
@@ -566,6 +568,50 @@ Pasos:
   10. Retornar ExpedienteReadModel con capabilities[]
 ```
 
+### 7.2A Use Case: GetExpedienteTimeline
+
+```typescript
+interface TimelinePagination {
+  readonly cursor?: string;
+  readonly limit: number;
+}
+
+interface MovimientoExpedienteSummary {
+  readonly movimientoId: string;
+  readonly movementType: string;
+  readonly originLocation: string | null;
+  readonly destinationLocation: string | null;
+  readonly originCustodianRef: string | null;
+  readonly destinationCustodianRef: string | null;
+  readonly businessReferenceType: string;
+  readonly businessReferenceId: string | null;
+  readonly occurredAt: Date;
+  readonly recordedAt: Date;
+  readonly actorRef: string;
+  readonly source: string;
+  readonly correlationId: string | null;
+}
+
+interface TimelinePage {
+  readonly items: readonly MovimientoExpedienteSummary[];
+  readonly nextCursor: string | null;
+}
+
+interface ExpedienteTimelineQueryPort {
+  findByExpediente(
+    expedienteId: ExpedienteId,
+    pagination: TimelinePagination,
+    tenant: TenantContext,
+  ): Promise<TimelinePage>;
+}
+```
+
+Input: `{ expedienteId, pagination: { cursor?, limit }, context: RequestContext }`.
+Requiere `EXPEDIENT_VIEW`; el port recibe `context.tenant`. Orden determinista:
+`occurredAt DESC, movimientoId DESC`. El cursor opaco representa ambos valores y no lo
+interpreta el cliente. Ausencia `items=[]/nextCursor=null`; sin total. AuditWriter registra
+el acceso por separado. OQ-EW-010 permanece abierta y T-06 no decide retención.
+
 ### 7.3 Use Case: DispatchExpediente
 
 ```
@@ -675,11 +721,11 @@ Reglas de capabilities para despacho/custodia:
 | Préstamo activo | Módulo Préstamo; query port consumidor en Workspace | read model server-side y GET /expedientes/{id}/active-loan |
 | Solicitud activa | Módulo Solicitud; query port consumidor en Workspace | read model server-side |
 | Incidencias abiertas | Módulo Incidencia; query port consumidor en Workspace | read model server-side |
-| Historial movimientos | Módulo Expediente | GET /expedientes/{id}/timeline |
+| Historial movimientos | Módulo Expediente / Archive Operations; schema de cada tenant | GET /expedientes/{id}/timeline |
 | Capabilities préstamo | ExpedienteCapabilityService | incluidas en capabilities[] |
 
-> **OQ-DOM-001 abierta:** ¿MovimientoExpediente en schema de expediente o separado?
-> Implementar en schema de expediente hasta resolución; interfaz abstracta para migración.
+`OQ-DOM-001` está RESOLVED: Movimiento pertenece lógica y físicamente a Archive
+Operations y permanece separado de `audit_log`.
 
 ---
 
@@ -689,18 +735,18 @@ Reglas de capabilities para despacho/custodia:
 |----|----------|---------|
 | OQ-EW-DESIGN-001 | ¿Comandos abren drawer inline o navegan a módulo? | CommandBar y flujo UX |
 | OQ-EW-DESIGN-002 | ¿capabilities[] incluye metadatos de por qué está deshabilitado? | Read model y UX |
-| OQ-EW-DESIGN-003 | ¿Timeline usa cursor-based pagination u offset? | GetExpedienteTimeline |
 | OQ-EW-DESIGN-005 | ¿ExpedienteCapabilityService en módulo Expediente o cross-module? | Estructura packages |
 
 `OQ-EW-DESIGN-004` está RESOLVED: endpoint/read model agregado compuesto server-side
 por `GetExpediente` (READ-MODEL-COMPOSITION-DECISION).
+`OQ-EW-DESIGN-003` está RESOLVED por TL-EW-001..006: cursor pagination.
 
 ---
 
 ## 12. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.5"
+spec_version: "0.3.6"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002
@@ -711,7 +757,6 @@ non_blocking_open_questions:
   - OQ-EW-010
   - OQ-EW-DESIGN-001
   - OQ-EW-DESIGN-002
-  - OQ-EW-DESIGN-003
   - OQ-EW-DESIGN-005
 contradictions_found: []
 implementation_ready: true

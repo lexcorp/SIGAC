@@ -14,3 +14,7 @@ Expediente timeline displays:
 timestamp, event/action, origin→destination when relevant, actor/custodian, business reference.
 
 Movement timeline is not identical to technical audit.
+
+`MovimientosTab` consume `{ items, nextCursor }`. Trata `nextCursor` como opaco y lo
+reenvía para cargar la página siguiente; no interpreta ni construye el cursor y no
+requiere `total`. Los items llegan ordenados por timestamp e identificador descendentes.

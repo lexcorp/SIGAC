@@ -39,3 +39,13 @@ Para `GetExpediente` y sus puertos de proyección, cubrir al menos:
   `EXPEDIENTE_NOT_FOUND`, audit `not-found` y no revela existencia cross-tenant;
 - `INSUFFICIENT_ENABLING_SOURCE` nunca representa falta de permission;
 - el read model contiene `rowVersion` y no contiene `updatedAt`.
+
+Para `GetExpedienteTimeline`, cubrir al menos:
+- `EXPEDIENT_VIEW` y `RequestContext` canónico;
+- query port recibe `context.tenant`, nunca tenant de input arbitrario;
+- orden `occurredAt DESC, movimientoId DESC` y cursor opaco;
+- ausencia `{ items: [], nextCursor: null }`, sin `total`;
+- summary con los campos DAT-011 y sin datos clínicos;
+- audit de acceso separado; ninguna fila de audit en `items`;
+- cross-tenant no divulgativo;
+- el Use Case no elimina movimientos ni decide retención.

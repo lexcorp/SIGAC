@@ -38,6 +38,8 @@ FR-VIEW-006 Incidencias abiertas si existen.
 
 FR-VIEW-007 Historial de movimientos operativos (`MovimientoExpediente`).
   Separado del audit log (Movimiento ≠ Audit).
+  Usa cursor pagination opaca con orden `occurredAt DESC, movimientoId DESC`, respuesta
+  `{ items, nextCursor }`, sin `total`; ausencia `{ items: [], nextCursor: null }`.
 
 FR-VIEW-008 `capabilities[]` — acciones válidas para el actor en el estado actual.
 
@@ -60,6 +62,10 @@ ausencia `[]`), cuyos únicos campos son `tipo` y `validada`.
 FR-VIEW-013 El provider determina `validada`. Capabilities sólo evalúa existencia de una
 fuente validada `CONSULTA_PROGRAMADA|VALE_ARCHIVO_SM_1_14`; no valida evidencia ni elige
 la fuente de OpenLoan. `ORDEN_SUPERIOR` permanece fail-closed incluso validada.
+
+FR-VIEW-014 Timeline requiere `EXPEDIENT_VIEW`, `RequestContext` y TenantContext
+server-side. Cross-tenant responde como no encontrado. El acceso se audita sin mezclar
+audit entries con movimientos. La retención permanece fuera del alcance.
 
 ## Non-goals
 - No mostrar diagnósticos, notas clínicas, tratamientos ni estudios.

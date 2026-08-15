@@ -40,5 +40,8 @@ CTX-EW-001..004 y AUD-EW-003..006 resuelven el bloqueo de request/audit context:
 recibe como input y `AuditWriter` enriquece el `AuditEntry` semántico hasta el
 `AuditRecord` persistido.
 
-Permanecen abiertas `OQ-EW-002`, `OQ-EW-003`, `OQ-EW-004`, las OQs de
-retención/paginación del timeline y el ownership físico de `MovimientoExpediente`.
+`OQ-EW-DESIGN-003` y `OQ-DOM-001` están RESOLVED por TL-EW-001..009: cursor pagination
+y ownership de Movimiento en Archive Operations/schema tenant. Permanece abierta
+`OQ-EW-010` sobre retención; T-06 no define ni ejecuta esa política.
+
+También permanecen abiertas `OQ-EW-002`, `OQ-EW-003` y `OQ-EW-004`.

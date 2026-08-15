@@ -28,6 +28,22 @@ architecture:
 
 No hay endpoint que edite contenido clínico.
 
+## Timeline
+
+`GET /api/v1/expedientes/{id}/timeline?cursor={opaque}&limit={n}` devuelve:
+
+```jsonc
+{
+  "items": [/* MovimientoExpedienteSummary DAT-011 */],
+  "nextCursor": "opaque | null"
+}
+```
+
+Orden: `occurredAt DESC, movimientoId DESC`. El cursor representa conceptualmente esa
+tupla, pero API/UI no interpretan su encoding. No se devuelve `total`. Ausencia:
+`items=[]`, `nextCursor=null`. Requiere `EXPEDIENT_VIEW`, opera sólo en el tenant
+server-side y registra audit separado. No decide retención.
+
 ## Búsqueda por número — colección (OQ-EW-001/007 RESOLVED)
 
 `GET /api/v1/expedientes?numero={n}` devuelve siempre un array:

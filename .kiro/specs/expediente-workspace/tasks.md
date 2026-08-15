@@ -1,11 +1,11 @@
 ---
 spec: expediente-workspace
-version: "0.3.5"
+version: "0.3.6"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 requires:
-  - requirements.md (v0.3.5)
-  - design.md (v0.3.5)
+  - requirements.md (v0.3.6)
+  - design.md (v0.3.6)
 decisions_applied:
   - "OQ-EW-001 RESOLVED"
   - "OQ-EW-005 RESOLVED"
@@ -21,6 +21,9 @@ decisions_applied:
   - "AUD-EW-003..006 APPROVED"
   - "READ-EW-013 APPROVED"
   - "ERR-EW-001..004 APPROVED"
+  - "TL-EW-001..010 APPROVED"
+  - "OQ-EW-DESIGN-003 RESOLVED"
+  - "OQ-DOM-001 RESOLVED"
 ready_gate: "READY-GATE.md — todos los ítems deben estar marcados antes de iniciar T-01"
 done_gate: "OS-018 — spec + tests + API/migrations + auth/tenant/audit + traceability"
 ---
@@ -48,14 +51,14 @@ Las OQs que eran bloqueantes en v0.2.0 están resueltas. La implementación pued
 
 OQ no bloqueantes (implementación avanza con decisión provisional):
 OQ-EW-002, OQ-EW-003, OQ-EW-004, OQ-EW-008, OQ-EW-009, OQ-EW-010,
-OQ-EW-DESIGN-001 a OQ-EW-DESIGN-005.
+OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
 
 ---
 
 ## Grupo 0 — Trazabilidad
 
 ### T-00 Completar traceability.md
-- **Descripción:** Verificar que traceability.md v0.3.5 tiene cadenas completas
+- **Descripción:** Verificar que traceability.md v0.3.6 tiene cadenas completas
   para todas las capacidades. Confirmar que GAP-002, GAP-003, GAP-007 están cerrados
   y que no quedan eslabones PENDIENTE en BR, UC o SPEC para las decisiones resueltas.
 - **Criterio de done:** Ningún REQ-EW-* sin cadena completa; matrices actualizadas.
@@ -231,16 +234,25 @@ OQ-EW-DESIGN-001 a OQ-EW-DESIGN-005.
 
 ### T-06 Implementar Use Case GetExpedienteTimeline
 - **Descripción:** `packages/modules/expediente/application/GetExpedienteTimeline.ts`.
-  - Input auditable: `{ expedienteId, limit, context: RequestContext }`.
-  - Carga MovimientoExpediente[] (DAT-011) por expediente_id; occurred_at DESC.
-  - Paginación con limit (cursor-based o offset según OQ-EW-DESIGN-003; usar limit mínimo).
+  - Input: `{ expedienteId, pagination: { cursor?: string; limit: number }, context: RequestContext }`.
+  - Define/consume `ExpedienteTimelineQueryPort.findByExpediente(expedienteId,
+    pagination, context.tenant): Promise<TimelinePage>` en Application de Archive Operations.
+  - `TimelinePage = { items: readonly MovimientoExpedienteSummary[];
+    nextCursor: string | null }`; ausencia `[]/null`, sin total.
+  - Cursor opaco conceptual `occurredAt + movimientoId`; orden canónico
+    `occurredAt DESC, movimientoId DESC`. El Use Case no interpreta el encoding.
+  - Summary exacto DAT-011/TL-EW-006; sin datos clínicos.
+  - Requiere EXPEDIENT_VIEW; cross-tenant usa EXPEDIENTE_NOT_FOUND sin divulgación.
   - NO mezcla con audit_log.
   - `AuditWriter.append(AuditEntry, context)`; el writer enriquece y establece occurredAt.
+  - No elimina movimientos ni decide retención; OQ-EW-010 permanece abierta.
 - **Tests requeridos (Vitest):**
   - Actor autorizado -> lista de movimientos ordenada.
   - Incluye movement_type DISPATCHED y CUSTODY_ACCEPTED cuando existen.
   - Cross-tenant -> sin movimientos de otro tenant.
   - Resultado no contiene filas de audit_log.
+  - Cursor se propaga opaco; ausencia -> items [] y nextCursor null; no total.
+  - Audit separado y mismo RequestContext.
 - **Fuente SDB:** DDD-020, DAT-011, SPEC-009 FR-VIEW-007, INT-008.
 - **Dependencias:** T-03.
 
@@ -582,7 +594,7 @@ T-23 (CI pipeline) <- todas
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.5"
+spec_version: "0.3.6"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002
@@ -593,7 +605,6 @@ non_blocking_open_questions:
   - OQ-EW-010
   - OQ-EW-DESIGN-001
   - OQ-EW-DESIGN-002
-  - OQ-EW-DESIGN-003
   - OQ-EW-DESIGN-005
 contradictions_found: []
 implementation_ready: true
