@@ -1,0 +1,35 @@
+{
+  "name": "sigac",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.21.0",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "dev": "nx run-many -t dev --parallel=3",
+    "build": "nx run-many -t build",
+    "test": "nx run-many -t test",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:tenant-isolation": "vitest run tests/tenant-isolation",
+    "test:e2e": "playwright test",
+    "lint": "nx run-many -t lint",
+    "typecheck": "nx run-many -t typecheck",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx tooling/db/migrate-tenants.ts",
+    "db:bootstrap": "tsx tooling/db/bootstrap-local.ts",
+    "openapi:validate": "node tooling/openapi/validate.mjs",
+    "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1",
+    "@types/node": "latest",
+    "drizzle-kit": "latest",
+    "nx": "23.1.1",
+    "tsx": "latest",
+    "typescript": "latest",
+    "vitest": "4.1.10",
+    "pg": "latest",
+    "@types/pg": "latest"
+  }
+}

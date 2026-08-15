@@ -1,0 +1,3019 @@
+{
+  "version": "6.0",
+  "nxVersion": "23.1.1",
+  "pathMappings": {
+    "@sigac/domain-kernel": [
+      "./packages/domain-kernel/src/index.ts"
+    ],
+    "@sigac/archive-operations": [
+      "./packages/modules/archive-operations/src/index.ts"
+    ],
+    "@sigac/requests": [
+      "./packages/modules/requests/src/index.ts"
+    ],
+    "@sigac/tenant": [
+      "./packages/platform/tenant/src/index.ts"
+    ],
+    "@sigac/database": [
+      "./packages/platform/database/src/index.ts"
+    ]
+  },
+  "nxJsonPlugins": [],
+  "fileMap": {
+    "nonProjectFiles": [
+      {
+        "file": "docs/decisions/ADR-0023-pnpm-nx.md",
+        "hash": "8253564896209776718"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/25-event-timeline.md",
+        "hash": "10708219479035187245"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/32-empty-loading-error.md",
+        "hash": "11699481598848407312"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/44-api-prestamos.md",
+        "hash": "14438135244051342515"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/README.md",
+        "hash": "600633398113517332"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/27-demo-environment.md",
+        "hash": "2905817433976684755"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/27-change-management.md",
+        "hash": "4060012219481259732"
+      },
+      {
+        "file": ".kiro/specs/expediente-workspace/design.md",
+        "hash": "2268695450711612070"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/12-data-subject-rights.md",
+        "hash": "12660380502019265315"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/12-uc-005-iniciar-busqueda.md",
+        "hash": "4641176625561081071"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/63-security-requirements.md",
+        "hash": "15931764164384979225"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/07-definition-done.md",
+        "hash": "1257768288274494670"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/00-index.md",
+        "hash": "10152195194455739131"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/README.md",
+        "hash": "4694449450406888059"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/12-wf-004-no-localizado.md",
+        "hash": "5064857326763375013"
+      },
+      {
+        "file": "manifest.json",
+        "hash": "5463906066643499064"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/53-personal-data-breach.md",
+        "hash": "17636196185773474791"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/28-workflow-to-domain-map.md",
+        "hash": "12625643857123294826"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/66-codex-guardrails.md",
+        "hash": "2548613883262018006"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/09-invariants.md",
+        "hash": "14474157598731447103"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/26-uc-019-consultar-jornada.md",
+        "hash": "5570911281761521543"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/11-uc-004-asignar-solicitud.md",
+        "hash": "8117315543276390406"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/34-technical-reference-notes.md",
+        "hash": "2141922981780466355"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/28-domain-diagram.md",
+        "hash": "12764343791698074705"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/10-color-system.md",
+        "hash": "4346704623770453334"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/11-retention-deletion.md",
+        "hash": "3138657164162978662"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/11-adrs.md",
+        "hash": "10224404918014189437"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/14-reference-data.md",
+        "hash": "9242598047782303773"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/03-experience-layers.md",
+        "hash": "8247541628197584330"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/62-audit-ux.md",
+        "hash": "4712231833387545537"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/43-expediente-workspace.md",
+        "hash": "11742035867399985563"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/69-validation-decisions.md",
+        "hash": "4939809075483404274"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/55-api-security.md",
+        "hash": "16202894838931319056"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/54-frontend-contract.md",
+        "hash": "3244421341483603138"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/25-independent-verification.md",
+        "hash": "6144696645788799706"
+      },
+      {
+        "file": "docs/sdb-master/REDISTRIBUTION-MAP.md",
+        "hash": "5877531937810587370"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/29-query-state.md",
+        "hash": "6096764738111512561"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/50-api-reference-data.md",
+        "hash": "6040997860539540788"
+      },
+      {
+        "file": "docs/agentic/04-task-routing.md",
+        "hash": "218637099502404871"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/40-testing-strategy.md",
+        "hash": "2103780237040782969"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/23-open-questions.md",
+        "hash": "14192925176736161170"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/35-api-tenant-resolution.md",
+        "hash": "10634018043701398746"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/28-migration-strategy.md",
+        "hash": "8103866040191990493"
+      },
+      {
+        "file": "tests/e2e/bootstrap.spec.ts",
+        "hash": "14383120438060025515"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/03-commits.md",
+        "hash": "2351416721040086062"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/11-risks.md",
+        "hash": "9167252127976387209"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/02-architecture-principles.md",
+        "hash": "4368196096014743932"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/06-module-boundaries.md",
+        "hash": "15010902814426293601"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/11-return-rules.md",
+        "hash": "12415379040663296313"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/28-api-client.md",
+        "hash": "9267233722079164475"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/README.md",
+        "hash": "13646615199599108772"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/37-spec-010-auditoria-operativa.md",
+        "hash": "7959912240438782661"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/23-availability-contingency.md",
+        "hash": "3051220084776822776"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/06-expediente-model.md",
+        "hash": "13645455987095552174"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/14-identity-authentication.md",
+        "hash": "4092870384294148372"
+      },
+      {
+        "file": ".devin/knowledge/architecture.md",
+        "hash": "13778031003937560840"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/31-open-workflow-questions.md",
+        "hash": "8292594740214383225"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/30-exit-criteria.md",
+        "hash": "7252549419176591307"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/19-wf-011-renovacion-prestamo.md",
+        "hash": "8772889578215790500"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/36-api-errors.md",
+        "hash": "2989401923681022152"
+      },
+      {
+        "file": ".kiro/steering/structure.md",
+        "hash": "10328426366263343673"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/04-process-inventory.md",
+        "hash": "15686480061697762644"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/22-domain-event-flow.md",
+        "hash": "13266352097893194664"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/20-audit-traceability.md",
+        "hash": "10003189570415389044"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/REVIEW-GUIDE.md",
+        "hash": "10077129397682061644"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/39-universal-search.md",
+        "hash": "2709562922903038663"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/25-backup-boundaries.md",
+        "hash": "8984982319214564435"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/49-asvs-verification.md",
+        "hash": "4386260411288846275"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/05-requirements.md",
+        "hash": "5319416670594361718"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/45-api-devoluciones.md",
+        "hash": "15319202509980579955"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/10-api-strategy.md",
+        "hash": "14777936149268436591"
+      },
+      {
+        "file": ".kiro/hooks/verify-typescript.json",
+        "hash": "9982435580477469821"
+      },
+      {
+        "file": ".devin/README.md",
+        "hash": "9576820379187200423"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/16-authorization-matrix.md",
+        "hash": "8717570115384220239"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/17-uc-010-abrir-prestamo.md",
+        "hash": "4142640636425889153"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/10-domain-layer.md",
+        "hash": "7397073796763521178"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/25-background-jobs.md",
+        "hash": "14576055179374573843"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/37-test-databases.md",
+        "hash": "13063325279656159758"
+      },
+      {
+        "file": "docs/sdb-master/NEXT-ACTIONS.md",
+        "hash": "15987033482685249472"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/14-knowledge-map.md",
+        "hash": "8368927063013243337"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/24-end-to-end-sequence.md",
+        "hash": "10498718960263292942"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/36-key-management.md",
+        "hash": "16324959838441292994"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/05-density.md",
+        "hash": "13978817036600775217"
+      },
+      {
+        "file": "docs/sdb/Volume-10-Testing-Quality/02-test-strategy.md",
+        "hash": "3037579645783663608"
+      },
+      {
+        "file": ".kiro/steering/api.md",
+        "hash": "4766444643355045355"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/26-data-security.md",
+        "hash": "2526214695212137234"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/32-multitenant-security.md",
+        "hash": "6392202108111475941"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/09-frontend-structure.md",
+        "hash": "13613097827177872292"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/39-api-idempotency.md",
+        "hash": "749477271894290693"
+      },
+      {
+        "file": "docs/sdb/Volume-10-Testing-Quality/22-exit-criteria.md",
+        "hash": "119903739249074326"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/14-wf-006-prestamo.md",
+        "hash": "2839574016816060481"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/20-runbooks.md",
+        "hash": "9212343899768736531"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/23-secrets.md",
+        "hash": "12393896354293892647"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/18-outbox.md",
+        "hash": "2602284116098975027"
+      },
+      {
+        "file": "knowledge/normas/NOM-004-SSA3-2012.pdf",
+        "hash": "5086639858898935219"
+      },
+      {
+        "file": "tooling/db/migrate-tenants.ts",
+        "hash": "3988850523903525956"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/21-workflow-state-matrix.md",
+        "hash": "14130538391530137396"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/27-uc-020-prestamos-vencidos.md",
+        "hash": "12816934166237753197"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/33-demo-security.md",
+        "hash": "7699756739417000428"
+      },
+      {
+        "file": "pnpm-workspace.yaml",
+        "hash": "4863024996328676892"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/74-validation-decisions.md",
+        "hash": "846095696820563638"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/31-exit-criteria.md",
+        "hash": "10995847484089581838"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/43-contract-tests.md",
+        "hash": "11216798374738581209"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/15-ui-map.md",
+        "hash": "8352881661356261294"
+      },
+      {
+        "file": ".devin/knowledge/tenant-security.md",
+        "hash": "11352754056696119789"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/09-prestamo-model.md",
+        "hash": "290048113232387749"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/28-machine-readable.md",
+        "hash": "11664200563671540559"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/01-repository-layout.md",
+        "hash": "1937959061680508350"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/14-stride.md",
+        "hash": "12564558047191589693"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/02-user-context.md",
+        "hash": "9961411509195893110"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/README.md",
+        "hash": "5848786998845583143"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/10-constraints.md",
+        "hash": "6146238095119393271"
+      },
+      {
+        "file": "docs/agentic/03-pipeline.md",
+        "hash": "13316980223894493590"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/18-uc-011-renovar-prestamo.md",
+        "hash": "9171866037875092299"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/38-api-filter-sort.md",
+        "hash": "18153257723872493455"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/38-role-navigation.md",
+        "hash": "15573306045082117472"
+      },
+      {
+        "file": "vitest.config.ts",
+        "hash": "1663445982311558465"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/09-brand-direction.md",
+        "hash": "14150911669453887222"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/14-iconography.md",
+        "hash": "11571110685343885242"
+      },
+      {
+        "file": "tests/integration/bootstrap.test.ts",
+        "hash": "9369164188774894783"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/15-authorization.md",
+        "hash": "17374743251010423687"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/52-openapi-contract.md",
+        "hash": "16553428946299702968"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/04-c4-containers.md",
+        "hash": "5749208199894114774"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/53-integration-contract.md",
+        "hash": "4197103077250628503"
+      },
+      {
+        "file": "docs/sdb/Volume-10-Testing-Quality/21-open-questions.md",
+        "hash": "513034427749449935"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/25-uc-018-consultar-expediente.md",
+        "hash": "3563993359728317634"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/64-design-tokens.md",
+        "hash": "15296031188533584396"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/15-simef-staging.md",
+        "hash": "12937570422192415219"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/20-transactions.md",
+        "hash": "5539296402338152033"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/03-local-development.md",
+        "hash": "13998956088073543221"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/29-validation.md",
+        "hash": "3961292439698953716"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/20-codex.md",
+        "hash": "15034225325584276072"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/14-api-map.md",
+        "hash": "3252196249191347477"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/52-release-strategy.md",
+        "hash": "11471380891957848583"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/06-acceptance.md",
+        "hash": "4737959648695477187"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/CHANGELOG.md",
+        "hash": "270986626206924010"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/08-external-systems.md",
+        "hash": "16278577726827934553"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/30-exit-criteria.md",
+        "hash": "6879389490626941590"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/23-uc-016-resolver-incidencia.md",
+        "hash": "1195355405323634749"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/17-domain-events.md",
+        "hash": "3534503741301037114"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/22-actor-responsibility-matrix.md",
+        "hash": "2182561748584755471"
+      },
+      {
+        "file": "knowledge/referencias/CONSIDERACIONES.txt",
+        "hash": "6035090170608614352"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/09-uc-002-reconciliar-agenda.md",
+        "hash": "4958948612542613573"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/58-third-party-security.md",
+        "hash": "1142280086708957153"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/09-preparation-rules.md",
+        "hash": "778277095741535721"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/59-codex-data-api-guardrails.md",
+        "hash": "14435663556699301181"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/35-component-states.md",
+        "hash": "11082812426348845050"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/33-error-boundaries.md",
+        "hash": "9421716508613756494"
+      },
+      {
+        "file": "AGENTS.md",
+        "hash": "3953891601579215067"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/04-context-map.md",
+        "hash": "6382600520899361361"
+      },
+      {
+        "file": "docs/sdb/Volume-10-Testing-Quality/20-validation.md",
+        "hash": "6875173936197505409"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/41-api-expedientes.md",
+        "hash": "13963621695181590421"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/60-codex-security-guardrails.md",
+        "hash": "8992041202786432415"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/46-exit-criteria.md",
+        "hash": "7358101784512253881"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/03-c4-system-context.md",
+        "hash": "3687071965347338595"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/REVIEW-GUIDE.md",
+        "hash": "6993049480180647457"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/51-api-admin-tenant.md",
+        "hash": "7984764752155724597"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/21-cards.md",
+        "hash": "7931226875670213622"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/68-codex-verification.md",
+        "hash": "11866570222051365449"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/41-requirement-traceability.md",
+        "hash": "1491493566920178606"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/13-ubiquitous-language.md",
+        "hash": "13612232880714520394"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/25-compliance-risks.md",
+        "hash": "9086705045649409599"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/32-spec-005-entrega-custodia.md",
+        "hash": "2743915094521258700"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/05-privacy-data-inventory.md",
+        "hash": "8851033235982175001"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/37-api-pagination.md",
+        "hash": "14469218026513135917"
+      },
+      {
+        "file": ".kiro/specs/README.md",
+        "hash": "8681294712470169727"
+      },
+      {
+        "file": "docs/sdb/Volume-10-Testing-Quality/04-application-testing.md",
+        "hash": "11932077515183819526"
+      },
+      {
+        "file": "REPOSITORY-MAP.md",
+        "hash": "5160418743159003418"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/06-read-models.md",
+        "hash": "7148888897854181301"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/14-health.md",
+        "hash": "14237681568400379169"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/66-codex-task-template.md",
+        "hash": "14031492731685319766"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/20-status.md",
+        "hash": "9955477436462823866"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/index.md",
+        "hash": "9029775747998933029"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/08-backend-structure.md",
+        "hash": "236651152942591844"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/06-data-minimization.md",
+        "hash": "12720615900301158190"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/20-mfa.md",
+        "hash": "8369258048401878106"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/24-handoff.md",
+        "hash": "5001945102035416592"
+      },
+      {
+        "file": "drizzle.config.ts",
+        "hash": "14144938374164397884"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/70-open-questions.md",
+        "hash": "5711100298366660572"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/35-migration-workflow.md",
+        "hash": "10648974423977015731"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/41-unit-tests.md",
+        "hash": "15897021036001966420"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/33-open-architecture-questions.md",
+        "hash": "6291900048667986291"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/18-requirement-classification.md",
+        "hash": "13554401612295281134"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/34-file-import.md",
+        "hash": "6717359419064035199"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/49-locations.md",
+        "hash": "6494496893609065916"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/36-seed-strategy.md",
+        "hash": "9419023632284409322"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/17-wf-009-incidencias.md",
+        "hash": "15674254055496925197"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/22-to-be-principles.md",
+        "hash": "3889640393682092616"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/07-hotspots.md",
+        "hash": "10430445784471191167"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/07-solicitud-model.md",
+        "hash": "4136833728857487108"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/18-data-constraints.md",
+        "hash": "8324056441047630283"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/40-api-concurrency.md",
+        "hash": "12402724437042944991"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/00-index.md",
+        "hash": "865880458236830361"
+      },
+      {
+        "file": ".vscode/settings.json",
+        "hash": "13917637498981570166"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/27-event-storming-color-key.md",
+        "hash": "16055160832523340148"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/51-penetration-testing.md",
+        "hash": "8646095584427760822"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/03-problem-statement.md",
+        "hash": "11380644235965720470"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/52-incident-response.md",
+        "hash": "8612331386521780167"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/19-search.md",
+        "hash": "8527677184057068597"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/42-dashboard.md",
+        "hash": "10291347481519893767"
+      },
+      {
+        "file": "docs/sdb-master/manifest.json",
+        "hash": "1090898234574273670"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/13-wf-005-entrega-custodia.md",
+        "hash": "314658823242454804"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/08-uc-001-importar-agenda.md",
+        "hash": "16953511683876524333"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/27-demo-boundary.md",
+        "hash": "6881184015132782445"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/10-privacy-impact-gate.md",
+        "hash": "7139872592061602082"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/21-session-security.md",
+        "hash": "4303992494884339531"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/29-open-domain-questions.md",
+        "hash": "11614146320300831669"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/67-exit-criteria.md",
+        "hash": "7576751851373991201"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/25-domain-vs-workflow.md",
+        "hash": "16169723615290961403"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/17-buttons.md",
+        "hash": "5631895742191577541"
+      },
+      {
+        "file": "tsconfig.base.json",
+        "hash": "17118202965483414685"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/02-vision.md",
+        "hash": "3372817418199455077"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/43-host-hardening.md",
+        "hash": "11841733225889214934"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/26-output-encoding.md",
+        "hash": "7431261923621536114"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/41-login.md",
+        "hash": "4914022218446064630"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/17-document-governance.md",
+        "hash": "6315366504522405739"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/26-multi-tenancy-boundary.md",
+        "hash": "14366281577648911783"
+      },
+      {
+        "file": "TECHNICAL-DECISIONS.md",
+        "hash": "3729423470094850549"
+      },
+      {
+        "file": ".kiro/hooks/README.md",
+        "hash": "9008075253492204600"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/05-permission-model.md",
+        "hash": "6883415274710436443"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/05-aggregate-catalog.md",
+        "hash": "4560296521528236968"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/36-sitemap.md",
+        "hash": "3775337434501776936"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/08-raci.md",
+        "hash": "18429987081314391021"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/11-typography.md",
+        "hash": "15894278682656603363"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/12-incident-rules.md",
+        "hash": "18414428998908567674"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/06-traceability-model.md",
+        "hash": "15626595733050550217"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/30-query-patterns.md",
+        "hash": "15620575720644577320"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/57-observability-implementation.md",
+        "hash": "3920764567817371800"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/23-logging.md",
+        "hash": "2895975152708917059"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/REVIEW-GUIDE.md",
+        "hash": "2716848677994860366"
+      },
+      {
+        "file": "docs/sdb/Volume-10-Testing-Quality/08-security-testing.md",
+        "hash": "7042740683506185458"
+      },
+      {
+        "file": "vitest.integration.config.ts",
+        "hash": "17206642881227978143"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/28-roadmap.md",
+        "hash": "17254049058990918596"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/18-restore.md",
+        "hash": "11490918096932597391"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/29-spec-002-preparacion.md",
+        "hash": "14135328137311954707"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/34-secrets.md",
+        "hash": "2032820172186633730"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/09-wf-001-agenda-demanda.md",
+        "hash": "11736105526458675628"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/20-network-trust-boundaries.md",
+        "hash": "2776881532963549890"
+      },
+      {
+        "file": "docs/decisions/ADR-0025-vitest-playwright.md",
+        "hash": "14756207511412946677"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/73-mvp-build-order.md",
+        "hash": "16851964592438222838"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/31-pagination.md",
+        "hash": "7364997612627360913"
+      },
+      {
+        "file": "docs/agentic/01-governance.md",
+        "hash": "3857576996704411732"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/40-page-anatomy.md",
+        "hash": "14829904814364732485"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/20-compliance-map.md",
+        "hash": "11777762301970626625"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/12-state-machines.md",
+        "hash": "4184560984933175392"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/24-seed-demo.md",
+        "hash": "11835512013147999555"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/47-returns.md",
+        "hash": "9508152377789484399"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/15-uc-008-preparar-expediente.md",
+        "hash": "17080723858178141434"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/21-contingency.md",
+        "hash": "9936948076754607517"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/09-documento-seguridad-support.md",
+        "hash": "10299868050623561340"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/13-threat-model.md",
+        "hash": "6106389750257696368"
+      },
+      {
+        "file": "docs/decisions/ADR-0024-drizzle.md",
+        "hash": "17403915236966359502"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/02-source-of-truth.md",
+        "hash": "2007949787493566401"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/17-ready.md",
+        "hash": "8854025088490897767"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/17-compliance-obligations.md",
+        "hash": "2443261576164579145"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/13-outbox-model.md",
+        "hash": "3350960083768761886"
+      },
+      {
+        "file": ".kiro/specs/expediente-workspace/requirements.md",
+        "hash": "14971595007981972198"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/02-subdomains.md",
+        "hash": "15009210516960315914"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/44-solicitudes.md",
+        "hash": "16190167155734226944"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/07-keyboard-ux.md",
+        "hash": "6625530547761324338"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/42-api-solicitudes.md",
+        "hash": "11227783308125094994"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/55-ui-state-machines.md",
+        "hash": "3215522341805447349"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/26-specboot-workflow.md",
+        "hash": "12529719928056881247"
+      },
+      {
+        "file": "docs/agentic/06-first-experiment.md",
+        "hash": "17428879791500040440"
+      },
+      {
+        "file": "docs/sdb/Volume-10-Testing-Quality/18-defect-management.md",
+        "hash": "8723613846114842185"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/29-validation-decisions.md",
+        "hash": "13060165795882646901"
+      },
+      {
+        "file": "docs/agentic/07-metrics.md",
+        "hash": "1794620883975920770"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/62-security-control-matrix.md",
+        "hash": "17756918928588208432"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/33-api-versioning.md",
+        "hash": "10048502864136038977"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/58-usecase-ui-traceability.md",
+        "hash": "5784843332331685211"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/20-validation.md",
+        "hash": "16152819745898327746"
+      },
+      {
+        "file": ".kiro/steering/domain.md",
+        "hash": "9936173339342515389"
+      },
+      {
+        "file": "docs/sdb-master/MASTER-TRACEABILITY-TEMPLATE.csv",
+        "hash": "12927164856327544352"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/12-glossary.md",
+        "hash": "17290026410448227330"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/02-branching.md",
+        "hash": "408644653459075466"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/51-environments.md",
+        "hash": "2838885097141707141"
+      },
+      {
+        "file": "docs/sdb/Volume-10-Testing-Quality/09-frontend-testing.md",
+        "hash": "13202307263841629356"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/65-frontend-architecture.md",
+        "hash": "11313242643672839329"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/21-agenda-external.md",
+        "hash": "14728055256616628112"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/60-logs.md",
+        "hash": "13206774542905962797"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/19-uc-012-recibir-devolucion.md",
+        "hash": "4897565074068273509"
+      },
+      {
+        "file": "package.json",
+        "hash": "16301526916421455170"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/65-codex-read-order.md",
+        "hash": "8565315442270033169"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/61-idempotency-ux.md",
+        "hash": "5180767728154062718"
+      },
+      {
+        "file": "docs/sdb-master/MASTER-OPEN-QUESTIONS-TEMPLATE.csv",
+        "hash": "17354871499416759380"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/15-abuse-cases.md",
+        "hash": "2370396856830118501"
+      },
+      {
+        "file": "docs/decisions/ADR-0029-agentic-engineering-governance.md",
+        "hash": "4007595830063068301"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/44-definition-of-ready-for-codex.md",
+        "hash": "3690664597706925833"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/01-ux-principles.md",
+        "hash": "4064480096687312559"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/15-exceptions.md",
+        "hash": "3085296102276922994"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/33-spec-006-prestamo.md",
+        "hash": "16506823339710811130"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/32-exit-criteria.md",
+        "hash": "12231766868531328785"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/18-privacy-minimum-data.md",
+        "hash": "3672628763014600551"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/31-adr-index.md",
+        "hash": "14947121414720830746"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/48-incidents.md",
+        "hash": "13591385243245413885"
+      },
+      {
+        "file": "docs/sdb/Volume-10-Testing-Quality/11-performance-testing.md",
+        "hash": "10026350082316496354"
+      },
+      {
+        "file": "tooling/db/bootstrap-local.ts",
+        "hash": "2537749354954629259"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/47-performance-tests.md",
+        "hash": "7221809622766253582"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/02-security-principles.md",
+        "hash": "9537931434446518193"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/23-service-accounts.md",
+        "hash": "8842561247965257537"
+      },
+      {
+        "file": "docs/sdb/Volume-10-Testing-Quality/README.md",
+        "hash": "16516802131906549422"
+      },
+      {
+        "file": "knowledge/normas/Ley-General-de-Archivos.pdf",
+        "hash": "10126663727850504049"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/CHANGELOG.md",
+        "hash": "6783801851509197561"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/CHANGELOG.md",
+        "hash": "5414605513208592774"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/19-retention-disposition-boundaries.md",
+        "hash": "6853537806686532437"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/01-project-charter.md",
+        "hash": "1815723628417638979"
+      },
+      {
+        "file": ".kiro/steering/product.md",
+        "hash": "14659220439923226318"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/12-audit-model.md",
+        "hash": "13208949299727802360"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/13-security-map.md",
+        "hash": "5733881302729694193"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/21-authorization.md",
+        "hash": "17355515065310834187"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/46-loans.md",
+        "hash": "7792334084361159979"
+      },
+      {
+        "file": "docs/sdb/Volume-10-Testing-Quality/13-test-data.md",
+        "hash": "16645506163213858840"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/20-uc-013-cerrar-prestamo.md",
+        "hash": "2011133484296083998"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/07-clean-architecture.md",
+        "hash": "11914739556816584336"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/19-repository-contract.md",
+        "hash": "10225147410693655559"
+      },
+      {
+        "file": "pnpm-lock.yaml",
+        "hash": "4016722747438614705"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/37-secure-logging.md",
+        "hash": "17474635927111802983"
+      },
+      {
+        "file": "openapi/sigac-v1.yaml",
+        "hash": "3231795835975198749"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/29-definition-of-ready.md",
+        "hash": "13531715246229530514"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/57-validation-decisions.md",
+        "hash": "16397254937593394921"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/07-value-objects.md",
+        "hash": "270617075480090378"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/13-demo-isolation.md",
+        "hash": "9840017256949236539"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/17-backup.md",
+        "hash": "15516285206547513851"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/56-dependency-policy.md",
+        "hash": "7194962221437877997"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/60-exit-criteria.md",
+        "hash": "5184897177261156099"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/54-rollback.md",
+        "hash": "10988745031557637443"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/30-workflow-validation-decisions.md",
+        "hash": "582735407065583592"
+      },
+      {
+        "file": ".github/workflows/ci.yml",
+        "hash": "16386275153960969990"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/25-non-functional-drivers.md",
+        "hash": "3022443301228310"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/01-security-objectives.md",
+        "hash": "11371930670638171569"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/43-api-preparation.md",
+        "hash": "3244421341483603138"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/08-feedback.md",
+        "hash": "4452285130614855504"
+      },
+      {
+        "file": ".kiro/specs/expediente-workspace/tasks.md",
+        "hash": "14325924104604363290"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/06-entity-catalog.md",
+        "hash": "17684812594972319896"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/52-audit.md",
+        "hash": "1382086542696568685"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/03-lifecycle.md",
+        "hash": "5137904746946592454"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/42-container-hardening.md",
+        "hash": "11171359604081280568"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/64-codex-operating-contract.md",
+        "hash": "6315813689035068053"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/14-aggregate-solicitud.md",
+        "hash": "2055985131046358389"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/18-concept-custodia.md",
+        "hash": "16427259848539682640"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/11-wf-003-busqueda-localizacion.md",
+        "hash": "5547563645532584849"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/05-objectives-kpis.md",
+        "hash": "4426588939912756621"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/08-location-custody-semantics.md",
+        "hash": "11488379920334645014"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/CHANGELOG.md",
+        "hash": "17837748253398966465"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/REVIEW-GUIDE.md",
+        "hash": "12830560999316269796"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/35-spec-008-reconciliacion-agenda.md",
+        "hash": "8330418536061796846"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/71-bootstrap-plan.md",
+        "hash": "3852288909092506611"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/index.md",
+        "hash": "220981989830864087"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/42-open-spec-questions.md",
+        "hash": "11951950419576325461"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/21-as-is-procedure-gaps.md",
+        "hash": "17881514700495280960"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/30-domain-validation-decisions.md",
+        "hash": "15707595411511639952"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/19-errors.md",
+        "hash": "12989999604187897328"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/17-domain-events-outbox.md",
+        "hash": "6727633945305077384"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/REVIEW-GUIDE.md",
+        "hash": "16393484276483306003"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/49-ci-pipeline.md",
+        "hash": "12173454914137526177"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/21-uc-014-confirmar-rearchivo.md",
+        "hash": "3531435196958238612"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/31-database-security.md",
+        "hash": "17116971684252810941"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/45-backup-security.md",
+        "hash": "12360797084724746820"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/08-preparation-model.md",
+        "hash": "8236821928701158873"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/23-migrations.md",
+        "hash": "12658301613345470432"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/30-command-bar.md",
+        "hash": "259131733401877773"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/REVIEW-GUIDE.md",
+        "hash": "9707059772160563958"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/04-ci.md",
+        "hash": "17925766903294219019"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/15-monitoring.md",
+        "hash": "16381233121681134250"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/README.md",
+        "hash": "11035102424283822734"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/07-codex-consumption-contract.md",
+        "hash": "17248438594974551501"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/47-secure-sdlc.md",
+        "hash": "17224267800565730693"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/28-notifications.md",
+        "hash": "10867366607058773605"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/27-first-feature.md",
+        "hash": "7661150722308229229"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/26-multi-tenancy-readiness.md",
+        "hash": "11869420230858858509"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/42-integration-tests.md",
+        "hash": "9567519015106636041"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/README.md",
+        "hash": "17283231412439806156"
+      },
+      {
+        "file": "CODEX-FIRST-TASK.md",
+        "hash": "12542462027076723132"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/12-demo.md",
+        "hash": "12251924764353250495"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/appendices/agentic-engineering-extension/README.md",
+        "hash": "14649705588363844001"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/CHANGELOG.md",
+        "hash": "5477314406008546869"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/REVIEW-GUIDE.md",
+        "hash": "7179543678608530164"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/03-control-plane-schema.md",
+        "hash": "12893777919228098483"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/appendices/agentic-engineering-extension/AGENTIC-ENGINEERING-MODEL.md",
+        "hash": "2937791565287490161"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/39-backup-engineering.md",
+        "hash": "472933736445488815"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/04-privacy-principles.md",
+        "hash": "4510371572739581867"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/16-search-model.md",
+        "hash": "10094879450910662726"
+      },
+      {
+        "file": "docs/sdb/Volume-10-Testing-Quality/06-api-contract-testing.md",
+        "hash": "933009670261409468"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/appendices/agentic-engineering-extension/INSTALL-INTO-BOOTSTRAP.md",
+        "hash": "12867619923448085821"
+      },
+      {
+        "file": ".env.example",
+        "hash": "13606895064090390139"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/22-backup-recovery.md",
+        "hash": "11485212060058453713"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/15-source-hierarchy.md",
+        "hash": "7402838339306780472"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/38-audit-integrity.md",
+        "hash": "1386968909502358672"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/31-capability-ui.md",
+        "hash": "6467996968009243590"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/27-data-quality.md",
+        "hash": "2059910837152527819"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/27-testing-architecture.md",
+        "hash": "1663216945560076374"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/37-global-navigation.md",
+        "hash": "12196055785236141973"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/07-traceability.md",
+        "hash": "5373327926304302790"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/31-open-questions.md",
+        "hash": "1774619993697809999"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/55-security-training.md",
+        "hash": "16642742127707393676"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/32-architecture-validation-decisions.md",
+        "hash": "14854181272586894905"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/CHANGELOG.md",
+        "hash": "3083212021527484783"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/15-wf-007-devolucion.md",
+        "hash": "7254283069959036962"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/29-workflow-to-spec-map.md",
+        "hash": "12832623790167249765"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/22-tenant-context.md",
+        "hash": "11760704484022872165"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/24-uc-017-gestionar-cita-tardia.md",
+        "hash": "2151298331136621281"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/40-rate-limiting.md",
+        "hash": "9244265844717173553"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/11-tenant-provisioning.md",
+        "hash": "5842016008399705696"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/22-patching.md",
+        "hash": "132162500980753150"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/08-domain-services.md",
+        "hash": "16708393844048017261"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/46-security-tests.md",
+        "hash": "10527209486798367418"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/10-commands.md",
+        "hash": "8933374354900541143"
+      },
+      {
+        "file": "docs/sdb/Volume-10-Testing-Quality/17-quality-gates.md",
+        "hash": "5056332978072178857"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/13-observability.md",
+        "hash": "3637143851515206709"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/11-data-architecture.md",
+        "hash": "11784440637548757065"
+      },
+      {
+        "file": "docs/agentic/02-handoff-protocol.md",
+        "hash": "11546917400380481121"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/22-to-be-business-policies.md",
+        "hash": "10280768091797170631"
+      },
+      {
+        "file": ".kiro/steering/testing.md",
+        "hash": "490133545640631263"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/64-security-validation-decisions.md",
+        "hash": "6851326580673690646"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/08-change-control.md",
+        "hash": "9130045477622019986"
+      },
+      {
+        "file": "tooling/openapi/validate.mjs",
+        "hash": "6182451010269567238"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/02-database-topology.md",
+        "hash": "9514085272053998915"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/CHANGELOG.md",
+        "hash": "17035732916301500506"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/23-agent-governance.md",
+        "hash": "10465437460841811831"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/30-definition-of-done-docs.md",
+        "hash": "10658598962635560885"
+      },
+      {
+        "file": "docs/sdb/Volume-10-Testing-Quality/16-traceability-testing.md",
+        "hash": "1556563982040543093"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/54-demo.md",
+        "hash": "4876343593370275077"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/06-definition-ready.md",
+        "hash": "8881904704135450968"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/18-simef-integration.md",
+        "hash": "8189250380798671136"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/29-conformance.md",
+        "hash": "13505430435456037710"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/44-e2e.md",
+        "hash": "9238687549218963135"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/09-module-template.md",
+        "hash": "14244310253406503838"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/29-security-headers.md",
+        "hash": "15731809067652219711"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/46-secure-configuration.md",
+        "hash": "2487769603977407950"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/27-dialogs.md",
+        "hash": "16764168670649318789"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/50-agenda-import.md",
+        "hash": "9581269457964414355"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/10-loan-rules.md",
+        "hash": "1225430343646190364"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/15-aggregate-prestamo.md",
+        "hash": "7710216942847125291"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/21-as-is-summary.md",
+        "hash": "6044851017261905335"
+      },
+      {
+        "file": "compose.yaml",
+        "hash": "1302516231455824222"
+      },
+      {
+        "file": "docs/decisions/ADR-0026-tanstack-query.md",
+        "hash": "1761922351140305588"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/01-business-context.md",
+        "hash": "9330648967520504949"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/01-architecture-drivers.md",
+        "hash": "16126607067497091838"
+      },
+      {
+        "file": ".gitignore",
+        "hash": "14098073045267340197"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/45-tenant-isolation-tests.md",
+        "hash": "8204108184022717492"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/05-logical-model.md",
+        "hash": "18218780711337334240"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/28-erd.md",
+        "hash": "16286851686282388324"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/16-audit-architecture.md",
+        "hash": "14572023894589448224"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/22-tables.md",
+        "hash": "15709625650566583004"
+      },
+      {
+        "file": ".vscode/extensions.json",
+        "hash": "8185772532866917814"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/22-soft-delete-policy.md",
+        "hash": "7159210423079786671"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/18-separation-duties.md",
+        "hash": "9584573982796227988"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/01-specification-model.md",
+        "hash": "8113647330982530733"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/10-uc-003-crear-solicitud.md",
+        "hash": "14132818678715756088"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/06-responsive.md",
+        "hash": "6139077486072854911"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/70-spec-drift.md",
+        "hash": "95502725381064285"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/13-presentation-layer.md",
+        "hash": "3553257031176475793"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/01-data-principles.md",
+        "hash": "9892363428158099767"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/25-input-validation.md",
+        "hash": "15822863590769682316"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/12-infrastructure-layer.md",
+        "hash": "6836103627975291460"
+      },
+      {
+        "file": "CONSOLIDATION-REPORT.json",
+        "hash": "303993034461728516"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/16-uc-009-transferir-custodia.md",
+        "hash": "7441504358109503867"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/24-business-invariants-candidates.md",
+        "hash": "6828172203486586800"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/28-open-questions.md",
+        "hash": "6381657239756492033"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/index.md",
+        "hash": "15055083745632129894"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/index.md",
+        "hash": "4296519379286865861"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/29-ddl-notes.md",
+        "hash": "16182207798765075075"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/24-product-principles.md",
+        "hash": "4903756430534546915"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/10-incidencia-model.md",
+        "hash": "2276935874900085220"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/24-navigation.md",
+        "hash": "17957789357367674877"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/33-forms.md",
+        "hash": "6975243728984176863"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/07-state-status-catalog.md",
+        "hash": "17865034268990165964"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/REVIEW-GUIDE.md",
+        "hash": "3473023367975615393"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/67-codex-guardrails.md",
+        "hash": "17688758252006253609"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/19-rpo-rto.md",
+        "hash": "6307763906204223606"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/50-vulnerability-management.md",
+        "hash": "13172284169273930174"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/02-environments.md",
+        "hash": "12463447022828051736"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/04-accessibility.md",
+        "hash": "13977495225121908141"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/26-evidence-register.md",
+        "hash": "2456525735134920593"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/04-event-storming-events.md",
+        "hash": "14547657950317257415"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/index.md",
+        "hash": "5616707492788096068"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/01-sdd.md",
+        "hash": "220248649615755856"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/58-open-questions.md",
+        "hash": "17239278165007546504"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/49-api-audit.md",
+        "hash": "15093605679706037972"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/38-spec-011-contingencia.md",
+        "hash": "6468593274513924861"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/50-cd-pipeline.md",
+        "hash": "1364803891778249466"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/02-event-storming-actors.md",
+        "hash": "13723628826386658863"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/71-exit-criteria.md",
+        "hash": "8913266306940636782"
+      },
+      {
+        "file": ".devin/playbooks/implement-approved-spec.devin.md",
+        "hash": "1849938531670574901"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/29-timeline.md",
+        "hash": "7482905585918237497"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/08-release.md",
+        "hash": "2046416213232825310"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/31-api-principles.md",
+        "hash": "14194242050777420529"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/23-command-event-matrix.md",
+        "hash": "10432685415891512612"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/12-multi-tenancy-architecture.md",
+        "hash": "8782967173583854907"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/index.md",
+        "hash": "7043218767695017739"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/04-tenant-schema-ownership.md",
+        "hash": "14172624215687368385"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/19-deployment.md",
+        "hash": "4054598971189717293"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/61-security-acceptance-gate.md",
+        "hash": "12070911422820654535"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/23-product-origin-alignment.md",
+        "hash": "5575373788663919889"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/75-open-questions.md",
+        "hash": "13444622953626057340"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/10-assumptions.md",
+        "hash": "14389650750557862207"
+      },
+      {
+        "file": "nx.json",
+        "hash": "5401353065015713473"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/69-architecture-compliance.md",
+        "hash": "9626454707137927789"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/22-uc-015-registrar-incidencia.md",
+        "hash": "14348957075076631450"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/59-error-recovery.md",
+        "hash": "13858230282647889820"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/25-operational-security.md",
+        "hash": "18229504381773226688"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/26-frontend-structure.md",
+        "hash": "8285327980369384082"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/59-metrics.md",
+        "hash": "6207562451474160718"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/24-configuration.md",
+        "hash": "9824550207671122970"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/63-runbooks.md",
+        "hash": "7673899375739651181"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/16-aggregate-jornada-preparacion.md",
+        "hash": "14490042948133503860"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/03-bounded-contexts.md",
+        "hash": "13652041937000358909"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/22-authentication-events.md",
+        "hash": "8963915731406136781"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/56-compatibility-policy.md",
+        "hash": "15741312099583810143"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/16-logging.md",
+        "hash": "6210312888057946802"
+      },
+      {
+        "file": "tests/tenant-isolation/tenant-isolation.test.ts",
+        "hash": "17644871914071249161"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/07-user-roles.md",
+        "hash": "17601950760239270610"
+      },
+      {
+        "file": "AGENTIC-ENGINEERING-MODEL.md",
+        "hash": "2937791565287490161"
+      },
+      {
+        "file": ".github/pull_request_template.md",
+        "hash": "7967462585566194872"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/47-api-agenda-imports.md",
+        "hash": "3244421341483603138"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/24-domain-vs-audit.md",
+        "hash": "16212903442858171987"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/46-api-incidencias.md",
+        "hash": "4400845250877255304"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/28-cors.md",
+        "hash": "18288440051836354135"
+      },
+      {
+        "file": "knowledge/guias/Guia de organización y manejo del expediente clinico.pdf",
+        "hash": "13388815541914348333"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/16-wf-008-rearchivo.md",
+        "hash": "5642732828908636373"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/27-traceability-matrix.md",
+        "hash": "7452306829527007424"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/34-api-authentication.md",
+        "hash": "14028335334250740168"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/53-administration.md",
+        "hash": "450880182173694966"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/01-principles.md",
+        "hash": "10819982689375560267"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/16-trust-boundaries.md",
+        "hash": "4563062937654518305"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/23-filters.md",
+        "hash": "16518204206340109986"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/19-traceability-strategy.md",
+        "hash": "10536102928769317993"
+      },
+      {
+        "file": "docs/sdb/Volume-10-Testing-Quality/19-quality-evidence.md",
+        "hash": "59784510462357187"
+      },
+      {
+        "file": "docs/decisions/ADR-0027-bff-oidc.md",
+        "hash": "15609848910006539694"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/README.md",
+        "hash": "3425249437646013357"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/19-concurrency.md",
+        "hash": "13976794829928962022"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/30-validation.md",
+        "hash": "11490370104433309355"
+      },
+      {
+        "file": ".devin/playbooks/fix-ci.devin.md",
+        "hash": "6017233803871801975"
+      },
+      {
+        "file": "docs/sdb-master/MASTER-INDEX.md",
+        "hash": "14104109146463584911"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/04-pull-requests.md",
+        "hash": "14671838626987634762"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/11-application-layer.md",
+        "hash": "2209298674428452167"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/68-acceptance-criteria.md",
+        "hash": "6894750934385951253"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/21-observability.md",
+        "hash": "13604301026451152893"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/09-open-questions.md",
+        "hash": "11244377873694246528"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/30-file-upload-security.md",
+        "hash": "4382537745431308671"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/10-rollback.md",
+        "hash": "285697416563398916"
+      },
+      {
+        "file": "INSTALL-INTO-BOOTSTRAP.md",
+        "hash": "12867619923448085821"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/13-uc-006-registrar-localizacion.md",
+        "hash": "7086399145047193262"
+      },
+      {
+        "file": ".editorconfig",
+        "hash": "6916398270338755385"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/03-business-actors.md",
+        "hash": "9628520547709152143"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/03-use-case-template.md",
+        "hash": "8752436695578377065"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/14-uc-007-registrar-no-localizado.md",
+        "hash": "765657549679107954"
+      },
+      {
+        "file": "docs/sdb-master/COVERAGE-GAP-ANALYSIS.md",
+        "hash": "2333471386867940687"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/41-dependency-security.md",
+        "hash": "7011274898293682130"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/56-access-reviews.md",
+        "hash": "16252136203174012676"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/63-privacy-ux.md",
+        "hash": "16556444560105191541"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/32-exit-criteria.md",
+        "hash": "14904922221570592876"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/05-c4-components.md",
+        "hash": "1038141459128507047"
+      },
+      {
+        "file": "tooling/docker/postgres-init/001-create-databases.sql",
+        "hash": "15745931118735554525"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/06-artifacts.md",
+        "hash": "18228577796116307314"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/28-production-readiness.md",
+        "hash": "3455892176580756743"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/38-tenant-provisioning.md",
+        "hash": "11601827131729252841"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/01-big-picture-event-storming.md",
+        "hash": "3570359134675063280"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/20-wf-012-contingencia.md",
+        "hash": "16935059929250108085"
+      },
+      {
+        "file": "docs/sdb/Volume-10-Testing-Quality/05-postgresql-integration.md",
+        "hash": "1196787172785165686"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/72-sprint0-technical.md",
+        "hash": "5280471113887397277"
+      },
+      {
+        "file": "docs/sdb/Volume-10-Testing-Quality/03-domain-testing.md",
+        "hash": "9784056509651896612"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/README.md",
+        "hash": "15984439287505633771"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/30-architecture-fitness-functions.md",
+        "hash": "11687765857324869069"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/29-codex-guardrails.md",
+        "hash": "3088240118004599483"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/11-movement-model.md",
+        "hash": "15597610687502199796"
+      },
+      {
+        "file": "knowledge/entrevistas/Analisis_Archivo_Clinico (2).docx",
+        "hash": "5260332915237112613"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/58-health-checks.md",
+        "hash": "791012465294572589"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/15-motion.md",
+        "hash": "13473362529777085174"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/07-purpose-limitation.md",
+        "hash": "10521128149980543653"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/55-artifact-policy.md",
+        "hash": "5024893614628949144"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/06-stakeholders.md",
+        "hash": "6223234269196357627"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/35-exit-criteria.md",
+        "hash": "4346807210962084701"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/57-bcp-security.md",
+        "hash": "8193226314614633637"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/67-testing.md",
+        "hash": "15037432098680004889"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/48-api-reporting.md",
+        "hash": "17079211982790925799"
+      },
+      {
+        "file": "docs/sdb/Volume-10-Testing-Quality/07-tenant-isolation-testing.md",
+        "hash": "16361882244646082562"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/61-tracing.md",
+        "hash": "322027122462189545"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/05-cd.md",
+        "hash": "18303747400361847894"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/REVIEW-GUIDE.md",
+        "hash": "9784543932736262641"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/16-data-visualization.md",
+        "hash": "2305188827206738396"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/CHANGELOG.md",
+        "hash": "12889388002785018336"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/15-unit-of-work.md",
+        "hash": "730351997630241076"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/34-spec-007-devolucion-rearchivo.md",
+        "hash": "17401215767648554612"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/16-evidence-model.md",
+        "hash": "9614172817621373900"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/04-scope.md",
+        "hash": "9806264906132871359"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/45-preparation.md",
+        "hash": "4511081016461721967"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/17-aggregate-incidencia.md",
+        "hash": "2848270370003141135"
+      },
+      {
+        "file": ".kiro/hooks/verify-spec-task.json",
+        "hash": "598157872854139342"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/32-api-resource-map.md",
+        "hash": "15424204591009331670"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/18-done.md",
+        "hash": "14202454541670976170"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/23-exception-matrix.md",
+        "hash": "16252114685016881251"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/README.md",
+        "hash": "10688326211276841836"
+      },
+      {
+        "file": "docs/sdb/Volume-01-Foundation/09-assumptions.md",
+        "hash": "4996365253539835095"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/01-domain-vision.md",
+        "hash": "17316552306124520548"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/28-spec-001-solicitud-demanda.md",
+        "hash": "2422611281078361398"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/06-business-rules-catalog.md",
+        "hash": "1813281468067237383"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/56-action-permission-matrix.md",
+        "hash": "13179904127843435293"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/14-repository-pattern.md",
+        "hash": "9450375647908787073"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/44-network-security.md",
+        "hash": "17933206597981195983"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/65-open-security-questions.md",
+        "hash": "2368804140947405827"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/21-retention.md",
+        "hash": "5076327704026906891"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/24-configuration-secrets.md",
+        "hash": "12720462232998589398"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/25-tabs.md",
+        "hash": "604421961173165281"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/09-migrations.md",
+        "hash": "1028441394088695980"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/12-architecture-map.md",
+        "hash": "209038990033705493"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/13-agenda-reconciliation.md",
+        "hash": "3805672049530247014"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/53-versioning.md",
+        "hash": "4957938235248766762"
+      },
+      {
+        "file": ".kiro/steering/tech.md",
+        "hash": "8329972743886185398"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/02-spec-lifecycle.md",
+        "hash": "5669996052328858777"
+      },
+      {
+        "file": "docs/sdb-master/EDITORIAL-ESTIMATE.md",
+        "hash": "8376390050844114321"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/README.md",
+        "hash": "10454134103363079552"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/CHANGELOG.md",
+        "hash": "15792691175159095920"
+      },
+      {
+        "file": "docs/sdb/Volume-10-Testing-Quality/01-quality-model.md",
+        "hash": "5238969884523098833"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/04-folder-standard.md",
+        "hash": "4185893297166806065"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/README.md",
+        "hash": "14287113764863955359"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/18-wf-010-cita-abierta-tardia.md",
+        "hash": "100992845615789379"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/22-devin.md",
+        "hash": "8003491035032936866"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/14-reporting-kpis.md",
+        "hash": "12121119240486583446"
+      },
+      {
+        "file": "docs/sdb/Volume-10-Testing-Quality/14-migration-testing.md",
+        "hash": "2442185743056096775"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/48-security-testing.md",
+        "hash": "3711618887046106512"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/59-secure-disposal.md",
+        "hash": "6597629533989382655"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/32-design-system-consumption.md",
+        "hash": "17884020344026757205"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/43-validation-decisions.md",
+        "hash": "16740928633668858050"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/17-rbac-contextual-access.md",
+        "hash": "8555898156914092378"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/05-code-ownership.md",
+        "hash": "6764150612418681546"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/CHANGELOG.md",
+        "hash": "9182177094292602317"
+      },
+      {
+        "file": "docs/sdb-master/MASTER-CATALOG.csv",
+        "hash": "8885026189661780370"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/13-aggregate-expediente.md",
+        "hash": "16809269312405769560"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/03-event-storming-commands.md",
+        "hash": "18123168183368103789"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/51-reports.md",
+        "hash": "8121248671777476336"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/19-concept-ubicacion.md",
+        "hash": "14993735476595524300"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/04-acceptance-criteria-standard.md",
+        "hash": "12759251422091532030"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/19-privileged-access.md",
+        "hash": "7938626869406553971"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/27-csrf.md",
+        "hash": "15614912693676983414"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/26-incidents.md",
+        "hash": "14322121597939765759"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/34-accessibility-engineering.md",
+        "hash": "12607028974906513452"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/16-transactions.md",
+        "hash": "11838738091962128010"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/16-test-map.md",
+        "hash": "11869753123689086062"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/26-workflow-metrics.md",
+        "hash": "3194163958626953197"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/11-domain-events.md",
+        "hash": "3434842833455033892"
+      },
+      {
+        "file": "docs/sdb/Volume-03-Domain-Driven-Design/20-concept-movimiento.md",
+        "hash": "4445090611321346062"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/10-wf-002-preparacion.md",
+        "hash": "14515044228025261562"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/03-data-classification.md",
+        "hash": "13551868235204266208"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/39-permission-action-matrix.md",
+        "hash": "10958636864435417435"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/48-test-data.md",
+        "hash": "3230614598020169178"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/05-request-taxonomy.md",
+        "hash": "9064098774659901596"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/08-privacy-roles.md",
+        "hash": "15847246935023302269"
+      },
+      {
+        "file": "docs/decisions/ADR-0028-domain-language.md",
+        "hash": "12966623697619412945"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/36-spec-009-consulta-expediente.md",
+        "hash": "18295445140234748026"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/18-inputs.md",
+        "hash": "15429728097072467592"
+      },
+      {
+        "file": "docs/sdb/Volume-10-Testing-Quality/15-backup-restore-testing.md",
+        "hash": "13561109074401454806"
+      },
+      {
+        "file": "docs/sdb/Volume-02-Business-Compliance/02-capability-map.md",
+        "hash": "13584729094400767088"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/26-security-architecture.md",
+        "hash": "989978139859525417"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/12-spacing-grid.md",
+        "hash": "17502077995521071625"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/40-spec-dependency-map.md",
+        "hash": "1473208649754578614"
+      },
+      {
+        "file": ".kiro/steering/security.md",
+        "hash": "2552454944175893431"
+      },
+      {
+        "file": "docs/sdb-master/SDB-STATUS.md",
+        "hash": "245477766273851680"
+      },
+      {
+        "file": "docs/sdb/Volume-04-Workflows-Event-Storming/05-event-storming-policies.md",
+        "hash": "10387606949529280502"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/66-reference-baseline.md",
+        "hash": "2770026692947483165"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/30-forms.md",
+        "hash": "15248806572640951146"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/31-spec-004-no-localizado-incidencias.md",
+        "hash": "15774624717906919362"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/54-security-monitoring.md",
+        "hash": "11122576730147967988"
+      },
+      {
+        "file": ".nvmrc",
+        "hash": "6929075154623388995"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/17-index-strategy.md",
+        "hash": "8968728766487007972"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/26-drawers.md",
+        "hash": "17438031766003863308"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/24-api-security.md",
+        "hash": "2168793576030174631"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/35-encryption.md",
+        "hash": "1051912065271893162"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/13-radius-elevation.md",
+        "hash": "15769918324701405462"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/60-concurrency-ux.md",
+        "hash": "10985201947788296930"
+      },
+      {
+        "file": "README.md",
+        "hash": "12245172954578907619"
+      },
+      {
+        "file": "docs/sdb/Volume-10-Testing-Quality/10-e2e-testing.md",
+        "hash": "2580074571333525659"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/76-exit-criteria.md",
+        "hash": "9296326043696631969"
+      },
+      {
+        "file": "docs/sdb/Volume-10-Testing-Quality/12-accessibility-testing.md",
+        "hash": "16625984804557937882"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/07-versioning.md",
+        "hash": "14305282140664935440"
+      },
+      {
+        "file": "docs/sdb/Volume-08-Data-API/REVIEW-GUIDE.md",
+        "hash": "715084529576681853"
+      },
+      {
+        "file": "docs/sdb/Volume-11-DevOps-Operations/24-capacity.md",
+        "hash": "59404997463118761"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/30-spec-003-busqueda-localizacion.md",
+        "hash": "9751906937443124159"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/08-backend-structure.md",
+        "hash": "6325435055939006444"
+      },
+      {
+        "file": "docs/sdb/Volume-06-Architecture-ADR/25-performance-scalability.md",
+        "hash": "4286828676249856909"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/57-api-ui-mapping.md",
+        "hash": "15990810309089052362"
+      },
+      {
+        "file": "docs/sdb/Volume-05-Use-Cases-SDD-Specifications/45-definition-of-done-feature.md",
+        "hash": "7744409733534891138"
+      },
+      {
+        "file": "docs/sdb/Volume-07-Security-Privacy/39-error-handling.md",
+        "hash": "7627244138095058314"
+      },
+      {
+        "file": "docs/sdb/Volume-12-OpenSpec-SpecBoot/21-kiro.md",
+        "hash": "2829246805525016441"
+      },
+      {
+        "file": "docs/agentic/05-ci-gates.md",
+        "hash": "2371940274796387050"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/27-feature-module.md",
+        "hash": "8714890841820675960"
+      },
+      {
+        "file": "docs/sdb/Volume-09-UI-UX/README.md",
+        "hash": "10135400022222189904"
+      },
+      {
+        "file": "docs/legacy/Volume-10-Implementation-Engineering-v0.1.0/62-alerts.md",
+        "hash": "16034777011834812108"
+      },
+      {
+        "file": "playwright.config.ts",
+        "hash": "16388029387389789269"
+      }
+    ],
+    "projectFileMap": {
+      "@sigac/api": [
+        {
+          "file": "apps/api/package.json",
+          "hash": "13677739620652349933",
+          "deps": [
+            "npm:tsx",
+            "npm:typescript",
+            "npm:vitest",
+            "npm:@types/node",
+            "npm:@nestjs/common",
+            "npm:@nestjs/core",
+            "npm:@nestjs/platform-express",
+            "@sigac/archive-operations",
+            "@sigac/tenant",
+            "@sigac/database",
+            "npm:reflect-metadata",
+            "npm:rxjs",
+            "npm:zod"
+          ]
+        },
+        {
+          "file": "apps/api/src/app.module.ts",
+          "hash": "9546083626129326139"
+        },
+        {
+          "file": "apps/api/src/health.controller.ts",
+          "hash": "12099495546091644568"
+        },
+        {
+          "file": "apps/api/src/main.ts",
+          "hash": "15039674073361667868"
+        },
+        {
+          "file": "apps/api/src/modules/expedientes.controller.ts",
+          "hash": "6586653891603166998"
+        },
+        {
+          "file": "apps/api/src/platform/auth/README.md",
+          "hash": "13519953119424546368"
+        },
+        {
+          "file": "apps/api/tsconfig.json",
+          "hash": "12554327700157026919"
+        }
+      ],
+      "@sigac/database": [
+        {
+          "file": "packages/platform/database/package.json",
+          "hash": "10411525054854703389",
+          "deps": [
+            "npm:@types/pg",
+            "npm:typescript",
+            "npm:vitest",
+            "npm:drizzle-orm",
+            "npm:pg"
+          ]
+        },
+        {
+          "file": "packages/platform/database/src/index.ts",
+          "hash": "17187237092949308253"
+        },
+        {
+          "file": "packages/platform/database/src/schema/tenant.ts",
+          "hash": "5720513979867753937"
+        },
+        {
+          "file": "packages/platform/database/tsconfig.json",
+          "hash": "17091007316187998725"
+        }
+      ],
+      "@sigac/domain-kernel": [
+        {
+          "file": "packages/domain-kernel/package.json",
+          "hash": "9157494851419470237",
+          "deps": [
+            "npm:typescript",
+            "npm:vitest"
+          ]
+        },
+        {
+          "file": "packages/domain-kernel/src/index.ts",
+          "hash": "10902949998370014984"
+        },
+        {
+          "file": "packages/domain-kernel/tsconfig.json",
+          "hash": "6807491086530945482"
+        }
+      ],
+      "@sigac/tenant": [
+        {
+          "file": "packages/platform/tenant/package.json",
+          "hash": "17066119508335145852",
+          "deps": [
+            "npm:typescript",
+            "npm:vitest"
+          ]
+        },
+        {
+          "file": "packages/platform/tenant/src/index.ts",
+          "hash": "3585902682935366401"
+        },
+        {
+          "file": "packages/platform/tenant/tsconfig.json",
+          "hash": "5695709683467230593"
+        }
+      ],
+      "@sigac/archive-operations": [
+        {
+          "file": "packages/modules/archive-operations/package.json",
+          "hash": "11703593386204231658",
+          "deps": [
+            "npm:typescript",
+            "npm:vitest",
+            "@sigac/domain-kernel"
+          ]
+        },
+        {
+          "file": "packages/modules/archive-operations/src/application/ExpedienteRepository.ts",
+          "hash": "1842181090481465329"
+        },
+        {
+          "file": "packages/modules/archive-operations/src/application/GetExpediente.ts",
+          "hash": "91412161561336946"
+        },
+        {
+          "file": "packages/modules/archive-operations/src/domain/Expediente.test.ts",
+          "hash": "18036426162170635113"
+        },
+        {
+          "file": "packages/modules/archive-operations/src/domain/Expediente.ts",
+          "hash": "12132773875918722227"
+        },
+        {
+          "file": "packages/modules/archive-operations/src/index.ts",
+          "hash": "8437181079844287371"
+        },
+        {
+          "file": "packages/modules/archive-operations/tsconfig.json",
+          "hash": "15763983297340264374"
+        }
+      ],
+      "@sigac/worker": [
+        {
+          "file": "apps/worker/package.json",
+          "hash": "12054418872731985667",
+          "deps": [
+            "npm:tsx",
+            "npm:typescript",
+            "npm:vitest",
+            "npm:@types/node",
+            "npm:@nestjs/common",
+            "npm:@nestjs/core",
+            "npm:reflect-metadata",
+            "npm:rxjs"
+          ]
+        },
+        {
+          "file": "apps/worker/src/main.ts",
+          "hash": "12817934419528617367"
+        },
+        {
+          "file": "apps/worker/tsconfig.json",
+          "hash": "3828308186008055768"
+        }
+      ],
+      "@sigac/requests": [
+        {
+          "file": "packages/modules/requests/package.json",
+          "hash": "3579248174711066024",
+          "deps": [
+            "npm:typescript",
+            "npm:vitest"
+          ]
+        },
+        {
+          "file": "packages/modules/requests/src/index.ts",
+          "hash": "18224808847383264809"
+        },
+        {
+          "file": "packages/modules/requests/tsconfig.json",
+          "hash": "17961011041091166186"
+        }
+      ],
+      "@sigac/web": [
+        {
+          "file": "apps/web/index.html",
+          "hash": "5776306688562603481"
+        },
+        {
+          "file": "apps/web/package.json",
+          "hash": "5662293043517164720",
+          "deps": [
+            "npm:@types/react",
+            "npm:@types/react-dom",
+            "npm:@vitejs/plugin-react",
+            "npm:typescript",
+            "npm:vite",
+            "npm:vitest",
+            "npm:@tanstack/react-query",
+            "npm:react",
+            "npm:react-dom",
+            "npm:react-hook-form",
+            "npm:zod"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/App.tsx",
+          "hash": "18004876018832392503"
+        },
+        {
+          "file": "apps/web/src/main.tsx",
+          "hash": "14571167193812958891"
+        },
+        {
+          "file": "apps/web/src/styles/global.css",
+          "hash": "7582022626670603270"
+        },
+        {
+          "file": "apps/web/src/styles/tokens.css",
+          "hash": "2373624261379765871"
+        },
+        {
+          "file": "apps/web/tsconfig.json",
+          "hash": "8946230327264172944"
+        },
+        {
+          "file": "apps/web/tsconfig.tsbuildinfo",
+          "hash": "17088443867055800194"
+        },
+        {
+          "file": "apps/web/vite.config.ts",
+          "hash": "21485754775923564"
+        }
+      ]
+    }
+  },
+  "externalNodesHash": "14169519471769373730"
+}

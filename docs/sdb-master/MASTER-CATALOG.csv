@@ -1,0 +1,13 @@
+volume,name,folder,raw_file_count,target_docs,target_pages,status
+I,Foundation,Volume-01-Foundation,34,25,120,Draft
+II,Business & Compliance,Volume-02-Business-Compliance,33,30,180,Draft
+III,Domain-Driven Design,Volume-03-Domain-Driven-Design,34,40,250,Draft
+IV,Workflows & Event Storming,Volume-04-Workflows-Event-Storming,36,35,220,Draft
+V,Use Cases & SDD Specifications,Volume-05-Use-Cases-SDD-Specifications,50,30,220,Draft
+VI,Architecture & ADR,Volume-06-Architecture-ADR,39,40,300,Draft
+VII,Security & Privacy,Volume-07-Security-Privacy,71,20,120,Draft
+VIII,Data & API,Volume-08-Data-API,64,30,250,Draft
+IX,UI/UX,Volume-09-UI-UX,75,30,220,Draft
+X,Testing & Quality,Volume-10-Testing-Quality,23,20,140,Draft
+XI,DevOps & Operations,Volume-11-DevOps-Operations,31,20,120,Draft
+XII,OpenSpec / SpecBoot,Volume-12-OpenSpec-SpecBoot,36,30,220,Draft

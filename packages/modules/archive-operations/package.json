@@ -1,0 +1,22 @@
+{
+  "name": "@sigac/archive-operations",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@sigac/domain-kernel": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "latest",
+    "vitest": "4.1.10"
+  }
+}

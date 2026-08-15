@@ -1,0 +1,36 @@
+{
+  "artifact": "SIGAC Unified Repository",
+  "version": "0.2.0",
+  "pnpm": "11.21.0",
+  "node_engine": ">=24 <25",
+  "total_files": 724,
+  "canonical_sdb_volumes": 12,
+  "volume_file_counts": {
+    "Volume-01-Foundation": 34,
+    "Volume-02-Business-Compliance": 33,
+    "Volume-03-Domain-Driven-Design": 34,
+    "Volume-04-Workflows-Event-Storming": 36,
+    "Volume-05-Use-Cases-SDD-Specifications": 50,
+    "Volume-06-Architecture-ADR": 39,
+    "Volume-07-Security-Privacy": 71,
+    "Volume-08-Data-API": 64,
+    "Volume-09-UI-UX": 75,
+    "Volume-10-Testing-Quality": 23,
+    "Volume-11-DevOps-Operations": 31,
+    "Volume-12-OpenSpec-SpecBoot": 36
+  },
+  "sources_included": [
+    "NOM-004-SSA3-2012.pdf",
+    "Ley-General-de-Archivos.pdf",
+    "Guia de organización y manejo del expediente clinico.pdf",
+    "Analisis_Archivo_Clinico (2).docx",
+    "CONSIDERACIONES.txt"
+  ],
+  "merge_precedence": [
+    "Bootstrap executable base",
+    "Agentic configuration/governance overlay",
+    "SDB Master canonical documentation",
+    "Root specs promoted from Volume V",
+    "Original evidence copied to knowledge/"
+  ]
+}

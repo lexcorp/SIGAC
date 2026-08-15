@@ -1,0 +1,9 @@
+packages:
+  - apps/*
+  - packages/*
+  - packages/modules/*
+  - packages/platform/*
+  - packages/integrations/*
+allowBuilds:
+  esbuild: true
+  nx: true

@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "verify-typescript",
+      "trigger": "PostFileSave",
+      "matcher": ".*\\.(ts|tsx)$",
+      "action": {
+        "type": "command",
+        "command": "pnpm typecheck"
+      },
+      "timeout": 120,
+      "enabled": false
+    }
+  ]
+}

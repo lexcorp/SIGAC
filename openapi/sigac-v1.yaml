@@ -1,0 +1,44 @@
+openapi: 3.1.0
+info:
+  title: SIGAC API
+  version: 0.1.0
+servers:
+  - url: /api/v1
+paths:
+  /health:
+    get:
+      security: []
+      responses:
+        '200':
+          description: API health
+  /expedientes/{id}:
+    get:
+      operationId: getExpediente
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Operational expediente view
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expediente'
+        '404':
+          description: Not found
+components:
+  schemas:
+    Expediente:
+      type: object
+      required: [id, expedienteNumero, estadoOperativo, rowVersion]
+      properties:
+        id: { type: string, format: uuid }
+        expedienteNumero: { type: string }
+        pacienteRef: { type: [string, 'null'] }
+        pacienteNombre: { type: [string, 'null'] }
+        estadoOperativo: { type: string }
+        ubicacionActualId: { type: [string, 'null'], format: uuid }
+        custodioRef: { type: [string, 'null'] }
+        rowVersion: { type: integer }

@@ -1,0 +1,2 @@
+source_id,business_rule_id,workflow_id,use_case_id,spec_id,acceptance_criterion_id,domain_element,api_operation,ui_screen,test_id,adr_id,status
+,,,,,,,,,,,Draft

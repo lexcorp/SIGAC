@@ -1,0 +1,21 @@
+---
+project: SIGAC
+sdb_volume: "08 - Data & API"
+version: "0.1.0"
+status: "Draft for data/API validation"
+date: "2026-08-13"
+architecture:
+  database: PostgreSQL
+  api: REST/OpenAPI
+  tenancy: database-per-tenant
+---
+# DAT-026 — Data Security
+
+- application DB role least privilege;
+- migration role separate;
+- backup role separate;
+- no cross-tenant DB credentials exposed to browser;
+- connection selection server-side;
+- sensitive fields not copied into logs;
+- exports permission-controlled;
+- DEMO never receives production rows.

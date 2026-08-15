@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "verify-spec-task",
+      "trigger": "PostTaskExec",
+      "action": {
+        "type": "command",
+        "command": "pnpm verify"
+      },
+      "timeout": 300,
+      "enabled": false
+    }
+  ]
+}
