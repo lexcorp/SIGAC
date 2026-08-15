@@ -2,7 +2,7 @@
 
 **Estado:** APPROVED  
 **Fecha:** 2026-08-15  
-**Scope:** Expediente Workspace v0.3.22 / pre-T-22
+**Scope:** Expediente Workspace v0.3.23 / pre-T-22
 
 ## AUDIT-UX-EW-001 — Permission de Auditoría
 
@@ -69,6 +69,13 @@ Security/Audit tenant-local. Filtra exclusivamente `resource_type = EXPEDIENTE` 
 paginación es cursor-based, el cursor es opaco para API/UI y no se devuelve `total`.
 El summary excluye `changeSummary`, `securityContext` y metadata interna. Audit continúa
 separado de `MovimientoExpediente`.
+
+## AUD-PAGE-EW-001/002 — Orden y cursor de Audit
+
+El orden canónico y determinista es `occurredAt DESC, auditId DESC`; `auditId` es el
+desempate estable. El cursor representa conceptualmente `occurredAt + auditId` y su
+encoding es opaco. Application, API y frontend no interpretan ni construyen el cursor:
+sólo lo reciben y reenvían. La respuesta permanece `{items,nextCursor}`, sin total.
 
 ## AUDIT-UX-EW-004 — API
 
@@ -152,6 +159,34 @@ amplía `AuditWriter`.
 
 `LOCATION-PERMISSION-GAP` queda CLOSED.
 
+## AUTH-UI-EW-001..005 — Autorización de sesión para frontend
+
+La frontera server-side expone un read model derivado exclusivamente del actor ya
+autenticado:
+
+```typescript
+interface SessionAuthorizationReadModel {
+  readonly actorId: string;
+  readonly permissions: readonly Permission[];
+}
+```
+
+El Use Case Application `GetSessionAuthorization` recibe `{context: RequestContext}` y
+retorna ese read model. Sólo proyecta `context.actor.actorId` y las permissions ya
+resueltas; el controller no interpreta claims ni construye autorización.
+
+GET `/api/v1/session` requiere autenticación y no exige una permission adicional para
+consultar la propia autorización. Sin autenticación responde
+`AUTHENTICATION_REQUIRED`/401. El `RequestContext` ya resuelto es su única fuente; el
+endpoint no selecciona tenant ni expone roles, tenantIds, databaseName, connection
+strings, claims OIDC, tokens/cookies o capabilities.
+
+`permissions != capabilities`: permissions expresan autorización general del actor y
+capabilities acciones contextuales del Expediente actual. `EXPEDIENT_AUDIT_VIEW` nunca
+se agrega a capabilities. El frontend consume el read model sin calcular permissions ni
+derivarlas de roles. El tab Auditoría es visible únicamente cuando
+`permissions.includes('EXPEDIENT_AUDIT_VIEW')`; ausencia implica fail-closed.
+
 ## E2E-EW-001 — Flujo operativo
 
 El escenario E2E canónico es búsqueda → selección/apertura → Dispatch dialog → 204 →
@@ -164,4 +199,4 @@ oculta y no hace request.
 
 Se introduce `T-21A` antes de T-22. Implementa permission/config de Auditoría,
 GetExpedienteAudit/port/adapter/API/OpenAPI, ListUbicaciones/API/OpenAPI con
-`LOCATION_VIEW`, ambos diálogos y sus tests. T-22 depende de T-21A.
+`LOCATION_VIEW`, GET `/api/v1/session`, ambos diálogos y sus tests. T-22 depende de T-21A.

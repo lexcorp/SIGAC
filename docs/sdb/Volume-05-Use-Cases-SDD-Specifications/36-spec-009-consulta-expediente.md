@@ -129,8 +129,14 @@ FR-VIEW-015 El tab Auditoría requiere `EXPEDIENT_AUDIT_VIEW`, fuera de capabili
 `GetExpedienteAudit` devuelve una página cursor-based sanitizada de `audit_log` filtrada
 por `EXPEDIENTE/expedienteId`; no expone changeSummary/securityContext ni mezcla
 Movimiento. Sin permission queda fail-closed; recurso fuera del tenant produce 404.
+El orden es `occurredAt DESC, auditId DESC`; el cursor representa ambos valores y es
+opaco para Application/API/UI.
 
 FR-VIEW-016 Dispatch y AcceptCustody usan diálogos con los campos exactos de sus
 commands. `expectedRowVersion` procede del Workspace y los metadatos server-side no son
 inputs. Ubicaciones se seleccionan desde `ListUbicaciones`, autorizado por
 `LOCATION_VIEW` antes de consultar el catálogo tenant-scoped. No es capability.
+
+FR-VIEW-017 La UI obtiene permissions exclusivamente desde GET `/api/v1/session`.
+`EXPEDIENT_AUDIT_VIEW` controla la visibilidad fail-closed de Auditoría sin incorporarse
+a capabilities ni derivarse de roles.

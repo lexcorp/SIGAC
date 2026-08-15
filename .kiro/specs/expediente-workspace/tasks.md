@@ -1,11 +1,11 @@
 ---
 spec: expediente-workspace
-version: "0.3.22"
+version: "0.3.23"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 requires:
-  - requirements.md (v0.3.22)
-  - design.md (v0.3.22)
+  - requirements.md (v0.3.23)
+  - design.md (v0.3.23)
 decisions_applied:
   - "OQ-EW-001 RESOLVED"
   - "OQ-EW-005 RESOLVED"
@@ -38,6 +38,8 @@ decisions_applied:
   - "EXPEDIENT-AUDIT-AND-COMMAND-UX-DECISION APPROVED"
   - "OQ-EW-003 RESOLVED"
   - "LOC-AUTH-001..010 APPROVED; LOCATION-PERMISSION-GAP CLOSED"
+  - "AUD-PAGE-EW-001/002 APPROVED"
+  - "AUTH-UI-EW-001..005 APPROVED"
 ready_gate: "READY-GATE.md — todos los ítems deben estar marcados antes de iniciar T-01"
 done_gate: "OS-018 — spec + tests + API/migrations + auth/tenant/audit + traceability"
 ---
@@ -75,7 +77,7 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
 ## Grupo 0 — Trazabilidad
 
 ### T-00 Completar traceability.md
-- **Descripción:** Verificar que traceability.md v0.3.22 tiene cadenas completas
+- **Descripción:** Verificar que traceability.md v0.3.23 tiene cadenas completas
   para todas las capacidades. Confirmar que GAP-002, GAP-003, GAP-007 están cerrados
   y que no quedan eslabones PENDIENTE en BR, UC o SPEC para las decisiones resueltas.
 - **Criterio de done:** Ningún REQ-EW-* sin cadena completa; matrices actualizadas.
@@ -640,10 +642,15 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
   - Permission/configuración `EXPEDIENT_AUDIT_VIEW`; no es capability.
   - `GetExpedienteAudit` y `ExpedienteAuditQueryPort` tenant-scoped, cursor-based,
     con comprobación previa de permission y existencia del Expediente.
+  - Orden Audit `occurredAt DESC, auditId DESC`; cursor conceptual
+    `occurredAt + auditId`, opaco y sólo reenviado por capas consumidoras.
   - Adapter PostgreSQL de consulta exclusiva de `audit_log` por
     `resource_type=EXPEDIENTE` y `resource_id=expedienteId`.
   - `GET /api/v1/expedientes/{id}/audit`, response sanitizada
     `{ items, nextCursor }`, sin `changeSummary`, `securityContext` ni total.
+  - `GetSessionAuthorization`, GET `/api/v1/session` y
+    `SessionAuthorizationReadModel {actorId,permissions}`;
+    autenticación obligatoria, sin permission adicional, roles/tenantIds/capabilities.
   - `ListUbicaciones` con input `{context}`, `LOCATION_VIEW` antes del query y
     `UbicacionesQueryPort.findAll(context.tenant)`; GET `/api/v1/ubicaciones` responde
     `{items}` con shape exacto `id`, `codigo`, `descripcion`, sin paginación.
@@ -652,7 +659,9 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
   - Tras success 204, refrescar el Workspace. No enviar actor, tenant, timestamps ni tracing.
 - **Tests requeridos:**
   - Audit: permission denied, tenant-scoped not-found, página vacía/no vacía,
-    cursor opaco y sanitización estricta.
+    orden determinista, cursor opaco occurredAt+auditId y sanitización estricta.
+  - Sesión: 401, actorId/permissions exactos y ausencia de roles, tenantIds, claims y
+    capabilities; frontend no inspecciona roles.
   - Ubicaciones: `LOCATION_VIEW`, autorización antes de query, 401/403, vacío 200
     `{items:[]}`, shape exacto y tenant routing; sin audit identifier nuevo.
   - Dialogs: apertura sólo por capability, payload editable completo, rowVersion no
@@ -747,7 +756,7 @@ T-23 (CI pipeline) <- todas
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.22"
+spec_version: "0.3.23"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

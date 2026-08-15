@@ -24,5 +24,9 @@ Use Case. OpenAPI no declara unicidad del número.
 
 La extensión pre-T-22 verifica GET `/expedientes/{id}/audit`, cursor opaco,
 `items/nextCursor`, ausencia de total/changeSummary/securityContext y 401/403/404.
+Debe comprobar el orden determinista de Audit y que el cursor se trata como opaco.
 GET `/ubicaciones` exige 401/403 canónicos, responde `{items}` sin paginación y retorna
 200 `{items:[]}` para catálogo vacío. Su OpenAPI se implementa en T-21A.
+
+GET `/session` responde 401 sin autenticación y, con RequestContext válido, únicamente
+actorId/permissions. El contrato excluye roles, tenantIds, claims y capabilities.

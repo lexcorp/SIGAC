@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.22"
+version: "0.3.23"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 traceability_model: "OS-007 / SDD-006"
@@ -37,10 +37,12 @@ decisions_applied:
   - "EXPEDIENT-AUDIT-AND-COMMAND-UX-DECISION APPROVED"
   - "OQ-EW-003 RESOLVED"
   - "LOC-AUTH-001..010 APPROVED; LOCATION-PERMISSION-GAP CLOSED"
+  - "AUD-PAGE-EW-001/002 APPROVED"
+  - "AUTH-UI-EW-001..005 APPROVED"
 requires:
-  - requirements.md (v0.3.22)
-  - design.md (v0.3.22)
-  - tasks.md (v0.3.22)
+  - requirements.md (v0.3.23)
+  - design.md (v0.3.23)
+  - tasks.md (v0.3.23)
 ---
 
 # Expediente Workspace — Traceability
@@ -279,7 +281,7 @@ requires:
 |---------|-----------|---------|
 | **Source / SDB** | SEC-017, SEC-038, DAT-012, EXPEDIENT-AUDIT-AND-COMMAND-UX-DECISION | Audit separado de Movimiento y proyección de lectura sanitizada |
 | **Business Rule** | `EXPEDIENT_AUDIT_VIEW`; fail-closed sin permission | No es capability; `EXPEDIENT_VIEW` no autoriza el tab Auditoría |
-| **Use Case** | GetExpedienteAudit | RequestContext, existencia tenant-scoped y cursor opaco |
+| **Use Case** | GetExpedienteAudit | RequestContext, existencia tenant-scoped y cursor occurredAt+auditId opaco |
 | **REQ** | REQ-EW-013, REQ-EW-018 | Read model sin changeSummary/securityContext |
 | **API** | GET /api/v1/expedientes/{id}/audit | `{ items, nextCursor }`, sin total |
 | **UI** | AuditoriaTab | Oculto sin permission; visible y consultable con permission |
@@ -295,9 +297,22 @@ requires:
 | **Business Rule** | `LOCATION_VIEW`; LOC-AUTH-001..010 | Permission específica, no capability; autorización antes del query |
 | **Use Case** | ListUbicaciones / UbicacionesQueryPort | RequestContext; TenantContext; salida exacta id/codigo/descripcion, sin paginación |
 | **REQ** | REQ-EW-019, REQ-EW-020 | Selector de ubicación y dialogs Dispatch/AcceptCustody |
-| **API** | GET /api/v1/ubicaciones | Pendiente de cierre del gap; no expone campos adicionales |
+| **API** | GET /api/v1/ubicaciones | `LOCATION_VIEW`; `{items}`; no expone campos adicionales |
 | **UI** | DispatchExpedienteDialog, AcceptCustodyDialog | Capability-driven; rowVersion del Workspace, no editable |
 | **Test** | T-21A/T-22 | Payload explícito, 204+refresh y flujo EN_TRASLADO->EN_CONSULTA |
+
+---
+
+### TR-018 — Autorización de sesión para frontend
+
+| Eslabón | Referencia | Detalle |
+|---------|-----------|---------|
+| **Source / SDB** | HTTP-EW-001, SEC-017, AUTH-UI-EW-001..005 | RequestContext autenticado proyecta permissions server-derived |
+| **Business Rule** | Permission != capability; fail-closed | UI no deriva permissions desde roles |
+| **REQ** | REQ-EW-021 | actorId + permissions únicamente |
+| **Use Case/API** | GetSessionAuthorization / GET /api/v1/session | 401 sin autenticación; no selecciona/exhibe tenant |
+| **UI** | Session authorization model | EXPEDIENT_AUDIT_VIEW controla tab Auditoría |
+| **Test** | T-21A/T-22 | 401, shape exacto, exclusiones y visibilidad sin roles |
 
 ---
 
@@ -325,6 +340,7 @@ requires:
 | REQ-EW-018 | TR-004, TR-005, TR-017 | Cubierto documentalmente; implementación T-21A |
 | REQ-EW-019 | TR-016 | Cubierto documentalmente; implementación T-21A |
 | REQ-EW-020 | TR-017 | Cubierto — LOCATION-PERMISSION-GAP CLOSED |
+| REQ-EW-021 | TR-018 | Cubierto documentalmente; implementación T-21A |
 | NFR-EW-001 | TR-001 | [PENDIENTE SLA en UAT] |
 | NFR-EW-002 | TR-009, TR-006 | Cubierto |
 | NFR-EW-003 | TR-012 | Cubierto |
@@ -414,13 +430,14 @@ requires:
 | 0.3.20 | 2026-08-15 | SEARCH-EW-001..010 aprobadas: Use Case SearchExpedientesByNumero, summary 0..N, audit, endpoint `{items}`, validación, UX y T-12A formalizados. |
 | 0.3.21 | 2026-08-15 | OQ-EW-003 resuelta con `EXPEDIENT_AUDIT_VIEW`; GetExpedienteAudit, read model sanitizado, dialogs de comandos, ListUbicaciones y T-21A formalizados. LOCATION-PERMISSION-GAP queda bloqueante. |
 | 0.3.22 | 2026-08-15 | LOC-AUTH-001..010 aprobadas: `LOCATION_VIEW`, ListUbicaciones/UbicacionesQueryPort, `{items}`, tenant y 401/403/empty definidos. LOCATION-PERMISSION-GAP cerrado. |
+| 0.3.23 | 2026-08-15 | AUD-PAGE-EW-001/002 y AUTH-UI-EW-001..005 aprobadas: orden/cursor Audit y GET `/session` con permissions server-derived cierran los bloqueos restantes de T-21A. |
 
 ---
 
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.22"
+spec_version: "0.3.23"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

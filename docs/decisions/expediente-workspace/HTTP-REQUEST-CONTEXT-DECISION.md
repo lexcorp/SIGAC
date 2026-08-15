@@ -1,7 +1,7 @@
 # HTTP Request Context and API Boundary Decision
 
 Status: **APPROVED**
-Scope: Expediente Workspace v0.3.18
+Scope: Expediente Workspace v0.3.23
 
 ## HTTP-EW-001 — Authenticated Request Context
 
@@ -88,3 +88,18 @@ módulo configurable requerido por T-11. No alteran el contrato de RequestContex
 `EXPEDIENT-SEARCH-DECISION.md` añade el Use Case y endpoint de búsqueda sin alterar la
 resolución server-side de RequestContext. `numero` es dato funcional de búsqueda; nunca
 selecciona tenant, actor ni conexión.
+
+## Extensión v0.3.23 — Session authorization read model
+
+GET `/api/v1/session` proyecta desde el `RequestContext` autenticado exclusivamente
+`{ actorId, permissions }`. No requiere permission adicional; request no autenticada
+produce `AUTHENTICATION_REQUIRED`/401. No acepta selección de tenant y no expone roles,
+tenantIds, configuración de database, claims OIDC, tokens/cookies ni capabilities.
+
+El endpoint invoca el Use Case mínimo `GetSessionAuthorization`, cuyo input es
+`{context: RequestContext}`. Así el controller conserva API-EW-021 y no interpreta
+claims ni accede a infraestructura de autorización directamente.
+
+El frontend usa estas permissions server-derived únicamente para presentación
+fail-closed. No las calcula ni deriva de roles. Las capabilities contextuales del
+Expediente conservan un contrato separado.

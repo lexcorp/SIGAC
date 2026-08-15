@@ -33,3 +33,7 @@ no la deriva de roles. OQ-EW-003 queda RESOLVED.
 `LOCATION_VIEW` autoriza exclusivamente `ListUbicaciones` y GET
 `/api/v1/ubicaciones`. Es distinta de `EXPEDIENT_VIEW`, `EXPEDIENT_AUDIT_VIEW` y
 `ADMIN_CONFIGURE`, no es capability y se evalúa server-side antes del query tenant-scoped.
+
+GET `/api/v1/session` es el boundary canónico para que frontend reciba permissions ya
+resueltas. No autoriza operaciones por sí mismo ni mezcla permissions generales con
+capabilities contextuales. La UI no inspecciona roles.

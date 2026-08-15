@@ -203,6 +203,9 @@ Cada item contiene sólo auditId, action, result canónico, actorRef, occurredAt
 requestId y correlationId. No expone changeSummary/securityContext. El endpoint es
 `GET /api/v1/expedientes/{id}/audit`; Audit permanece separado de Movimiento.
 
+El orden de Audit es `occurredAt DESC, auditId DESC`. El cursor opaco representa ambos
+valores y ninguna capa consumidora interpreta o construye su encoding.
+
 Dispatch/AcceptCustody se capturan en diálogos sólo cuando su capability existe.
 `expectedRowVersion` procede del Workspace y no es editable; actor, tenant, timestamps
 y tracing nunca proceden del formulario.
@@ -213,3 +216,9 @@ y tracing nunca proceden del formulario.
 de consultar y consume `UbicacionesQueryPort.findAll(context.tenant)`. Retorna
 `readonly UbicacionOption[]`, limitado a `id`, `codigo`, `descripcion`. Catálogo vacío
 es success con `[]`; no existe not-found. `LOCATION_VIEW` no es capability.
+
+## Extensión v0.3.23 — autorización de sesión
+
+GET `/api/v1/session` proyecta `{actorId, permissions}` desde el RequestContext
+autenticado mediante `GetSessionAuthorization`. No requiere permission adicional y no expone roles, tenantIds, claims,
+capabilities ni configuración técnica. Sin autenticación responde 401.

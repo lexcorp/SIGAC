@@ -188,3 +188,5 @@ EXPEDIENT-SEARCH-DECISION SEARCH-EW-001..010.
 `{items,nextCursor}` sin total. El cursor es opaco. Items exponen sólo auditId, action,
 result, actorRef, occurredAt, source, requestId y correlationId. No exponen
 changeSummary/securityContext. 401/403/404 conservan la taxonomía no divulgativa.
+El orden determinista es `occurredAt DESC, auditId DESC`; el cursor opaco representa
+ambos valores y el cliente sólo lo reenvía.

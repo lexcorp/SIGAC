@@ -61,3 +61,7 @@ GetExpedienteAudit/ExpedienteAuditQueryPort/API sanitizada y los dos diálogos q
 definidos. v0.3.22 aprueba `LOCATION_VIEW` para `ListUbicaciones`, separada de
 `EXPEDIENT_VIEW`, `EXPEDIENT_AUDIT_VIEW` y `ADMIN_CONFIGURE`.
 LOCATION-PERMISSION-GAP queda CLOSED; T-21A/T-22 no conservan bloqueos conocidos.
+
+v0.3.23 fija Audit `occurredAt DESC, auditId DESC`, cursor conceptual
+`occurredAt + auditId`, y GET `/api/v1/session` como fuente server-derived de
+permissions para frontend. Los dos bloqueos restantes de T-21A quedan cerrados.

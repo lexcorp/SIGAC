@@ -87,6 +87,8 @@ Para `GetExpedienteAudit`, cubrir permission antes de queries, existencia tenant
 404 no divulgativo, cursor/limit/TenantContext, página vacía/no vacía y summary exacto
 sin changeSummary/securityContext. Audit y Movimiento permanecen separados.
 `EXPEDIENT_AUDIT_VIEW` nunca aparece en capabilities.
+Verificar orden `occurredAt DESC, auditId DESC`, desempate estable y cursor conceptual
+`occurredAt + auditId` sin interpretación fuera del adapter.
 
 Los tests de `ListUbicaciones` cubren autorización `LOCATION_VIEW` antes del query,
 403 sin permission, propagación exclusiva de `context.tenant`, catálogo vacío `[]` y

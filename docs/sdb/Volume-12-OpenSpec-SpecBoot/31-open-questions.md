@@ -35,6 +35,10 @@ quedan definidos.
 `ListUbicaciones` / GET `/api/v1/ubicaciones`. No se extiende `EXPEDIENT_VIEW` ni
 `ADMIN_CONFIGURE`, y `LOCATION_VIEW` no es capability.
 
+v0.3.23 cierra los bloqueos restantes de T-21A: Audit ordena
+`occurredAt DESC, auditId DESC` con cursor conceptual `occurredAt + auditId`; frontend
+recibe permissions desde GET `/api/v1/session` sin roles, tenantIds ni capabilities.
+
 ## Read model composition de T-05 (2026-08-15)
 
 `OQ-EW-DESIGN-004` está RESOLVED a favor de un endpoint/read model agregado compuesto

@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.22"
+version: "0.3.23"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -44,6 +44,8 @@ decisions_applied:
   - "EXPEDIENT-AUDIT-AND-COMMAND-UX-DECISION APPROVED"
   - "OQ-EW-003 RESOLVED — EXPEDIENT_AUDIT_VIEW"
   - "LOC-AUTH-001..010 APPROVED; LOCATION-PERMISSION-GAP CLOSED"
+  - "AUD-PAGE-EW-001/002 APPROVED"
+  - "AUTH-UI-EW-001..005 APPROVED"
 ---
 
 # Expediente Workspace — Requirements
@@ -350,6 +352,8 @@ operativos; `EXPEDIENT_VIEW` no es una capability.
   `EXPEDIENT_AUDIT_VIEW`, comprueba existencia tenant-scoped y usa
   `ExpedienteAuditQueryPort`. Responde `{items,nextCursor}`, sin total y cursor opaco.
 - Falta de permission usa 403; ausencia/cross-tenant usa 404 no divulgativo.
+- Orden determinista `occurredAt DESC, auditId DESC`; cursor conceptual
+  `occurredAt + auditId`, opaco para Application/API/frontend; sin total.
 
 ### REQ-EW-020 — Catálogo de ubicaciones para comandos
 - `ListUbicaciones` retorna únicamente id/codigo/descripcion desde `ubicaciones`, sin
@@ -359,6 +363,18 @@ operativos; `EXPEDIENT_VIEW` no es una capability.
 - Sin autenticación: 401; sin permission: 403; catálogo vacío: 200 `{items:[]}`.
 - `LOCATION_VIEW` no es capability y es distinta de `EXPEDIENT_VIEW`,
   `EXPEDIENT_AUDIT_VIEW` y `ADMIN_CONFIGURE`.
+
+### REQ-EW-021 — Autorización de sesión para frontend
+- GET `/api/v1/session` requiere autenticación y retorna exclusivamente
+  `{actorId, permissions}` desde el RequestContext server-side.
+- El endpoint invoca `GetSessionAuthorization` con `{context: RequestContext}`; el
+  controller no interpreta claims ni accede directamente a infraestructura auth.
+- No exige permission adicional para consultar la propia sesión y no permite seleccionar tenant.
+- No expone roles, tenantIds, databaseName, connection strings, claims OIDC raw,
+  tokens/cookies ni capabilities.
+- Permissions y capabilities permanecen separadas. Auditoría es visible sólo cuando
+  permissions incluye `EXPEDIENT_AUDIT_VIEW`; ausencia es fail-closed.
+- Sin autenticación: `AUTHENTICATION_REQUIRED`/401.
 
 ### REQ-EW-014 — Privacidad en presentación
 - **Resultado:** Solo referencia mínima de paciente para la tarea. Sin datos clínicos.
@@ -661,7 +677,7 @@ Ninguno. `LOCATION-PERMISSION-GAP` está CLOSED mediante `LOCATION_VIEW`.
 ## 7. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.22"
+spec_version: "0.3.23"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

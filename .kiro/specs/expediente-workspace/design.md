@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.22"
+version: "0.3.23"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -43,8 +43,10 @@ decisions_applied:
   - "EXPEDIENT-AUDIT-AND-COMMAND-UX-DECISION APPROVED"
   - "OQ-EW-003 RESOLVED — EXPEDIENT_AUDIT_VIEW"
   - "LOC-AUTH-001..010 APPROVED; LOCATION-PERMISSION-GAP CLOSED"
+  - "AUD-PAGE-EW-001/002 APPROVED"
+  - "AUTH-UI-EW-001..005 APPROVED"
 requires:
-  - requirements.md (v0.3.22)
+  - requirements.md (v0.3.23)
 open_questions_blocking: []
 open_questions_non_blocking:
   - OQ-EW-002
@@ -258,6 +260,9 @@ API-011 conserva el mapa futuro, pero el scope implementable de T-11 está marca
 | GET | /api/v1/expedientes/{id} | Read model completo por ExpedienteId UUID | Vigente |
 | GET | /api/v1/expedientes/{id}/timeline | Historial de movimientos operativos | Vigente |
 | GET | /api/v1/expedientes?numero={n} | Búsqueda — devuelve colección 0..N | Vigente tras T-12A |
+| GET | /api/v1/expedientes/{id}/audit | Audit sanitizado cursor-based | T-21A |
+| GET | /api/v1/ubicaciones | Catálogo operativo `{items}` | T-21A |
+| GET | /api/v1/session | actorId + permissions server-derived | T-21A |
 | GET | /api/v1/expedientes/{id}/current-custody | Custodia actual | Diferido: sin Use Case |
 | GET | /api/v1/expedientes/{id}/active-loan | Préstamo activo si existe | Diferido: sin Use Case |
 
@@ -521,7 +526,8 @@ apps/web/src/features/expediente-workspace/
     useExpediente.ts               # fetch + cache; invalidar en 409
     useExpedienteSearch.ts         # búsqueda 0..N; normaliza separadores
     useExpedienteTimeline.ts       # fetch DAT-011
-    useExpedienteAudit.ts          # cursor opaco; summary sanitizado
+    useExpedienteAudit.ts          # occurredAt+auditId opaco; summary sanitizado
+    useSessionAuthorization.ts     # GET /session; permissions server-derived
     useUbicaciones.ts              # consume GET /ubicaciones; UI no evalúa LOCATION_VIEW
     useCapabilities.ts             # derivado del read model; no calcula dominio
   api/
@@ -535,7 +541,7 @@ apps/web/src/features/expediente-workspace/
 - capabilities viene del API; hooks derivan de él.
 - useExpedienteSearch normaliza separadores antes de enviar; no elige coincidencias.
 
-### 6.1 Extensión pre-T-22 v0.3.22
+### 6.1 Extensión pre-T-22 v0.3.23
 
 `GetExpedienteAudit` depende de ExpedienteRepository, ExpedienteAuditQueryPort y
 RequestContext. Autoriza EXPEDIENT_AUDIT_VIEW antes de queries, verifica existencia
@@ -547,6 +553,11 @@ read model, permanece string decimal/no editable y se reutiliza en el command. L
 opciones de ubicación proceden de `ListUbicaciones` (`id/codigo/descripcion`), nunca
 de UUID manual. El Use Case autoriza `LOCATION_VIEW` antes de consumir
 `UbicacionesQueryPort.findAll(context.tenant)`; la UI sólo maneja 403 Problem Details.
+
+Audit ordena `occurredAt DESC, auditId DESC`; el cursor representa ambos valores y sólo
+se reenvía. `GetSessionAuthorization` proyecta `{actorId,permissions}` desde RequestContext
+y respalda GET `/api/v1/session`.
+La UI no recibe roles ni ActorContext completo y no mezcla permissions con capabilities.
 
 ---
 
@@ -894,7 +905,7 @@ por `GetExpediente` (READ-MODEL-COMPOSITION-DECISION).
 ## 12. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.22"
+spec_version: "0.3.23"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

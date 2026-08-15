@@ -39,3 +39,5 @@ apps/web/src/
 - `EXPEDIENT_AUDIT_VIEW` controla Auditoría sin convertirse en capability;
 - Dispatch/AcceptCustody dialogs consumen capabilities y contratos API, no reglas;
 - opciones de Ubicación proceden de `ListUbicaciones`, nunca de UUID manual.
+- permissions de presentación proceden de GET `/api/v1/session`; no se derivan de roles
+  ni se mezclan con capabilities contextuales.

@@ -87,6 +87,10 @@ OQ-EW-003 queda RESOLVED: Auditoría requiere `EXPEDIENT_AUDIT_VIEW`, que no es
 capability. Sin ella queda oculta y no consulta; con ella consume GET `/audit`, muestra
 items sanitizados y mantiene cursor opaco.
 
+Las permissions se obtienen únicamente de GET `/api/v1/session`. El frontend evalúa
+`permissions.includes('EXPEDIENT_AUDIT_VIEW')` para mostrar el tab, nunca roles. El
+cursor de Audit representa `occurredAt + auditId`, permanece opaco y sólo se reenvía.
+
 `DispatchExpedienteDialog` captura destination mediante selector de Ubicación,
 intendedCustodian type/reference y businessReference type/id opcional.
 `AcceptCustodyDialog` captura receptor type/reference/service nullable,

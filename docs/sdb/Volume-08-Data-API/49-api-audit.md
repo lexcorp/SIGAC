@@ -23,3 +23,5 @@ Para Expediente Workspace v0.3.21, el contrato específico es
 `GET /api/v1/expedientes/{id}/audit`, respaldado por `GetExpedienteAudit` y protegido
 por `EXPEDIENT_AUDIT_VIEW`. Retorna sólo el summary sanitizado con cursor opaco,
 `items/nextCursor` y sin total. No expone changeSummary ni securityContext.
+Ordena `occurredAt DESC, auditId DESC`; el cursor conceptual es
+`occurredAt + auditId` y su encoding es opaco.

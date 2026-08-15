@@ -13,6 +13,15 @@ architecture:
 
 OIDC access/session context validated at boundary.
 
+## Session authorization projection v0.3.23
+
+GET `/api/v1/session` requiere autenticación y responde únicamente
+`{actorId,permissions}` mediante `GetSessionAuthorization` desde el RequestContext
+server-side. No requiere permission
+adicional. No expone roles, tenantIds, claims OIDC raw, tokens/cookies, capabilities ni
+configuración de tenant/database. Request no autenticada produce
+`AUTHENTICATION_REQUIRED`/401.
+
 API never accepts user identity from request body.
 
 Actor is derived from authenticated security context.

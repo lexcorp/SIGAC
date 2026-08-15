@@ -44,3 +44,7 @@ La task pre-T-22 añade, sólo después de implementar los Use Cases,
 `GET /api/v1/ubicaciones`, autorizado por `LOCATION_VIEW`. Ninguno se documenta
 anticipadamente en el archivo OpenAPI durante las decisiones documentales v0.3.21/0.3.22;
 T-21A es responsable de actualizar el contrato ejecutable.
+
+T-21A también añade GET `/api/v1/session` con schemas `Permission` y
+`SessionAuthorizationReadModel`. `Permission` enumera únicamente permissions canónicas
+aprobadas que la UI puede recibir; no incluye capabilities.

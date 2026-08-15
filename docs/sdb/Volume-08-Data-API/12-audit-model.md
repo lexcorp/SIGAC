@@ -102,3 +102,5 @@ Expediente; `success` para página vacía o no vacía. Este append no crea Movim
 cursor-based, sin total. Cada item contiene auditId, action, result, actorRef,
 occurredAt, source, requestId y correlationId; no expone change_summary,
 security_context ni metadata física. Requiere `EXPEDIENT_AUDIT_VIEW`.
+El orden canónico es `occurredAt DESC, auditId DESC`; el cursor conceptual contiene
+ambos valores y su encoding permanece opaco fuera del adapter.

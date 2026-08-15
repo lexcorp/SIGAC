@@ -47,3 +47,5 @@ Escenarios base:
 - sin esa permission el tab no aparece ni dispara request;
 - el resolver E2E proporciona `LOCATION_VIEW`; los diálogos cargan ubicaciones desde el
   endpoint real y un 403 usa Problem Details sin derivar autorización desde roles.
+- GET `/session` entrega permissions server-derived; Auditoría queda oculta/visible
+  según `EXPEDIENT_AUDIT_VIEW`, nunca según roles.

@@ -96,3 +96,7 @@ El adapter tenant-scoped consulta storage propiedad de Security/Audit y sólo ex
 summary sanitizado; Drizzle/PostgreSQL no cruzan el boundary. `ListUbicaciones` es un
 Use Case de Reference Data autorizado por `LOCATION_VIEW`; consume un query port
 tenant-scoped sin exponer Drizzle/PostgreSQL a Application.
+
+`GetSessionAuthorization` proyecta `SessionAuthorizationReadModel` desde RequestContext
+y respalda GET `/api/v1/session`. El frontend recibe `{actorId,permissions}`; no recibe ActorContext
+completo, roles, tenantIds ni capabilities de sesión.

@@ -145,3 +145,14 @@ La extensión v0.3.22 aprueba `LOCATION_VIEW` exclusivamente para
 `EXPEDIENT_AUDIT_VIEW` y `ADMIN_CONFIGURE`. No es capability. Con esta decisión,
 `LOCATION-PERMISSION-GAP` queda CLOSED. Contrato completo en
 `EXPEDIENT-AUDIT-AND-COMMAND-UX-DECISION.md`.
+
+---
+
+## AUD-PAGE-EW-001/002 y AUTH-UI-EW-001..005 — T-21A
+**Estado:** APPROVED
+
+Audit ordena `occurredAt DESC, auditId DESC`; el cursor opaco representa ambos valores.
+GET `/api/v1/session`, respaldado por `GetSessionAuthorization`, retorna únicamente
+actorId y permissions server-derived. Permission y capability permanecen separadas y
+la UI nunca deriva autorización desde roles. Estas decisiones cierran los dos bloqueos
+restantes de T-21A.

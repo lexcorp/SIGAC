@@ -14,3 +14,7 @@ editable, no envían metadata server-side y refrescan tras 204.
 Los dialogs consumen GET `/api/v1/ubicaciones` sin evaluar `LOCATION_VIEW` ni roles en
 frontend. Tratan 403 mediante Problem Details, sin mensajes técnicos ni captura manual
 de UUID.
+
+La autorización del tab Auditoría se prueba con permissions obtenidas desde GET
+`/session`: oculto sin `EXPEDIENT_AUDIT_VIEW`, visible con ella y sin inspeccionar roles.
+El cursor de Audit se almacena/reenvía sin decodificar ni reconstruir.

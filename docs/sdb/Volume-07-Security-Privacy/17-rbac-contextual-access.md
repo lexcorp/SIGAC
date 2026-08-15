@@ -67,6 +67,11 @@ La consulta de reference data de ubicaciones requiere `LOCATION_VIEW`. Es distin
 antes de acceder al catálogo y nunca se deriva de roles en frontend. El query usa sólo
 el `TenantContext` ya resuelto y no admite selección cross-tenant.
 
+`SessionAuthorizationReadModel` expone únicamente actorId y permissions del actor
+autenticado. GET `/api/v1/session` no requiere permission adicional, pero sí
+autenticación; no expone roles, tenantIds, claims OIDC, tokens, cookies, configuración
+de database ni capabilities. El endpoint no permite seleccionar tenant.
+
 ## Aplicación a préstamos/salidas (OQ-EW-005)
 - `CONSULTA_PROGRAMADA`: el rol Archivo/Jefatura es suficiente; no se requiere
   verificación de actor emisor adicional.

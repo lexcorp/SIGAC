@@ -27,3 +27,8 @@ Para Expediente Timeline el contrato específico es `{ items, nextCursor }`; no 
 `hasMore` ni `total`. El cursor opaco representa `occurredAt + movimientoId`. El orden es
 `occurredAt DESC, movimientoId DESC`. No hay un máximo numérico canónico aprobado, por
 lo que este slice no inventa uno.
+
+Para Expediente Audit el contrato específico también es `{items,nextCursor}`, sin
+`hasMore` ni `total`. El orden determinista es `occurredAt DESC, auditId DESC`; el
+cursor opaco representa `occurredAt + auditId`. Application, API y frontend sólo lo
+reciben y reenvían.
