@@ -2,7 +2,7 @@
 
 **Estado:** APPROVED  
 **Fecha:** 2026-08-15  
-**Scope:** Expediente Workspace v0.3.1 / T-04
+**Scope:** Expediente Workspace v0.3.3 / T-04
 
 ## Separación de conceptos
 
@@ -106,6 +106,19 @@ Reglas del Workspace:
   fuente llega previamente validada.
 - `ORDEN_SUPERIOR` opera fail-closed: no habilita `ABRIR_PRESTAMO` en T-04 hasta que
   exista su spec detallada.
+
+## AUTH-EW-006 — Colección de fuentes disponibles
+
+`ExpedienteCapabilityService` recibe `readonly FuenteHabilitanteSalidaContext[]` desde
+`ExitEnablingSourceQueryPort`. Incluye `ABRIR_PRESTAMO` sólo cuando existe al menos un
+elemento validado cuyo tipo es `CONSULTA_PROGRAMADA` o `VALE_ARCHIVO_SM_1_14`, además de
+las condiciones de permission, rol, estado y ausencia de préstamo activo.
+
+## AUTH-EW-007 — ORDEN_SUPERIOR fail-closed
+
+`ORDEN_SUPERIOR` permanece fail-closed incluso si llega con `validada: true`. El servicio
+no selecciona la fuente concreta ni valida evidencia; `OpenLoan` selecciona y registra la
+fuente, y el provider/adapter determina `validada`.
 
 ## Gaps
 

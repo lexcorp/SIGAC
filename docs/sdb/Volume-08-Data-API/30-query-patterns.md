@@ -26,11 +26,17 @@ Avoid giant “everything joins everything” screens. Use purpose-built read mo
 ## Expediente Workspace
 
 El read model del Workspace se compone server-side. Application de Expediente Workspace
-posee `ActiveLoanQueryPort`, `ActiveRequestQueryPort` y `OpenIncidentsQueryPort`; todos
-reciben `ExpedienteId` y `TenantContext` y retornan summaries, nunca aggregates.
+posee `ActiveLoanQueryPort`, `ActiveRequestQueryPort`, `OpenIncidentsQueryPort` y
+`ExitEnablingSourceQueryPort`; todos reciben `ExpedienteId` y `TenantContext` y retornan
+proyecciones, nunca aggregates.
 
 - Solicitud activa: `0..1`, ausencia `null`.
 - Préstamo activo: `0..1`, ausencia `null`.
 - Incidencias abiertas: `0..N`, ausencia `[]`.
+- Fuentes habilitantes disponibles: `0..N`, ausencia `[]`; elementos `{ tipo, validada }`.
 
-Los contratos exactos están en READ-MODEL-COMPOSITION-DECISION READ-EW-003..006.
+`ExitEnablingSourceQueryPort.findAvailableByExpediente(ExpedienteId, TenantContext)` no
+expone evidencia completa. El provider determina `validada`; no se especifica aquí su
+adapter concreto.
+
+Los contratos exactos están en READ-MODEL-COMPOSITION-DECISION READ-EW-003..012.

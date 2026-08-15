@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.2"
+version: "0.3.3"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 traceability_model: "OS-007 / SDD-006"
@@ -14,10 +14,12 @@ decisions_applied:
   - "AUTHORIZATION-DECISION APPROVED"
   - "READ-MODEL-COMPOSITION-DECISION APPROVED"
   - "OQ-EW-DESIGN-004 RESOLVED"
+  - "READ-EW-008..012 APPROVED"
+  - "AUTH-EW-006/007 APPROVED"
 requires:
-  - requirements.md (v0.3.2)
-  - design.md (v0.3.2)
-  - tasks.md (v0.3.2)
+  - requirements.md (v0.3.3)
+  - design.md (v0.3.3)
+  - tasks.md (v0.3.3)
 ---
 
 # Expediente Workspace — Traceability
@@ -39,8 +41,8 @@ requires:
 | **Source / SDB** | DDD-013, DAT-006 v0.2.0, READ-MODEL-COMPOSITION-DECISION, NOM-004-SSA3-2012, LGPDPPSO | Expediente con identificador institucional y composición server-side |
 | **Business Rule** | INV-EXP-001, INV-EXP-002, INV-EXP-004 | Identificador institucional; coherencia operativa; EstadoOperativo con 6 valores válidos |
 | **Workflow** | WF (Read Models — V05-41 SPEC-009) | Flujo de consulta |
-| **Use Case** | UC-018 v0.2.0 | GetExpediente compone read model; query ports 0..1/0..N tenant-scoped |
-| **SPEC** | SPEC-009 v0.2.0 FR-VIEW-001..011 | Situación actual completa; proyecciones y audit Application |
+| **Use Case** | UC-018 v0.2.0 | GetExpediente compone read model; query ports tenant-scoped, incl. fuentes 0..N |
+| **SPEC** | SPEC-009 v0.2.0 FR-VIEW-001..013 | Situación, proyecciones, fuentes y audit Application |
 | **REQ** | REQ-EW-001, REQ-EW-003..007 | Recuperar; ubicación; custodia; préstamo; solicitud; incidencias |
 | **API** | GET /api/v1/expedientes/{id} (API-011 v0.2.0) | Read model con capabilities[] |
 | **UI** | ExpedienteHeader (design.md §5.1), ResumenTab (APP-003 v0.2.0) | Header above-the-fold; badges de 6 estados |
@@ -117,9 +119,9 @@ requires:
 | Eslabón | Referencia | Detalle |
 |---------|-----------|---------|
 | **Source / SDB** | DECISION-REGISTER OQ-EW-005, BIZ-010 v0.2.0, BIZ-016 v0.2.0, SRC-INT-003 | CONSULTA_PROGRAMADA / VALE_ARCHIVO_SM_1_14 / ORDEN_SUPERIOR |
-| **Business Rule** | BR-018, INV-LOAN-003 | Fuente habilitante determina actores y plazo |
+| **Business Rule** | BR-018, INV-LOAN-003, AUTH-EW-006/007 | Al menos una fuente validada permitida; ORDEN_SUPERIOR fail-closed |
 | **Workflow** | WF-006 v0.2.0 | OpenLoan evalúa FuenteHabilitanteSalida |
-| **Use Case** | UC-010 v0.2.0 | Verificar actor según fuente |
+| **Use Case** | UC-010 v0.2.0 | Capability no selecciona; OpenLoan selecciona/registra fuente concreta |
 | **SPEC** | SPEC-006 v0.2.0 FR-LOAN-007 | Autorización por fuente |
 | **REQ** | REQ-EW-010 | Préstamo con fuente habilitante |
 | **API** | POST /api/v1/prestamos con fuenteHabilitante; 403 INSUFFICIENT_ENABLING_SOURCE | — |
@@ -336,13 +338,14 @@ requires:
 | 0.3.0 | 2026-08-14 | Decisiones OQ-EW-001/005/006/007 y DEC-EW-STATE-001 aplicadas. GAP-002/003/007 cerrados. 15 cadenas TR. REQ-EW-011/012 añadidas. Búsqueda 0..N, normalización, desambiguación, FuenteHabilitanteSalida, dispatch, custodia aceptada integrados. |
 | 0.3.1 | 2026-08-15 | AUTHORIZATION-DECISION aplicada. AUTH-GAP-001..013 cerrados para T-04; roles, permissions, capabilities, estados contextuales, SM 1-14 y tenant prevalidado formalizados. |
 | 0.3.2 | 2026-08-15 | READ-MODEL-COMPOSITION-DECISION aplicada. OQ-EW-DESIGN-004 resuelta; query ports de proyección y AuditWriter definidos para T-05..T-08. |
+| 0.3.3 | 2026-08-15 | READ-EW-008..012 y AUTH-EW-006/007 aplicadas. ExitEnablingSourceQueryPort 0..N y capabilities por existencia de fuente validada formalizadas. |
 
 ---
 
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.2"
+spec_version: "0.3.3"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

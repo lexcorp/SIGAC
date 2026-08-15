@@ -27,8 +27,12 @@ flowchart LR
 
 Archive Operations conserva la propiedad del Workspace y consume proyecciones mínimas
 de Requests, Loans & Returns e Incidents mediante query ports propiedad del consumidor:
-`ActiveRequestQueryPort`, `ActiveLoanQueryPort` y `OpenIncidentsQueryPort`. Estos puertos
-no exponen aggregates completos ni cambian la propiedad de dominio de cada bounded
-context. Todas sus consultas reciben `ExpedienteId` y `TenantContext`.
+`ActiveRequestQueryPort`, `ActiveLoanQueryPort`, `OpenIncidentsQueryPort` y
+`ExitEnablingSourceQueryPort`. Estos puertos no exponen aggregates completos ni cambian
+la propiedad de dominio de cada bounded context. Todas sus consultas reciben
+`ExpedienteId` y `TenantContext`.
 
-Fuente: READ-MODEL-COMPOSITION-DECISION, READ-EW-002..006.
+`ExitEnablingSourceQueryPort` devuelve `0..N` contextos mínimos `{ tipo, validada }`.
+El provider determina `validada`; el Workspace no consulta evidencia completa.
+
+Fuente: READ-MODEL-COMPOSITION-DECISION, READ-EW-002..012.

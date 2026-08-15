@@ -48,10 +48,18 @@ múltiples dominios.
 
 FR-VIEW-010 Los contratos de proyección son propiedad de Application de Expediente
 Workspace y no exponen aggregates ajenos. Sus schemas exactos están definidos en
-READ-MODEL-COMPOSITION-DECISION READ-EW-003..006.
+READ-MODEL-COMPOSITION-DECISION READ-EW-003..012.
 
 FR-VIEW-011 La consulta registra audit append-only en Application mediante `AuditWriter`;
 el resultado es `success`, `denied` o `not-found` y el registro no contiene datos C3.
+
+FR-VIEW-012 `GetExpediente` consulta `ExitEnablingSourceQueryPort` con `ExpedienteId` y
+`TenantContext`. El puerto retorna `readonly FuenteHabilitanteSalidaContext[]` (`0..N`,
+ausencia `[]`), cuyos únicos campos son `tipo` y `validada`.
+
+FR-VIEW-013 El provider determina `validada`. Capabilities sólo evalúa existencia de una
+fuente validada `CONSULTA_PROGRAMADA|VALE_ARCHIVO_SM_1_14`; no valida evidencia ni elige
+la fuente de OpenLoan. `ORDEN_SUPERIOR` permanece fail-closed incluso validada.
 
 ## Non-goals
 - No mostrar diagnósticos, notas clínicas, tratamientos ni estudios.

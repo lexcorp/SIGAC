@@ -31,5 +31,9 @@ fuera de las capabilities operativas.
 server-side. La decisión y los contratos canónicos están en
 `docs/decisions/expediente-workspace/READ-MODEL-COMPOSITION-DECISION.md`.
 
+READ-EW-008..012 resuelven para T-05 el origen contractual de las fuentes habilitantes:
+`ExitEnablingSourceQueryPort` devuelve `0..N` contextos mínimos y el provider determina
+`validada`. La infraestructura concreta de Agenda/SM 1-14 no se decide aquí.
+
 Permanecen abiertas `OQ-EW-002`, `OQ-EW-003`, `OQ-EW-004`, las OQs de
 retención/paginación del timeline y el ownership físico de `MovimientoExpediente`.

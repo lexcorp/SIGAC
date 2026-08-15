@@ -23,3 +23,7 @@ Capabilities operativas canónicas del Expediente Workspace:
 
 `EXPEDIENT_VIEW` es permission, no capability. `AUDITOR_CONSULTA` recibe
 `capabilities: []` para comandos operativos.
+
+Para `ABRIR_PRESTAMO`, backend evalúa `0..N` fuentes disponibles y requiere al menos una
+fuente validada `CONSULTA_PROGRAMADA|VALE_ARCHIVO_SM_1_14`. La Command Bar no valida ni
+elige fuentes. `ORDEN_SUPERIOR` no habilita la capability en esta spec.

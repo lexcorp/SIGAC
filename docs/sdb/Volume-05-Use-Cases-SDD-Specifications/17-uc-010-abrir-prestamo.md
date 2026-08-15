@@ -23,6 +23,11 @@ Formalizar una salida que requiera préstamo, evaluando la fuente habilitante ap
      `COORDINACION_MEDICA` emite/autoriza y `ARCHIVISTA` o `ARCHIVO_JEFE` ejecuta
      con `LOAN_OPEN`; registrar referencia del formato SM 1-14.
    - `ORDEN_SUPERIOR`: no habilita OpenLoan en este slice (fail-closed).
+
+La capability previa puede evaluar una colección `0..N` de fuentes disponibles, pero no
+selecciona ninguna. `OpenLoan` selecciona y registra la fuente concreta utilizada. El
+provider de evidencia determina `validada`; `ExpedienteCapabilityService` no valida
+agenda, vale ni documentación.
 2. Validar tipo de solicitud y autorización según la fuente.
 3. Validar que el expediente está disponible para préstamo (`EstadoOperativo` compatible).
 4. Registrar solicitante, custodio, finalidad y `FuenteHabilitanteSalida`.

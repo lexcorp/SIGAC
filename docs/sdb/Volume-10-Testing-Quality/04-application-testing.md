@@ -10,6 +10,11 @@ Para `ExpedienteCapabilityService`, cubrir al menos:
 - ActorContext/TenantContext llegan ya validados; el servicio no resuelve tenant.
 - SM 1-14: emisor y ejecutante separados; ejecución por Archivo/Jefatura con fuente validada.
 - `ORDEN_SUPERIOR` no habilita `ABRIR_PRESTAMO` (fail-closed).
+- colección de fuentes vacía -> `ABRIR_PRESTAMO` ausente;
+- una o varias fuentes: basta una validada `CONSULTA_PROGRAMADA|VALE_ARCHIVO_SM_1_14`;
+- fuentes no validadas -> `ABRIR_PRESTAMO` ausente;
+- `ORDEN_SUPERIOR` validada -> `ABRIR_PRESTAMO` ausente;
+- CapabilityService no selecciona una fuente ni valida evidencia.
 
 Para `GetExpediente` y sus puertos de proyección, cubrir al menos:
 - composición server-side del read model único;
@@ -20,3 +25,5 @@ Para `GetExpediente` y sus puertos de proyección, cubrir al menos:
 - audit `EXPEDIENTE_VIEW` con `success`, `denied`, `not-found`;
 - ningún registro de audit contiene datos C3;
 - el controller no escribe audit.
+- `ExitEnablingSourceQueryPort` recibe el mismo ExpedienteId/TenantContext, devuelve
+  `0..N` y usa `[]` como ausencia.

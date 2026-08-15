@@ -2,7 +2,7 @@
 
 **Estado:** APPROVED  
 **Fecha:** 2026-08-15  
-**Scope:** Expediente Workspace v0.3.2 / T-05 a T-08
+**Scope:** Expediente Workspace v0.3.3 / T-04 a T-08
 
 ## READ-EW-001 — Composición server-side
 
@@ -123,6 +123,61 @@ El campo mínimo de presentación de paciente sigue bajo `OQ-EW-002`; se conserv
 
 `GetExpediente` devuelve un solo `ExpedienteReadModel` compuesto al API. No devuelve una
 colección de respuestas parciales ni delega al controller o al frontend la composición.
+
+## READ-EW-008 — ExitEnablingSourceQueryPort
+
+Application de Expediente Workspace posee el contrato consumidor:
+
+```typescript
+interface ExitEnablingSourceQueryPort {
+  findAvailableByExpediente(
+    expedienteId: ExpedienteId,
+    tenant: TenantContext,
+  ): Promise<readonly FuenteHabilitanteSalidaContext[]>;
+}
+
+interface FuenteHabilitanteSalidaContext {
+  tipo: FuenteHabilitanteSalida;
+  validada: boolean;
+}
+```
+
+El puerto no expone aggregates ni evidencia/documentación completa de Agenda o SM 1-14.
+
+## READ-EW-009 — Cardinalidad
+
+El resultado tiene cardinalidad `0..N`. La ausencia se representa exclusivamente con
+`[]`. Pueden coexistir fuentes de tipos distintos o más de una evidencia disponible.
+
+## READ-EW-010 — Responsabilidad de validación
+
+`validada` es determinada por el provider/adapter que consulta la evidencia de la fuente
+habilitante. `ExpedienteCapabilityService` nunca valida agenda, vale ni documentación;
+sólo consume el resultado del puerto. Esta decisión no prescribe adapters concretos.
+
+## READ-EW-011 — Uso en GetExpediente
+
+`GetExpediente` consulta `ExitEnablingSourceQueryPort` internamente con el mismo
+`ExpedienteId` y `TenantContext` de los demás query ports. Su input público permanece:
+`expedienteId + actor + tenant`.
+
+## READ-EW-012 — Evaluación y selección
+
+Pueden coexistir varias fuentes válidas. `ExpedienteCapabilityService` sólo determina si
+existe al menos una fuente habilitante para ofrecer `ABRIR_PRESTAMO`; no selecciona cuál
+se utilizará. La selección y el registro de la fuente concreta pertenecen al command/use
+case `OpenLoan`.
+
+## AUTH-EW-006 — Fuentes que habilitan ABRIR_PRESTAMO
+
+Además de permission, rol, EstadoOperativo y ausencia de préstamo activo,
+`ABRIR_PRESTAMO` requiere al menos un elemento con `validada: true` y `tipo` igual a
+`CONSULTA_PROGRAMADA` o `VALE_ARCHIVO_SM_1_14`.
+
+## AUTH-EW-007 — ORDEN_SUPERIOR fail-closed
+
+`ORDEN_SUPERIOR` nunca habilita `ABRIR_PRESTAMO` en esta spec, incluso si el provider la
+retorna con `validada: true`. Permanecerá fail-closed hasta contar con su spec específica.
 
 ## AUD-EW-001 — AuditWriter
 

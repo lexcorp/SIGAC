@@ -50,7 +50,7 @@ Debe responder rápidamente: dónde está, quién lo tiene, desde cuándo y qué
 ## Precondición
 Actor autenticado con permiso `EXPEDIENT_VIEW` en el tenant resuelto server-side.
 
-## Composición del read model (READ-EW-001..007)
+## Composición del read model (READ-EW-001..012)
 
 `GetExpediente` compone server-side un único `ExpedienteReadModel`. Obtiene el Expediente
 tenant-scoped y consume proyecciones mínimas mediante:
@@ -64,10 +64,18 @@ tenant-scoped y consume proyecciones mínimas mediante:
 - `OpenIncidentsQueryPort.findOpenByExpedienteId(ExpedienteId, TenantContext)` ->
   `readonly OpenIncidentSummary[]` (`incidenciaId`, `tipo`, `severidad`, `estado`,
   `resumen`, `asignadoA` nullable, `openedAt`).
+- `ExitEnablingSourceQueryPort.findAvailableByExpediente(ExpedienteId, TenantContext)` ->
+  `readonly FuenteHabilitanteSalidaContext[]`, cardinalidad `0..N`, ausencia `[]`;
+  cada elemento contiene exclusivamente `tipo` y `validada`.
 
 Los puertos pertenecen a Application de Expediente Workspace como consumidor de
 proyecciones; los aggregates siguen perteneciendo a sus módulos. El frontend recibe el
 read model ya compuesto y no orquesta dominios.
+
+El provider determina `validada`. `GetExpediente` pasa la colección completa a
+`ExpedienteCapabilityService`, que sólo comprueba si existe al menos una fuente validada
+de tipo `CONSULTA_PROGRAMADA` o `VALE_ARCHIVO_SM_1_14`. No selecciona la fuente de
+`OpenLoan`. `ORDEN_SUPERIOR` no habilita la capability aunque llegue validada.
 
 ## Audit
 

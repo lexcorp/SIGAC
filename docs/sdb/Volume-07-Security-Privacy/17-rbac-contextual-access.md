@@ -48,5 +48,14 @@ antes del CapabilityService; éste recibe ActorContext y TenantContext ya valida
   concede `LOAN_OPEN`.
 - `ORDEN_SUPERIOR`: fail-closed para T-04; no habilita `ABRIR_PRESTAMO`.
 
+## Fuentes disponibles para capabilities
+
+`ExpedienteCapabilityService` recibe una colección tenant-scoped de contextos
+`{ tipo, validada }`. Requiere al menos una fuente validada de tipo
+`CONSULTA_PROGRAMADA` o `VALE_ARCHIVO_SM_1_14` para ofrecer `ABRIR_PRESTAMO`, además de
+las demás condiciones de autorización. El provider determina `validada`; el servicio no
+inspecciona evidencia. `ORDEN_SUPERIOR` no habilita la acción aunque llegue validada.
+La selección de la fuente concreta se re-verifica y registra en `OpenLoan`.
+
 ## Fuente
 BIZ-016, DDD-010, DECISION-REGISTER OQ-EW-005, NIST SP 800-207.

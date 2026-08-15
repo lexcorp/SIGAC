@@ -110,5 +110,11 @@ Application de Expediente Workspace. Cardinalidades: solicitud `0..1`, préstamo
 incidencias `0..N`. Ausencia: `null`, `null`, `[]`, respectivamente. El frontend no
 orquesta dominios para construir la respuesta.
 
+Para calcular capabilities, `GetExpediente` consume internamente
+`ExitEnablingSourceQueryPort.findAvailableByExpediente(ExpedienteId, TenantContext)` ->
+`readonly FuenteHabilitanteSalidaContext[]`. Esta colección no forma parte obligatoria
+del response body: alimenta `capabilities[]`. El provider determina `validada`; no se
+expone evidencia de Agenda o SM 1-14.
+
 ## Fuente
 DECISION-REGISTER OQ-EW-001, OQ-EW-006, OQ-EW-007, DEC-EW-STATE-001, DAT-006, DAT-016.

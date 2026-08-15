@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.2"
+version: "0.3.3"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -21,6 +21,8 @@ decisions_applied:
   - "AUTHORIZATION-DECISION APPROVED"
   - "READ-MODEL-COMPOSITION-DECISION APPROVED"
   - "OQ-EW-DESIGN-004 RESOLVED"
+  - "READ-EW-008..012 APPROVED"
+  - "AUTH-EW-006/007 APPROVED"
 ---
 
 # Expediente Workspace — Requirements
@@ -93,11 +95,15 @@ del aggregate, el rol del usuario y el contexto del negocio.
   incidencias abiertas, capabilities[].
 - **Fuente SDB:** UC-018, SPEC-009 FR-VIEW-001..006, API-011.
 - **Invariantes:** INV-EXP-001, INV-EXP-002, INV-EXP-004.
-- **Composición (READ-EW-001..007):** `GetExpediente` compone server-side un único
+- **Composición (READ-EW-001..012):** `GetExpediente` compone server-side un único
   `ExpedienteReadModel`. El frontend no orquesta Préstamo, Solicitud e Incidencia.
 - **Cardinalidades:** `prestamoActivo` 0..1 (`null` si no existe), `solicitudActiva`
   0..1 (`null` si no existe), `incidenciasAbiertas` 0..N (`[]` si no existen).
 - **Tenant:** cada query port recibe obligatoriamente `ExpedienteId` y `TenantContext`.
+- **Fuente habilitante disponible:** `GetExpediente` consulta internamente
+  `ExitEnablingSourceQueryPort.findAvailableByExpediente(id, tenant)` ->
+  `readonly FuenteHabilitanteSalidaContext[]` (`0..N`; ausencia `[]`). Su input público
+  permanece `expedienteId + actor + tenant`.
 
 ### REQ-EW-001A — Contratos de proyección del Workspace
 - **Ownership:** Application de Expediente Workspace es propietario consumidor de
@@ -112,6 +118,9 @@ del aggregate, el rol del usuario y el contexto del negocio.
   `resumen`, `asignadoA` nullable, `openedAt`; estado exclusivamente
   `Abierta|EnInvestigacion|Escalada` (`Resuelta` no es abierta).
 - **Regla:** `NO_LOCALIZADO` no crea automáticamente una Incidencia; OQ-EW-004 sigue abierta.
+- **Contrato de fuente:** `FuenteHabilitanteSalidaContext` contiene exclusivamente
+  `tipo: FuenteHabilitanteSalida` y `validada: boolean`. El provider determina
+  `validada`; CapabilityService no inspecciona evidencia.
 
 ### REQ-EW-002 — Búsqueda por número de expediente (0..N resultados)
 - **Actor:** Archivista, Jefatura.
@@ -210,6 +219,12 @@ operativos; `EXPEDIENT_VIEW` no es una capability.
     concede LOAN_OPEN; plazo máx. 24 h; si se necesita más tiempo se genera nuevo préstamo.
   - ORDEN_SUPERIOR: fuente reconocida, pero no habilita ABRIR_PRESTAMO en este slice.
 - **Resultado:** Préstamo abierto con FuenteHabilitanteSalida registrada.
+- **Capability (AUTH-EW-006/007):** además de permission, rol, estado y ausencia de
+  préstamo activo, `ABRIR_PRESTAMO` requiere que la colección disponible contenga al
+  menos una fuente con `validada=true` y tipo `CONSULTA_PROGRAMADA` o
+  `VALE_ARCHIVO_SM_1_14`. `ORDEN_SUPERIOR` nunca habilita en esta spec, incluso validada.
+- **Separación:** CapabilityService no elige fuente. `OpenLoan` selecciona y registra la
+  fuente concreta.
 - **Fuente SDB:** UC-010, SPEC-006 FR-LOAN-001/007, BIZ-010, DECISION-REGISTER OQ-EW-005.
 
 ### REQ-EW-011 — Despacho de expediente
@@ -465,7 +480,7 @@ Ninguna. OQ-EW-001, OQ-EW-005, OQ-EW-006 y OQ-EW-007 están RESUELTAS.
 ## 7. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.2"
+spec_version: "0.3.3"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

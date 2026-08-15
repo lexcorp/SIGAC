@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.2"
+version: "0.3.3"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -20,8 +20,10 @@ decisions_applied:
   - "AUTHORIZATION-DECISION APPROVED"
   - "READ-MODEL-COMPOSITION-DECISION APPROVED"
   - "OQ-EW-DESIGN-004 RESOLVED"
+  - "READ-EW-008..012 APPROVED"
+  - "AUTH-EW-006/007 APPROVED"
 requires:
-  - requirements.md (v0.3.2)
+  - requirements.md (v0.3.3)
 open_questions_blocking: []
 open_questions_non_blocking:
   - OQ-EW-002
@@ -487,13 +489,26 @@ interface OpenIncidentsQueryPort {
   ): Promise<readonly OpenIncidentSummary[]>;
 }
 
+interface ExitEnablingSourceQueryPort {
+  findAvailableByExpediente(
+    expedienteId: ExpedienteId,
+    tenant: TenantContext,
+  ): Promise<readonly FuenteHabilitanteSalidaContext[]>;
+}
+
+interface FuenteHabilitanteSalidaContext {
+  tipo: FuenteHabilitanteSalida;
+  validada: boolean;
+}
+
 interface AuditWriter {
   append(record: AuditRecord, tenant: TenantContext): Promise<void>;
 }
 ```
 
 Los summaries y `AuditRecord` tienen exactamente los campos definidos en
-READ-MODEL-COMPOSITION-DECISION. Ausencia: Solicitud/Préstamo `null`; Incidencias `[]`.
+READ-MODEL-COMPOSITION-DECISION. Ausencia: Solicitud/Préstamo `null`; Incidencias y
+fuentes habilitantes `[]`.
 Los query ports no exponen aggregates. `AuditWriter` no ofrece update/delete.
 
 ```
@@ -506,9 +521,10 @@ Pasos:
   4. ActiveLoanQueryPort.findActiveByExpedienteId(id, tenant)
   5. ActiveRequestQueryPort.findActiveByExpedienteId(id, tenant)
   6. OpenIncidentsQueryPort.findOpenByExpedienteId(id, tenant)
-  7. ExpedienteCapabilityService(estado, solicitud, prestamo, actor)
-  8. AuditWriter.append(EXPEDIENTE_VIEW, success|denied|not-found, tenant)
-  9. Retornar ExpedienteReadModel con capabilities[]
+  7. ExitEnablingSourceQueryPort.findAvailableByExpediente(id, tenant)
+  8. ExpedienteCapabilityService(estado, solicitud, prestamo, fuentes[], actor)
+  9. AuditWriter.append(EXPEDIENTE_VIEW, success|denied|not-found, tenant)
+  10. Retornar ExpedienteReadModel con capabilities[]
 ```
 
 ### 7.3 Use Case: DispatchExpediente
@@ -549,8 +565,8 @@ Pasos:
 ### 7.5 ExpedienteCapabilityService (actualizado)
 
 Entradas: EstadoOperativo, SolicitudActiva?, PrestamoActivo?, actor.roles,
-          actor.permissions, TenantContext validado y FuenteHabilitanteSalida
-          previamente validada cuando aplique.
+          actor.permissions, TenantContext validado y
+          readonly FuenteHabilitanteSalidaContext[].
 
 Salida: string[] de capabilities operativas. EXPEDIENT_VIEW no forma parte del array.
 
@@ -565,11 +581,16 @@ Estados de contexto admitidos:
 Reglas de capabilities para préstamo:
 - ABRIR_PRESTAMO incluido SOLO si:
   - EstadoOperativo compatible (ej. DISPONIBLE)
-  - FuenteHabilitanteSalida = CONSULTA_PROGRAMADA + actor es Archivo/Jefatura, O
-  - FuenteHabilitanteSalida = VALE_ARCHIVO_SM_1_14 previamente validada + actor es
+  - existe fuente `CONSULTA_PROGRAMADA` con `validada=true` + actor Archivo/Jefatura, O
+  - existe `VALE_ARCHIVO_SM_1_14` con `validada=true` + actor es
     ARCHIVISTA/ARCHIVO_JEFE. DIRECCION/COORDINACION_MEDICA emite o autoriza el vale,
     pero no recibe LOAN_OPEN por emitirlo.
   - FuenteHabilitanteSalida = ORDEN_SUPERIOR -> no incluir (fail-closed en T-04).
+
+El provider determina `validada`. CapabilityService no valida evidencia y sólo comprueba
+existencia de al menos una fuente habilitante; no selecciona cuál utilizar. `OpenLoan`
+selecciona y registra la fuente concreta. `ORDEN_SUPERIOR` permanece fail-closed aunque
+llegue con `validada=true`.
 
 Reglas de capabilities para despacho/custodia:
 - DISPATCH incluido si EstadoOperativo = APARTADO + actor es Archivo/Jefatura.
@@ -640,7 +661,7 @@ por `GetExpediente` (READ-MODEL-COMPOSITION-DECISION).
 ## 12. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.2"
+spec_version: "0.3.3"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

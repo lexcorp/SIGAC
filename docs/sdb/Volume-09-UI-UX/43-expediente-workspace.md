@@ -44,6 +44,12 @@ Ejemplos de comandos posibles (según estado y rol):
 El array contiene comandos operativos. `EXPEDIENT_VIEW` no se incluye.
 `AUDITOR_CONSULTA` puede consultar con `EXPEDIENT_VIEW`, pero recibe `capabilities: []`.
 
+`ABRIR_PRESTAMO` aparece sólo si backend encuentra al menos una fuente habilitante
+validada `CONSULTA_PROGRAMADA|VALE_ARCHIVO_SM_1_14`, además del resto del contexto.
+El frontend no recibe/valida evidencia ni selecciona la fuente concreta. Varias fuentes
+pueden coexistir; `OpenLoan` resuelve la selección. `ORDEN_SUPERIOR` permanece
+fail-closed aunque el provider la marque validada.
+
 ## Tabs
 `Resumen` | `Movimientos` | `Solicitudes` | `Préstamos` | `Incidencias` | `Auditoría*`
 

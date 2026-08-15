@@ -1,11 +1,11 @@
 ---
 spec: expediente-workspace
-version: "0.3.2"
+version: "0.3.3"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 requires:
-  - requirements.md (v0.3.2)
-  - design.md (v0.3.2)
+  - requirements.md (v0.3.3)
+  - design.md (v0.3.3)
 decisions_applied:
   - "OQ-EW-001 RESOLVED"
   - "OQ-EW-005 RESOLVED"
@@ -15,6 +15,8 @@ decisions_applied:
   - "AUTHORIZATION-DECISION APPROVED"
   - "READ-MODEL-COMPOSITION-DECISION APPROVED"
   - "OQ-EW-DESIGN-004 RESOLVED"
+  - "READ-EW-008..012 APPROVED"
+  - "AUTH-EW-006/007 APPROVED"
 ready_gate: "READY-GATE.md — todos los ítems deben estar marcados antes de iniciar T-01"
 done_gate: "OS-018 — spec + tests + API/migrations + auth/tenant/audit + traceability"
 ---
@@ -49,7 +51,7 @@ OQ-EW-DESIGN-001 a OQ-EW-DESIGN-005.
 ## Grupo 0 — Trazabilidad
 
 ### T-00 Completar traceability.md
-- **Descripción:** Verificar que traceability.md v0.3.2 tiene cadenas completas
+- **Descripción:** Verificar que traceability.md v0.3.3 tiene cadenas completas
   para todas las capacidades. Confirmar que GAP-002, GAP-003, GAP-007 están cerrados
   y que no quedan eslabones PENDIENTE en BR, UC o SPEC para las decisiones resueltas.
 - **Criterio de done:** Ningún REQ-EW-* sin cadena completa; matrices actualizadas.
@@ -127,7 +129,7 @@ OQ-EW-DESIGN-001 a OQ-EW-DESIGN-005.
   - Estado de PrestamoActivo.
   - actor.roles, actor.permissions.
   - ActorContext y TenantContext ya validados server-side; el servicio no resuelve tenant.
-  - FuenteHabilitanteSalida previamente validada cuando aplique.
+  - `readonly FuenteHabilitanteSalidaContext[]` provisto por el query port aprobado.
   - Estados canónicos de Solicitud: Pendiente, Asignada, EnBusqueda, Localizada,
     Preparada, Entregada, Cancelada, NoLocalizada.
   - Estados canónicos de Préstamo: Activo, Vencido, Renovado, Devuelto, Cerrado.
@@ -146,11 +148,13 @@ OQ-EW-DESIGN-001 a OQ-EW-DESIGN-005.
   - REPORTAR_INCIDENCIA -> INCIDENT_OPEN
   
   Reglas de ABRIR_PRESTAMO (OQ-EW-005 RESOLVED — sin política provisional):
-  - CONSULTA_PROGRAMADA: actor es Archivo o Jefatura -> capability habilitada.
-  - VALE_ARCHIVO_SM_1_14: fuente previamente validada + ARCHIVISTA/ARCHIVO_JEFE
+  - CONSULTA_PROGRAMADA: existe elemento `validada=true` + Archivo/Jefatura -> habilitada.
+  - VALE_ARCHIVO_SM_1_14: existe elemento `validada=true` + ARCHIVISTA/ARCHIVO_JEFE
     con LOAN_OPEN -> habilitada. DIRECCION/COORDINACION_MEDICA emite/autoriza y no
     obtiene LOAN_OPEN por esa emisión.
-  - ORDEN_SUPERIOR: fail-closed -> no incluir en T-04.
+  - ORDEN_SUPERIOR: fail-closed -> no incluir aunque llegue `validada=true`.
+  - Puede haber 0..N fuentes; basta una habilitante validada.
+  - CapabilityService no valida evidencia ni selecciona fuente; OpenLoan selecciona.
   
   Reglas de DISPATCH:
   - EstadoOperativo = APARTADO + actor es Archivo/Jefatura -> habilitada.
@@ -169,10 +173,13 @@ OQ-EW-DESIGN-001 a OQ-EW-DESIGN-005.
   - VALE_ARCHIVO_SM_1_14 validada + Archivista -> ABRIR_PRESTAMO incluida.
   - DIRECCION/COORDINACION_MEDICA emisor -> ABRIR_PRESTAMO NO incluida.
   - ORDEN_SUPERIOR -> ABRIR_PRESTAMO NO incluida.
+  - Colección vacía o sólo fuentes no validadas -> ABRIR_PRESTAMO NO incluida.
+  - Múltiples fuentes con al menos una habilitante validada -> incluida.
   - Sin EXPEDIENT_VIEW -> capabilities vacías.
   - AUDITOR_CONSULTA + EXPEDIENT_VIEW -> capabilities vacías.
 - **Fuente SDB:** SEC-017, SDD-005, DDD-010, DDD-012 v0.2.0, PERM-MATRIX v0.2.0,
-  DECISION-REGISTER OQ-EW-005.
+  DECISION-REGISTER OQ-EW-005, READ-MODEL-COMPOSITION-DECISION READ-EW-008..012,
+  AUTH-EW-006/007.
 - **Dependencias:** T-02.
 
 ### T-05 Implementar Use Case GetExpediente
@@ -188,6 +195,8 @@ OQ-EW-DESIGN-001 a OQ-EW-DESIGN-005.
        `ActiveRequestSummary | null` (0..1).
      - `OpenIncidentsQueryPort.findOpenByExpedienteId(id, tenant)` ->
        `readonly OpenIncidentSummary[]` (0..N; vacío = `[]`).
+     - `ExitEnablingSourceQueryPort.findAvailableByExpediente(id, tenant)` ->
+       `readonly FuenteHabilitanteSalidaContext[]` (0..N; vacío = `[]`).
      Los summaries tienen exactamente los campos de READ-EW-003..005 y no exponen
      aggregates ajenos. `ExpedienteId` y `TenantContext` son obligatorios.
   5. ExpedienteCapabilityService.
@@ -203,6 +212,7 @@ OQ-EW-DESIGN-001 a OQ-EW-DESIGN-005.
   - estadoOperativo en respuesta es uno de los 6 valores válidos.
   - Ausencia de préstamo/solicitud -> ambos `null`; ausencia de incidencias -> `[]`.
   - Cada query port recibe el mismo ExpedienteId y TenantContext server-side.
+  - El input público permanece expedienteId + actor + tenant; fuentes se consultan dentro.
   - Los intentos success/denied/not-found escriben audit sin datos C3.
 - **Fuente SDB:** UC-018 v0.2.0, SPEC-009 v0.2.0, SEC-017, SEC-032, SEC-038,
   DAT-012, READ-MODEL-COMPOSITION-DECISION.
@@ -554,7 +564,7 @@ T-23 (CI pipeline) <- todas
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.2"
+spec_version: "0.3.3"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002
