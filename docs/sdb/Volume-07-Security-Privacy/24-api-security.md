@@ -13,6 +13,11 @@ baseline:
 ---
 # SEC-024 — API Security
 
+Antes de Application, el resolver server-side valida que el TenantContext trusted y
+allow-listed pertenezca a `actor.tenantIds`. Body/query no pueden aportar tenant,
+databaseName, connection string, actor, requestId ni correlationId. Los tipos HTTP no
+cruzan el boundary hacia Application.
+
 - auth mandatory by default;
 - authorization in application layer;
 - schema validation;

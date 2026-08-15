@@ -35,3 +35,10 @@ Un módulo no modifica directamente tablas propiedad de otro módulo. Interactú
 - TenantContext.
 - Transaction boundary.
 No compartir entidades de dominio por comodidad.
+
+## HTTP boundary
+
+Un resolver de infraestructura convierte el contexto HTTP autenticado en el
+`RequestContext` canónico. Los tipos HTTP/NestJS no entran a Application. Controllers
+sólo invocan Use Cases canónicos y no acceden directamente a Repository. Actor, tenant
+y trazabilidad se resuelven server-side antes del Use Case.

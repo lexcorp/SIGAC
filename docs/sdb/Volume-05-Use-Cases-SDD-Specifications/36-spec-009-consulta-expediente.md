@@ -107,3 +107,10 @@ And la custodia no muestra acceptedAt hasta que CustodyAccepted ocurra
 ## Fuente
 UC-018, DDD-013, BIZ-007, DECISION-REGISTER OQ-EW-001, OQ-EW-007,
 DEC-EW-STATE-001, READ-MODEL-COMPOSITION-DECISION.
+
+## API slice v0.3.18
+
+La búsqueda 0..N continúa siendo requisito funcional, pero se difiere de T-11 hasta
+definir `SearchExpedientesByNumero` (o nombre canónico equivalente). El controller no
+consume `ExpedienteRepository` directamente. T-11 sólo publica GetExpediente,
+GetExpedienteTimeline, DispatchExpediente y AcceptCustody.

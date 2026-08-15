@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.17"
+version: "0.3.18"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -37,8 +37,9 @@ decisions_applied:
   - "POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014 APPROVED"
   - "TENANT-TRANSACTION-AUDIT-DECISION TX-EW-001..012 APPROVED"
   - "AUDIT-PHYSICAL-MODEL-DECISION AUD-DB-EW-001..013 APPROVED; AUD-DB-GAP CLOSED"
+  - "HTTP-REQUEST-CONTEXT-DECISION HTTP-EW-001, API-BIGINT-001, API-EW-021 APPROVED"
 requires:
-  - requirements.md (v0.3.17)
+  - requirements.md (v0.3.18)
 open_questions_blocking: []
 open_questions_non_blocking:
   - OQ-EW-002
@@ -245,13 +246,16 @@ rollback cuando corresponde. No existen distributed/cross-tenant transactions.
 
 ### 4.1 Endpoints de consulta
 
-| Método | Ruta | Propósito |
-|--------|------|-----------|
-| GET | /api/v1/expedientes/{id} | Read model completo por ExpedienteId UUID |
-| GET | /api/v1/expedientes?numero={n} | Búsqueda — devuelve colección 0..N |
-| GET | /api/v1/expedientes/{id}/timeline | Historial de movimientos operativos |
-| GET | /api/v1/expedientes/{id}/current-custody | Custodia actual |
-| GET | /api/v1/expedientes/{id}/active-loan | Préstamo activo si existe |
+API-011 conserva el mapa futuro, pero el scope implementable de T-11 está marcado como
+**vigente** o **diferido** según exista Use Case Application canónico.
+
+| Método | Ruta | Propósito | T-11 |
+|--------|------|-----------|------|
+| GET | /api/v1/expedientes/{id} | Read model completo por ExpedienteId UUID | Vigente |
+| GET | /api/v1/expedientes/{id}/timeline | Historial de movimientos operativos | Vigente |
+| GET | /api/v1/expedientes?numero={n} | Búsqueda — devuelve colección 0..N | Diferido: requiere SearchExpedientesByNumero |
+| GET | /api/v1/expedientes/{id}/current-custody | Custodia actual | Diferido: sin Use Case |
+| GET | /api/v1/expedientes/{id}/active-loan | Préstamo activo si existe | Diferido: sin Use Case |
 
 ### 4.2 Búsqueda por número — respuesta colección
 
@@ -280,7 +284,7 @@ rollback cuando corresponde. No existen distributed/cross-tenant transactions.
 | Despachar | POST /api/v1/expedientes/{id}/dispatch | DispatchExpediente |
 | Aceptar custodia | POST /api/v1/expedientes/{id}/accept-custody | AcceptCustody |
 | Transferir custodia | POST /api/v1/expedientes/{id}/custody-transfers | TransferCustody |
-| Confirmar rearchivo | POST /api/v1/expedientes/{id}/rearchive | ConfirmRearchive |
+| Confirmar rearchivo (diferido T-11) | POST /api/v1/expedientes/{id}/rearchive | ConfirmRearchive aún sin Use Case canónico |
 | Abrir préstamo | POST /api/v1/prestamos | OpenLoan + FuenteHabilitanteSalida |
 | Renovar préstamo | POST /api/v1/prestamos/{id}/renew | RenewLoan |
 | Recibir devolución | POST /api/v1/devoluciones | ReceiveReturn |
@@ -335,7 +339,7 @@ rollback cuando corresponde. No existen distributed/cross-tenant transactions.
     "openedAt": "ISO8601"
   }],
   "capabilities": ["DISPATCH", "SOLICITAR", "REPORTAR_INCIDENCIA", ...],
-  "rowVersion": 42
+  "rowVersion": "42"
 }
 ```
 
@@ -347,6 +351,17 @@ Frontend solo renderiza lo que capabilities contiene.
 vertical slice. No existe un query port para obtenerlo. `rowVersion` conserva la
 responsabilidad de optimistic concurrency.
 
+En HTTP/OpenAPI, `rowVersion` y `expectedRowVersion` son strings decimales con patrón
+`^[0-9]+$`; la frontera convierte a/desde `bigint` sin usar JavaScript `number`.
+
+### 4.6 RequestContext HTTP
+
+Un resolver de infraestructura autenticado produce el único `RequestContext` con actor,
+tenant, requestId, correlationId y `source=WEB`. El tenant es trusted/allow-listed y
+pertenece a `actor.tenantIds`; body/query no seleccionan contexto. CorrelationId sólo se
+propaga de fuente trusted o se genera, y nunca reutiliza requestId. Tipos HTTP no entran
+a Application. Request no autenticada retorna 401; actor autenticado sin permission, 403.
+
 ### 4.5 Manejo de errores (API-006)
 
 ```jsonc
@@ -356,7 +371,7 @@ responsabilidad de optimistic concurrency.
 { "type": "https://sigac/errors/conflict", "status": 409,
   "code": "OPTIMISTIC_LOCK_CONFLICT",
   "detail": "El expediente fue modificado. Recarga antes de reintentar.",
-  "currentVersion": 43, "traceId": "..." }
+  "currentVersion": "43", "traceId": "..." }
 
 { "type": "https://sigac/errors/authorization", "status": 403,
   "code": "INSUFFICIENT_ENABLING_SOURCE", "traceId": "..." }
@@ -808,7 +823,7 @@ Reglas de capabilities para despacho/custodia:
 
 | Dato | Módulo propietario | API |
 |------|--------------------|-----|
-| Préstamo activo | Módulo Préstamo; query port consumidor en Workspace | read model server-side y GET /expedientes/{id}/active-loan |
+| Préstamo activo | Módulo Préstamo; query port consumidor en Workspace | read model server-side; sub-recurso diferido hasta Use Case canónico |
 | Solicitud activa | Módulo Solicitud; query port consumidor en Workspace | read model server-side |
 | Incidencias abiertas | Módulo Incidencia; query port consumidor en Workspace | read model server-side |
 | Historial movimientos | Módulo Expediente / Archive Operations; schema de cada tenant | GET /expedientes/{id}/timeline |
@@ -836,7 +851,7 @@ por `GetExpediente` (READ-MODEL-COMPOSITION-DECISION).
 ## 12. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.17"
+spec_version: "0.3.18"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

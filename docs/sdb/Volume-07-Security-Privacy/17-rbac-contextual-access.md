@@ -40,6 +40,12 @@ No se delega la verificación al frontend.
 `roles`, `permissions` y `tenantIds`. La membresía actor -> tenant se valida server-side
 antes del CapabilityService; éste recibe ActorContext y TenantContext ya validados.
 
+La infraestructura autenticada construye `ActorContext` con actorId, roles, permissions
+y tenantIds sin fijar todavía claims OIDC concretos. El tenant resuelto debe pertenecer
+a `actor.tenantIds`; la ambigüedad multi-tenant se resuelve antes de Application.
+Request no autenticada produce `AUTHENTICATION_REQUIRED`/401; actor autenticado sin
+permission produce `PERMISSION_DENIED`/403.
+
 La falta de una permission requerida produce `PERMISSION_DENIED`; no se confunde con
 `INSUFFICIENT_ENABLING_SOURCE`. Ambas se traducen a 403, pero expresan causas distintas.
 Un Expediente fuera del tenant activo se trata como `EXPEDIENTE_NOT_FOUND`/404. No se

@@ -1,0 +1,77 @@
+# HTTP Request Context and API Boundary Decision
+
+Status: **APPROVED**
+Scope: Expediente Workspace v0.3.18
+
+## HTTP-EW-001 — Authenticated Request Context
+
+La frontera server-side posee un resolver conceptualmente equivalente a:
+
+```typescript
+interface AuthenticatedRequestContextResolver {
+  resolve(request: HttpRequestContext): Promise<RequestContext>;
+}
+```
+
+`HttpRequestContext` es un tipo de infraestructura y no cruza hacia Application. El
+resolver produce el único `RequestContext` canónico con `actor`, `tenant`, `requestId`,
+`correlationId` y `source: 'WEB'` antes de invocar un Use Case.
+
+La infraestructura de autenticación aporta un actor autenticado con `actorId`, `roles`,
+`permissions` y `tenantIds`. Esta decisión no fija nombres de claims OIDC mientras el
+proveedor no esté definido.
+
+`TenantContext` se obtiene exclusivamente de fuentes server-side trusted y allow-listed,
+y debe corresponder a uno de `actor.tenantIds`. Una selección ambigua entre múltiples
+tenants se resuelve antes de Application. Body, query y valores arbitrarios de
+`databaseName`, connection string o tenant nunca seleccionan una database.
+
+`requestId` identifica una petición HTTP individual y la frontera garantiza que exista.
+`correlationId` identifica el flujo lógico: sólo se propaga desde una fuente trusted
+aprobada y, si no existe, la frontera genera uno. Son valores distintos; ninguno procede
+del body y `requestId` nunca sustituye a `correlationId`.
+
+## API-BIGINT-001 — Bigint en JSON/OpenAPI
+
+Application conserva `bigint`. La frontera JSON representa `rowVersion` y
+`expectedRowVersion` como string decimal no negativo:
+
+```json
+{ "rowVersion": "42", "expectedRowVersion": "42" }
+```
+
+El contrato OpenAPI es `type: string` con `pattern: '^[0-9]+$'`. La API convierte
+string decimal a `bigint` al entrar y `bigint` a string decimal al salir. Nunca usa
+JavaScript `number` para estas versiones.
+
+## API-EW-021 — Controller boundary y scope T-11
+
+Un controller sólo expone operaciones respaldadas por un Use Case/contrato Application
+canónico. No accede a Repository para compensar contratos ausentes.
+
+T-11 queda limitado a:
+
+- `GET /api/v1/expedientes/{id}` → `GetExpediente`;
+- `GET /api/v1/expedientes/{id}/timeline` → `GetExpedienteTimeline`;
+- `POST /api/v1/expedientes/{id}/dispatch` → `DispatchExpediente`;
+- `POST /api/v1/expedientes/{id}/accept-custody` → `AcceptCustody`.
+
+Se difieren búsqueda por número, `current-custody`, `active-loan` y `rearchive` hasta
+que exista un Use Case Application canónico. La búsqueda requerirá
+`SearchExpedientesByNumero` o un nombre equivalente aprobado, mantendrá 0..N y nunca
+será implementada mediante acceso directo del controller a `findByNumero`.
+
+## Authentication y RFC7807
+
+| Situación/code | HTTP |
+|---|---:|
+| request no autenticada / `AUTHENTICATION_REQUIRED` | 401 |
+| `PERMISSION_DENIED` | 403 |
+| `INSUFFICIENT_ENABLING_SOURCE` | 403 |
+| `EXPEDIENTE_NOT_FOUND` | 404 |
+| `OPTIMISTIC_LOCK_CONFLICT` | 409 |
+| `REQUEST_INVALID_TRANSITION` | 409 |
+
+`AUTHENTICATION_REQUIRED` pertenece a API/BFF; no se añade a `ApplicationError`. La
+respuesta usa RFC7807 con `code` estable y sin datos sensibles, detalles internos ni
+existencia cross-tenant.

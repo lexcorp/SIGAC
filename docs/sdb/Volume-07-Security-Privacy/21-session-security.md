@@ -13,6 +13,11 @@ baseline:
 ---
 # SEC-021 — Session Security
 
+La frontera HTTP autenticada produce `ActorContext` sin fijar nombres de claims OIDC en
+este slice. Una request sin identidad autenticada produce
+`AUTHENTICATION_REQUIRED`/401. El `correlationId` sólo se propaga desde una fuente
+trusted aprobada; si falta se genera, siempre distinto del `requestId` de la petición.
+
 - OIDC Authorization Code + PKCE para SPA.
 - Access tokens cortos.
 - Refresh handling según patrón aprobado.

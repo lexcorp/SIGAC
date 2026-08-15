@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.17"
+version: "0.3.18"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 traceability_model: "OS-007 / SDD-006"
@@ -31,10 +31,11 @@ decisions_applied:
   - "POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014 APPROVED"
   - "TENANT-TRANSACTION-AUDIT-DECISION TX-EW-001..012 APPROVED"
   - "AUDIT-PHYSICAL-MODEL-DECISION AUD-DB-EW-001..013 APPROVED; AUD-DB-GAP CLOSED"
+  - "HTTP-REQUEST-CONTEXT-DECISION HTTP-EW-001, API-BIGINT-001, API-EW-021 APPROVED"
 requires:
-  - requirements.md (v0.3.17)
-  - design.md (v0.3.17)
-  - tasks.md (v0.3.17)
+  - requirements.md (v0.3.18)
+  - design.md (v0.3.18)
+  - tasks.md (v0.3.18)
 ---
 
 # Expediente Workspace — Traceability
@@ -75,9 +76,9 @@ requires:
 | **Use Case** | UC-018 v0.2.0 | Búsqueda 0..N; desambiguación manual |
 | **SPEC** | SPEC-009 v0.2.0 FR-VIEW-001 | 0..N; variantes de separador; desambiguación |
 | **REQ** | REQ-EW-002 | Búsqueda 0..N; normalización; desambiguación |
-| **API** | GET /api/v1/expedientes?numero= -> {data[], total} (API-011 v0.2.0) | Colección; N=0 HTTP 200 vacío |
+| **API** | GET /api/v1/expedientes?numero= -> {data[], total} (API-011 v0.2.0) | Diferido de T-11 hasta SearchExpedientesByNumero; contrato 0..N permanece canónico |
 | **UI** | useExpedienteSearch (normaliza), DisambiguationList (N>1), apertura directa (N=1) | design.md §5.3, APP-003 v0.2.0 |
-| **Test** | AC-EW-002/003/004; T-09/T-10/T-11/T-15/T-21/T-22 (escenarios 1..4) | Migración y Repository PostgreSQL, normalización 0..N y E2E variantes |
+| **Test** | AC-EW-002/003/004; T-09/T-10 y task posterior de Search/T-15/T-21/T-22 | Migración y Repository PostgreSQL ya cubren normalización 0..N; API espera Use Case canónico |
 
 ---
 
@@ -186,7 +187,7 @@ requires:
 | **Workflow** | Transversal | — |
 | **Use Case** | UC-018 paso 1 | — |
 | **REQ** | REQ-EW-001 (precondición), REQ-EW-016 (tenant) | — |
-| **API** | `PERMISSION_DENIED` -> 403; `EXPEDIENTE_NOT_FOUND` -> 404, incluido cross-tenant | RFC7807 futuro en T-11/T-12 |
+| **API** | `AUTHENTICATION_REQUIRED` -> 401; `PERMISSION_DENIED` -> 403; `EXPEDIENTE_NOT_FOUND` -> 404, incluido cross-tenant | RFC7807 T-11/T-12; HTTP-REQUEST-CONTEXT-DECISION |
 | **Test** | AC-EW-013; T-19; TQ-007 | Unit UC; API contract; Tenant isolation gate |
 
 ---
@@ -198,7 +199,7 @@ requires:
 | **Source / SDB** | SEC-032, API-005, AGENTS.md | database-per-tenant; TenantContext server-side |
 | **Business Rule** | "No cross-tenant queries"; actor -> tenant validado antes de CapabilityService | — |
 | **REQ** | REQ-EW-016 | — |
-| **API** | API-005; tenant del host/claim de sesión | — |
+| **API** | HTTP-EW-001/API-005; fuente server-side trusted/allow-listed, sin fijar claim OIDC | tenant debe pertenecer a actor.tenantIds |
 | **Test** | AC-EW-013; T-19; T-21; TQ-007 | Integration PG; E2E; tenant isolation gate |
 
 ---
@@ -210,7 +211,7 @@ requires:
 | **Source / SDB** | DAT-019, API-006, INT-006 | row_version; conflicto -> HTTP 409 |
 | **Business Rule** | INV-EXP-002, INV-LOAN-002 | Transiciones críticas no sobreescriben |
 | **REQ** | REQ-EW-015 | — |
-| **API** | HTTP 409 con currentVersion (API-006) | DispatchExpediente, AcceptCustody, OpenLoan, etc. |
+| **API** | HTTP 409; versiones JSON como string decimal (API-BIGINT-001) | DispatchExpediente, AcceptCustody, OpenLoan, etc. |
 | **UI** | Banner de conflicto; Recargar; preservar contexto (design.md §5.4) | — |
 | **Test** | AC-EW-012; T-18/T-22 (escenario 10) | Component 409; E2E concurrencia |
 
@@ -295,6 +296,7 @@ requires:
 | NFR-EW-005 | TR-013 | Cubierto |
 | NFR-EW-006 | TR-011 | Cubierto |
 | NFR-EW-007 | TR-012 | Cubierto — AuditWriter Application append-only |
+| NFR-EW-012 | TR-009/TR-010/TR-011 | Cubierto — resolver HTTP, 401/403 y bigint decimal |
 
 ---
 
@@ -305,7 +307,7 @@ requires:
 | AC-EW-001 | E2E | T-22 | Pendiente implementación |
 | AC-EW-002 | Unit VO + E2E | T-01, T-21, T-22 | Pendiente |
 | AC-EW-003 | Unit + E2E | T-09, T-15, T-22 | Pendiente |
-| AC-EW-004 | API contract + E2E | T-11, T-22 | Pendiente |
+| AC-EW-004 | API contract + E2E | Task posterior Search, T-22 | Diferido hasta Use Case Search canónico |
 | AC-EW-005 | Unit UC + E2E | T-07, T-08, T-22 | Pendiente |
 | AC-EW-006 | Unit aggregate + E2E | T-02, T-22 | Pendiente |
 | AC-EW-007 | Unit VO + E2E | T-01, T-14, T-22 | Pendiente |
@@ -369,13 +371,14 @@ requires:
 | 0.3.15 | 2026-08-15 | DB-EW-001..014 aprobadas: DDL PostgreSQL tenant, nombres físicos, PacienteReferencia, Ubicacion, Custodia inline, bigint, Movimiento, FKs y mapping Repository definidos; T-10 listo. |
 | 0.3.16 | 2026-08-15 | TX-EW-001..012 aprobadas: TenantDatabaseRouter, transaction-bound AuditWriter, UoW tenant y audit local formalizados; AUD-DB-GAP bloquea T-09. |
 | 0.3.17 | 2026-08-15 | AUD-DB-EW-001..013 aprobadas: DDL audit_log, checks, mapping, exclusión source_ip_hash y migration ownership definidos; AUD-DB-GAP cerrado. |
+| 0.3.18 | 2026-08-15 | HTTP-EW-001, API-BIGINT-001 y API-EW-021 aprobadas: resolver HTTP autenticado, tenant membership/tracing, bigint decimal, scope T-11 y 401/403 formalizados. |
 
 ---
 
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.17"
+spec_version: "0.3.18"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

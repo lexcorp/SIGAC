@@ -58,3 +58,7 @@ La capa API mapea el code a RFC7807 y lo conserva como extensión estable:
 No expone datos sensibles, stack trace, nombres de database ni existencia cross-tenant.
 La ausencia tenant-scoped usa `EXPEDIENTE_NOT_FOUND`; no existe code público
 `CROSS_TENANT_*`.
+
+Una request no autenticada usa `AUTHENTICATION_REQUIRED`/401 en la frontera API/BFF.
+Un actor autenticado sin permission usa `PERMISSION_DENIED`/403. El primero no forma
+parte de la taxonomía `ApplicationError`.

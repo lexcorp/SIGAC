@@ -157,3 +157,13 @@ no escribe audit.
 ## Fuente
 DDD-013, SPEC-009, BIZ-007, DECISION-REGISTER OQ-EW-001, OQ-EW-007,
 DEC-EW-STATE-001, READ-MODEL-COMPOSITION-DECISION.
+
+## Frontera HTTP (HTTP-EW-001, API-EW-021)
+
+La frontera autenticada construye el `RequestContext` antes de Application. Para este
+slice, T-11 sólo expone consulta por id, timeline, Dispatch y AcceptCustody porque son
+las operaciones con Use Case canónico existente. Búsqueda por número, current-custody,
+active-loan y rearchive quedan diferidos; el controller no accede al Repository.
+
+En JSON, `rowVersion` y `expectedRowVersion` son strings decimales; Application conserva
+`bigint`.

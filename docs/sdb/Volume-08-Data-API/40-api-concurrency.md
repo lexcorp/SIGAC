@@ -23,3 +23,7 @@ decisión explícita de este vertical slice.
 El code de Dispatch sigue siendo `OPTIMISTIC_LOCK_CONFLICT`/409 y su resultado de audit
 es `conflict`. El append ocurre fuera de la UoW mutante después del rollback; no se
 persiste Movimiento ni cambio del aggregate.
+
+En Application las versiones son `bigint`. JSON/OpenAPI representa `rowVersion` y
+`expectedRowVersion` como string decimal con patrón `^[0-9]+$`; la frontera convierte
+en ambos sentidos sin pasar por JavaScript `number`.

@@ -37,6 +37,16 @@ The server-side boundary constructs it before Application. `requestId` identifie
 request/execution; `correlationId` relates a logical flow and cannot substitute it.
 Actor, tenant and identifiers never come from arbitrary body/query input.
 
+La frontera implementa un resolver server-side conceptualmente equivalente a
+`AuthenticatedRequestContextResolver.resolve(HttpRequestContext): Promise<RequestContext>`.
+El tipo HTTP queda en infraestructura. El tenant procede sólo de fuentes trusted y
+allow-listed, debe estar en `actor.tenantIds` y cualquier selección ambigua se resuelve
+antes de Application. No se fijan claims OIDC concretos en este slice.
+
+La frontera garantiza un `requestId` por request. `correlationId` sólo se propaga desde
+una fuente trusted aprobada y, si falta, se genera. Nunca se reutilizan entre sí ni se
+aceptan desde el body. Para HTTP, `source = WEB`.
+
 Antes de invocar `ExpedienteCapabilityService`, el backend valida que el actor pertenece
 al tenant resuelto. El servicio recibe `ActorContext` y `TenantContext` ya validados y no
 resuelve ni selecciona tenant.

@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.17"
+version: "0.3.18"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -38,6 +38,7 @@ decisions_applied:
   - "POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014 APPROVED"
   - "TENANT-TRANSACTION-AUDIT-DECISION TX-EW-001..012 APPROVED"
   - "AUDIT-PHYSICAL-MODEL-DECISION AUD-DB-EW-001..013 APPROVED; AUD-DB-GAP CLOSED"
+  - "HTTP-REQUEST-CONTEXT-DECISION HTTP-EW-001, API-BIGINT-001, API-EW-021 APPROVED"
 ---
 
 # Expediente Workspace — Requirements
@@ -400,6 +401,23 @@ y RequestContext obligatorios, result/source con CHECK, JSONB opcional permitido
 tenant_id, FKs, índices secundarios ni source_ip_hash. Es append-only y su migración
 tenant posterior pertenece a Security / Audit. No almacena datos C3 ni secretos.
 
+### NFR-EW-012 — Frontera HTTP autenticada y bigint
+
+La infraestructura server-side resuelve un único `RequestContext` con actor autenticado,
+TenantContext trusted/allow-listed perteneciente a `actor.tenantIds`, requestId,
+correlationId y `source=WEB`. Body/query no aportan actor, tenant ni trazabilidad. Si no
+existe correlationId en una fuente trusted aprobada, la frontera genera uno distinto de
+requestId.
+
+Application conserva `rowVersion` y `expectedRowVersion` como `bigint`; JSON/OpenAPI los
+representa como string decimal con patrón `^[0-9]+$`, sin usar JavaScript `number`.
+
+T-11 sólo expone GetExpediente, GetExpedienteTimeline, DispatchExpediente y
+AcceptCustody. Búsqueda por número, current-custody, active-loan y rearchive quedan
+diferidos hasta contar con Use Case Application canónico. Request no autenticada usa
+`AUTHENTICATION_REQUIRED`/401; actor autenticado sin permission usa
+`PERMISSION_DENIED`/403.
+
 ---
 
 ## 5. Criterios de aceptación
@@ -590,7 +608,7 @@ Ninguna. `AUD-DB-GAP` y las OQs históricamente bloqueantes están cerradas.
 ## 7. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.17"
+spec_version: "0.3.18"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

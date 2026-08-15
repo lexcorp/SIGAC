@@ -26,6 +26,20 @@ architecture:
 | `POST` | `/api/v1/expedientes/{id}/accept-custody` | `AcceptCustody` → `EN_CONSULTA` |
 | `POST` | `/api/v1/expedientes/{id}/rearchive` | `ConfirmRearchive` → `DISPONIBLE` |
 
+### Scope T-11 (API-EW-021)
+
+El catálogo anterior incluye operaciones futuras. T-11 publica exclusivamente las rutas
+con Use Case Application canónico existente:
+
+- `GET /api/v1/expedientes/{id}`;
+- `GET /api/v1/expedientes/{id}/timeline`;
+- `POST /api/v1/expedientes/{id}/dispatch`;
+- `POST /api/v1/expedientes/{id}/accept-custody`.
+
+La búsqueda por número, `current-custody`, `active-loan` y `rearchive` permanecen
+diferidos. Búsqueda requiere `SearchExpedientesByNumero` o nombre canónico equivalente.
+El controller no consume Repository directamente.
+
 No hay endpoint que edite contenido clínico.
 
 El contrato conceptual de `POST /accept-custody` aporta receptor
@@ -126,9 +140,12 @@ El parámetro `numero` se normaliza internamente (sin separador) antes de la bú
     "openedAt": "ISO8601"
   }],
   "capabilities": ["DISPATCH", "SOLICITAR", "REPORTAR_INCIDENCIA", ...],
-  "rowVersion": 42
+  "rowVersion": "42"
 }
 ```
+
+`rowVersion` y `expectedRowVersion` son strings decimales en JSON (`^[0-9]+$`) y
+`bigint` en Application. La frontera nunca convierte mediante JavaScript `number`.
 
 El backend compone este único read model mediante query ports tenant-scoped propiedad de
 Application de Expediente Workspace. Cardinalidades: solicitud `0..1`, préstamo `0..1`,

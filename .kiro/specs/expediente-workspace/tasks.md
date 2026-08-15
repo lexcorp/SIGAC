@@ -1,11 +1,11 @@
 ---
 spec: expediente-workspace
-version: "0.3.17"
+version: "0.3.18"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 requires:
-  - requirements.md (v0.3.17)
-  - design.md (v0.3.17)
+  - requirements.md (v0.3.18)
+  - design.md (v0.3.18)
 decisions_applied:
   - "OQ-EW-001 RESOLVED"
   - "OQ-EW-005 RESOLVED"
@@ -32,6 +32,7 @@ decisions_applied:
   - "POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014 APPROVED"
   - "TENANT-TRANSACTION-AUDIT-DECISION TX-EW-001..012 APPROVED"
   - "AUDIT-PHYSICAL-MODEL-DECISION AUD-DB-EW-001..013 APPROVED; AUD-DB-GAP CLOSED"
+  - "HTTP-REQUEST-CONTEXT-DECISION HTTP-EW-001, API-BIGINT-001, API-EW-021 APPROVED"
 ready_gate: "READY-GATE.md — todos los ítems deben estar marcados antes de iniciar T-01"
 done_gate: "OS-018 — spec + tests + API/migrations + auth/tenant/audit + traceability"
 ---
@@ -66,7 +67,7 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
 ## Grupo 0 — Trazabilidad
 
 ### T-00 Completar traceability.md
-- **Descripción:** Verificar que traceability.md v0.3.17 tiene cadenas completas
+- **Descripción:** Verificar que traceability.md v0.3.18 tiene cadenas completas
   para todas las capacidades. Confirmar que GAP-002, GAP-003, GAP-007 están cerrados
   y que no quedan eslabones PENDIENTE en BR, UC o SPEC para las decisiones resueltas.
 - **Criterio de done:** Ningún REQ-EW-* sin cadena completa; matrices actualizadas.
@@ -406,39 +407,46 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
 - **Descripción:** `apps/api/src/expediente/ExpedienteController.ts`.
   Endpoints:
   - GET /api/v1/expedientes/:id -> GetExpediente.
-  - GET /api/v1/expedientes?numero= -> findByNumero; retorna colección {data[], total}.
-    Normaliza el parámetro antes de llamar al use case.
   - GET /api/v1/expedientes/:id/timeline -> GetExpedienteTimeline.
-  - GET /api/v1/expedientes/:id/current-custody -> sub-recurso de custodia.
-  - GET /api/v1/expedientes/:id/active-loan -> sub-recurso de préstamo activo.
   - POST /api/v1/expedientes/:id/dispatch -> DispatchExpediente.
   - POST /api/v1/expedientes/:id/accept-custody -> AcceptCustody.
-  - POST /api/v1/expedientes/:id/rearchive -> ConfirmRearchive.
+  - Diferidos: búsqueda por número (requiere SearchExpedientesByNumero o nombre
+    equivalente), current-custody, active-loan y rearchive hasta contar con Use Case.
   - El controller NO escribe repositorios directamente.
-  - La frontera server-side construye un único `RequestContext` (`WEB`) por request y lo
-    entrega a los Use Cases; body/query no aportan actor, tenant ni IDs de trazabilidad.
+  - Un resolver de infraestructura autenticado construye un único `RequestContext`
+    (`WEB`) por request. Tenant trusted/allow-listed debe pertenecer a actor.tenantIds;
+    body/query no aportan actor, tenant ni IDs de trazabilidad.
+  - requestId siempre existe; correlationId sólo se propaga de fuente trusted o se
+    genera, y nunca reutiliza requestId.
+  - rowVersion y expectedRowVersion cruzan HTTP como string decimal `^[0-9]+$`; la
+    frontera convierte a/desde bigint sin JavaScript number.
   - Errores: RFC7807; sin stack trace, sin nombre DB, sin datos clínicos.
   - Mapear `ApplicationError.code` según ERR-EW-002; `code` es extensión estable.
     Cross-tenant usa 404 `EXPEDIENTE_NOT_FOUND`, nunca un code público específico.
 - **Tests requeridos (contract):**
-  - GET ?numero= con N=0 -> 200 {data:[], total:0}.
-  - GET ?numero= con N=1 -> 200 {data:[...], total:1}.
-  - GET ?numero= con N=2 -> 200 {data:[...,...], total:2}.
+  - GET /:id success con rowVersion string decimal.
+  - Timeline vacío y con nextCursor opaco.
   - GET /:id con id inexistente -> 404.
-  - GET /:id sin token -> 403.
+  - GET /:id sin autenticación -> 401 AUTHENTICATION_REQUIRED.
+  - GET /:id autenticado sin permission -> 403 PERMISSION_DENIED.
   - POST /dispatch con rowVersion incorrecto -> 409.
   - POST /dispatch con estado incorrecto -> 409.
+  - POST /accept-custody success/conflict/invalid-transition.
+  - RequestContext se propaga y body/query no pueden falsificar tenant ni trazabilidad.
   - Tenant isolation: Hospital-A no accede a Hospital-B -> 404.
 - **Fuente SDB:** API-001, API-005, API-006, API-011 v0.2.0, AGENTS.md.
 - **Dependencias:** T-05, T-06, T-07, T-08.
 
 ### T-12 Actualizar contrato OpenAPI
 - **Descripción:** Actualizar `openapi/` para reflejar T-11:
-  - Schema ExpedienteSearchResponse: {data: ExpedienteListItem[], total: integer}.
   - Schema ExpedienteReadModel: estadoOperativo como enum de 6 valores exactos;
     custodiaActual.aceptadaEn nullable; prestamoActivo.fuenteHabilitante como enum.
   - Endpoints /dispatch y /accept-custody.
-  - Errores 403 con code INSUFFICIENT_ENABLING_SOURCE.
+  - Timeline `{items,nextCursor}`, sin total.
+  - rowVersion/expectedRowVersion string decimal `^[0-9]+$`.
+  - RFC7807: 401 AUTHENTICATION_REQUIRED; 403 PERMISSION_DENIED o
+    INSUFFICIENT_ENABLING_SOURCE; 404 y 409 canónicos.
+  - No publicar los cuatro endpoints diferidos de API-EW-021.
 - **Regla (AGENTS.md, steering/api.md):** Todo cambio de API requiere actualizar OpenAPI.
 - **Fuente SDB:** API-001, API-011 v0.2.0.
 - **Dependencias:** T-11.
@@ -656,7 +664,7 @@ T-23 (CI pipeline) <- todas
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.17"
+spec_version: "0.3.18"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002
