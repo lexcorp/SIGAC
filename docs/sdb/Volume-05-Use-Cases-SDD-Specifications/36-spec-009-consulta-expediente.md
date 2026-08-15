@@ -1,9 +1,10 @@
 ---
 project: SIGAC
 sdb_volume: "05 - Use Cases & Spec-Driven Development Specifications"
-version: "0.1.0"
+version: "0.2.0"
 status: "Draft for use-case/spec validation"
-date: "2026-08-13"
+date: "2026-08-14"
+amended: "2026-08-14 — OQ-EW-001, OQ-EW-007: FR-VIEW-001 actualizado para 0..N"
 methodology:
   - Spec-Driven Development
   - Domain-Driven Design
@@ -12,12 +13,65 @@ methodology:
 ---
 # SPEC-009 — Consulta del Expediente
 
-FR-VIEW-001 búsqueda rápida por identificadores permitidos.
-FR-VIEW-002 situación actual.
-FR-VIEW-003 ubicación actual.
-FR-VIEW-004 custodia actual.
-FR-VIEW-005 préstamo activo.
-FR-VIEW-006 incidencias.
-FR-VIEW-007 historial.
+## Requisitos funcionales
 
-Non-goal: mostrar diagnósticos o notas clínicas.
+FR-VIEW-001 Búsqueda por número de expediente con resultado 0..N.
+  - Acepta variantes de separador: `RFC/10`, `RFC-10`, `RFC10`.
+  - Si N = 0: estado vacío descriptivo.
+  - Si N = 1: abre workspace directamente.
+  - Si N > 1: muestra lista con datos mínimos de desambiguación (nombre, CURP, núm. ISSSTE);
+    nunca selecciona automáticamente (INV-EXP-003, BR-017).
+
+FR-VIEW-002 Situación actual del expediente: `EstadoOperativo` con los valores aceptados
+  (DISPONIBLE, APARTADO, EN_TRASLADO, EN_CONSULTA, NO_LOCALIZADO, EXTRAVIADO).
+  `EN_BUSQUEDA` no es un estado del Expediente.
+
+FR-VIEW-003 Ubicación actual.
+
+FR-VIEW-004 Custodia actual: tipo, referencia, `acceptedAt` si aplica.
+  Distinguir entre estado `EN_TRASLADO` (transporte sin custodia aceptada) y
+  `EN_CONSULTA` (custodia formalmente aceptada por receptor).
+
+FR-VIEW-005 Préstamo activo si existe (con fuente habilitante visible).
+
+FR-VIEW-006 Incidencias abiertas si existen.
+
+FR-VIEW-007 Historial de movimientos operativos (`MovimientoExpediente`).
+  Separado del audit log (Movimiento ≠ Audit).
+
+FR-VIEW-008 `capabilities[]` — acciones válidas para el actor en el estado actual.
+
+## Non-goals
+- No mostrar diagnósticos, notas clínicas, tratamientos ni estudios.
+- No seleccionar automáticamente entre coincidencias múltiples.
+
+## Acceptance criteria (selección)
+
+```gherkin
+Given un archivista con EXPEDIENT_VIEW
+When busca por número "PERR810604/10"
+Then el sistema devuelve el expediente único
+And muestra EstadoOperativo, ubicación y custodia above the fold
+
+Given un archivista con EXPEDIENT_VIEW
+When busca por número "PERR810604-10"
+Then el sistema normaliza la variante y devuelve el mismo expediente
+
+Given un número que corresponde a dos derechohabientes distintos
+When el archivista busca
+Then el sistema muestra lista de desambiguación con nombre/CURP/núm. ISSSTE
+And no abre ningún expediente automáticamente
+
+Given un número que no existe en el tenant
+When el archivista busca
+Then el sistema muestra estado vacío descriptivo
+And no revela información de otros tenants
+
+Given un expediente EN_TRASLADO
+When el archivista abre el workspace
+Then el estado muestra EN_TRASLADO (no EN_CONSULTA)
+And la custodia no muestra acceptedAt hasta que CustodyAccepted ocurra
+```
+
+## Fuente
+UC-018, DDD-013, BIZ-007, DECISION-REGISTER OQ-EW-001, OQ-EW-007, DEC-EW-STATE-001.
