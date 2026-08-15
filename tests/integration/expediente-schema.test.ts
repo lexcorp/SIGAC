@@ -29,7 +29,7 @@ describe('expediente-workspace tenant migration', () => {
     await client.end();
     await admin.query(`DROP DATABASE "${databaseName}"`);
     await admin.end();
-  });
+  }, 30_000);
 
   it('crea sólo las columnas y nullability aprobadas', async () => {
     const result = await client.query<{

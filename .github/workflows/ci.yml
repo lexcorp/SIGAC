@@ -8,6 +8,22 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: sigac
+          POSTGRES_PASSWORD: sigac_dev_only
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sigac -d postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      SIGAC_POSTGRES_ADMIN_URL: postgresql://sigac:sigac_dev_only@localhost:5432/postgres
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -15,9 +31,18 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: corepack enable
-      - run: pnpm install --frozen-lockfile=false
+      - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
       - run: pnpm openapi:validate
+      - name: Validate migration regeneration
+        run: |
+          pnpm db:generate
+          test -z "$(git status --porcelain -- migrations/tenant)"
+      - run: pnpm test:integration
+      - run: pnpm test:tenant-isolation
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - run: git diff --check
