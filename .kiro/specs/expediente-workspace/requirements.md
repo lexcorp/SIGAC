@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.7"
+version: "0.3.9"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -30,6 +30,7 @@ decisions_applied:
   - "TL-EW-001..017 APPROVED"
   - "OQ-EW-DESIGN-003 RESOLVED"
   - "OQ-DOM-001 RESOLVED"
+  - "DISPATCH-DECISION DSP-EW-001..011 APPROVED; DSP-GAP-001/002 CLOSED"
 ---
 
 # Expediente Workspace — Requirements
@@ -256,6 +257,18 @@ operativos; `EXPEDIENT_VIEW` no es una capability.
 - **Resultado:** ExpedienteDispatched emitido; EstadoOperativo → EN_TRASLADO.
   Custodia sigue siendo de Archivo hasta CustodyAccepted.
 - **Fuente SDB:** WF-005 Fase 1, DDD-010, DDD-011, BIZ-008, DECISION-REGISTER OQ-EW-006.
+- **Input:** expedienteId, destination Ubicacion, intendedCustodianRef string obligatorio
+  y no vacío,
+  businessReference `{type:string,id:string|null}`, expectedRowVersion bigint y context.
+- **Atomicidad:** update aggregate + Movimiento DISPATCHED + audit success en una única
+  UoW PostgreSQL tenant-scoped, ALL OR NOTHING.
+- **Audit:** EXPEDIENTE_DISPATCH / EXPEDIENTE / expedienteId.
+- **Custodia:** `Custodia.enTraslado` conserva `custodianReference: string` obligatorio;
+  no se usa string vacío ni se deriva desde destination.
+- **Concurrencia:** optimistic lock mismatch revierte la UoW mutante y después registra
+  audit `conflict` fuera de ella; no persiste aggregate ni Movimiento.
+- **AuditResult:** `success | denied | not-found | conflict`; respectivamente mutación
+  confirmada, permission ausente, recurso tenant-scoped ausente y optimistic lock mismatch.
 
 ### REQ-EW-012 — Aceptación de custodia en destino
 - **Actor:** Receptor de Servicio autenticado (Enfermería o médico/solicitante).
@@ -516,7 +529,7 @@ Ninguna. OQ-EW-001, OQ-EW-005, OQ-EW-006 y OQ-EW-007 están RESUELTAS.
 ## 7. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.7"
+spec_version: "0.3.9"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

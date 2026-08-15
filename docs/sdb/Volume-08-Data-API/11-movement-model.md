@@ -45,3 +45,7 @@ No se usa para:
 - audit técnico general.
 
 No se mezcla ni comparte persistencia con `audit_log`.
+
+Para DISPATCHED, el append contiene expedienteId, movementType, origin/destination
+location, origin/destination custodian ref, business reference type/id, occurredAt,
+actorRef, source y correlationId. Writer genera id y recordedAt al persistir. Sin C3.

@@ -26,6 +26,10 @@ Probar invariantes, value objects, state transitions y policies.
 
 ### Despacho / Custodia (OQ-EW-006 RESOLVED)
 - `DispatchExpediente` produce `EstadoOperativo = EN_TRASLADO`.
+- Dispatch parte sólo de APARTADO, deriva origin/custodian previos, establece destination
+  y Custodia acceptedAt null, y produce el payload mínimo ExpedienteDispatched.
+- Dispatch exige intendedCustodianRef string no vacío; Custodia en tránsito conserva
+  custodianReference obligatorio y no lo deriva de destination.
 - `EN_TRASLADO` sin `AcceptCustody` → `custodiaActual.acceptedAt = null`.
 - `AcceptCustody` produce `EstadoOperativo = EN_CONSULTA` y establece `acceptedAt`.
 - Despacho sin aceptación no equivale a custodia formal.

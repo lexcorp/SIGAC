@@ -55,3 +55,8 @@ Para `GetExpedienteTimeline`, cubrir al menos:
   invocar el timeline port;
 - página vacía y página no vacía producen audit `success` sobre resourceType EXPEDIENTE;
 - auditar la consulta no crea MovimientoExpediente.
+
+Para Dispatch, cubrir permission/tenant/not-found, expectedRowVersion, transición,
+payload/evento, Movimiento DAT-011 sin C3, timestamps no-client y atomicidad rollback de
+aggregate+movimiento+audit. Cubrir intendedCustodianRef obligatorio/no vacío y optimistic
+conflict: rollback sin aggregate ni Movimiento, seguido de audit `conflict` externo.

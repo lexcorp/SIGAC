@@ -112,6 +112,17 @@ La acción es `EXPEDIENTE_TIMELINE_VIEW`, con `resourceType = EXPEDIENTE` y
 `resourceId = expedienteId`. Timeline vacío y no vacío son `success`. El audit no crea
 movimientos y sus filas nunca forman parte del resultado.
 
+## DispatchExpediente (DSP-EW-001..011)
+
+Input: ExpedienteId, destination Ubicacion, intendedCustodianRef string obligatorio y no vacío,
+businessReference `{type,id}`, expectedRowVersion bigint y RequestContext. Autoriza
+EXPEDIENT_DISPATCH, carga tenant-scoped, ejecuta la transición APARTADO→EN_TRASLADO y en
+una UoW guarda aggregate, Movimiento DISPATCHED y audit success ALL OR NOTHING.
+
+Audit: `EXPEDIENTE_DISPATCH/EXPEDIENTE/{expedienteId}`. Denied/not-found quedan fuera de
+la transacción mutante. Optimistic conflict provoca rollback completo y después se
+audita `conflict` fuera de la UoW fallida; no persiste aggregate ni Movimiento.
+
 ## Audit
 
 El Use Case produce un `AuditEntry` semántico y consume

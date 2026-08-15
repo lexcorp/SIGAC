@@ -45,3 +45,9 @@ y ownership de Movimiento en Archive Operations/schema tenant. Permanece abierta
 `OQ-EW-010` sobre retención; T-06 no define ni ejecuta esa política.
 
 También permanecen abiertas `OQ-EW-002`, `OQ-EW-003` y `OQ-EW-004`.
+
+## DispatchExpediente T-07 (v0.3.9)
+
+DSP-EW-001..011 define semántica, input, evento, MovimientoWriter, timestamps, UoW y
+audit. DSP-GAP-001/002 están CLOSED: intendedCustodianRef es obligatorio y no vacío;
+optimistic conflict usa AuditResult `conflict` después del rollback.

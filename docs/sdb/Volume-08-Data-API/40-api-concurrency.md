@@ -19,3 +19,7 @@ Stale version → `OPTIMISTIC_LOCK_CONFLICT`, HTTP 409 para Expediente Workspace
 
 La convención global 409/412 para otros slices permanece abierta; no modifica la
 decisión explícita de este vertical slice.
+
+El code de Dispatch sigue siendo `OPTIMISTIC_LOCK_CONFLICT`/409 y su resultado de audit
+es `conflict`. El append ocurre fuera de la UoW mutante después del rollback; no se
+persiste Movimiento ni cambio del aggregate.

@@ -33,6 +33,10 @@ y proteger coherencia entre disponibilidad, ubicación y custodia.
 - La identidad técnica es `ExpedienteId`; `expedienteNumero` es el identificador institucional.
 - El despacho (`DispatchExpediente`) y la aceptación de custodia (`AcceptCustody`)
   son transiciones de estado distintas (INV-EXP-005).
+- `dispatch` sólo parte de APARTADO, cambia a EN_TRASLADO, establece destination y una
+  Custodia no aceptada (`acceptedAt=null`), y devuelve `ExpedienteDispatched`. No persiste
+  ni conoce audit. Recibe `intendedCustodianRef: string` obligatorio y no vacío junto
+  con destination y businessReference; no deriva el custodio desde destination.
 
 ## Fuente
 SRC-INT-002, SRC-INT-003, DECISION-REGISTER OQ-EW-001, OQ-EW-007, DEC-EW-STATE-001.

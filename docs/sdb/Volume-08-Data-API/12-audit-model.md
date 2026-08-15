@@ -40,8 +40,11 @@ Application y contiene exclusivamente:
 - action
 - resourceType
 - resourceId
-- result: `success | denied | not-found`
+- result: `success | denied | not-found | conflict`
 - changeSummary opcional, sólo cuando esté permitido
+
+`conflict` representa optimistic lock mismatch. Para una mutación fallida se escribe
+fuera de la UoW mutante y únicamente después de su rollback.
 
 `AuditRecord` es el registro persistido completo. `AuditWriter` lo enriquece con:
 

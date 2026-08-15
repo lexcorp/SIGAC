@@ -1,11 +1,11 @@
 ---
 spec: expediente-workspace
-version: "0.3.7"
+version: "0.3.9"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 requires:
-  - requirements.md (v0.3.7)
-  - design.md (v0.3.7)
+  - requirements.md (v0.3.9)
+  - design.md (v0.3.9)
 decisions_applied:
   - "OQ-EW-001 RESOLVED"
   - "OQ-EW-005 RESOLVED"
@@ -24,6 +24,7 @@ decisions_applied:
   - "TL-EW-001..017 APPROVED"
   - "OQ-EW-DESIGN-003 RESOLVED"
   - "OQ-DOM-001 RESOLVED"
+  - "DISPATCH-DECISION DSP-EW-001..011 APPROVED; DSP-GAP-001/002 CLOSED"
 ready_gate: "READY-GATE.md — todos los ítems deben estar marcados antes de iniciar T-01"
 done_gate: "OS-018 — spec + tests + API/migrations + auth/tenant/audit + traceability"
 ---
@@ -58,7 +59,7 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
 ## Grupo 0 — Trazabilidad
 
 ### T-00 Completar traceability.md
-- **Descripción:** Verificar que traceability.md v0.3.7 tiene cadenas completas
+- **Descripción:** Verificar que traceability.md v0.3.9 tiene cadenas completas
   para todas las capacidades. Confirmar que GAP-002, GAP-003, GAP-007 están cerrados
   y que no quedan eslabones PENDIENTE en BR, UC o SPEC para las decisiones resueltas.
 - **Criterio de done:** Ningún REQ-EW-* sin cadena completa; matrices actualizadas.
@@ -268,7 +269,9 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
 
 ### T-07 Implementar Use Case DispatchExpediente
 - **Descripción:** `packages/modules/expediente/application/DispatchExpediente.ts`.
-  - Input: `{ expedienteId, destinoRef, rowVersion, context: RequestContext }`.
+  - Input: `{ expedienteId, destination: Ubicacion, intendedCustodianRef: string,
+    businessReference: {type:string,id:string|null}, expectedRowVersion: bigint,
+    context: RequestContext }`.
   Pasos:
   1. Verificar permiso EXPEDIENT_DISPATCH en tenant.
   2. findById con rowVersion -> 409 si conflicto.
@@ -276,8 +279,11 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
   4. EstadoOperativo -> EN_TRASLADO.
   5. custody_accepted_at -> null.
   6. save con rowVersion+1.
-  7. INSERT MovimientoExpediente (movement_type = DISPATCHED).
-  8. `AuditWriter.append(AuditEntry, context)`.
+  7. Append MovimientoExpediente (movement_type = DISPATCHED) mediante writer.
+  8. UoW: save + movimiento + audit `EXPEDIENTE_DISPATCH` success, ALL OR NOTHING.
+  9. Denied/not-found fuera de la transacción mutante. Ante optimistic conflict,
+     rollback completo y audit `conflict` fuera de la UoW fallida; sin aggregate ni
+     Movimiento persistidos.
 - **Tests requeridos (Vitest):**
   - APARTADO -> EN_TRASLADO exitoso.
   - EstadoOperativo != APARTADO -> 409.
@@ -604,7 +610,7 @@ T-23 (CI pipeline) <- todas
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.7"
+spec_version: "0.3.9"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

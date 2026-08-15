@@ -39,6 +39,10 @@ flowchart LR
  APP --> OUT
 ```
 
+Para DispatchExpediente, optimistic lock mismatch revierte la UoW mutante completa.
+Sólo después del rollback, Application registra audit `conflict` mediante AuditWriter
+fuera de esa UoW; no persiste aggregate ni Movimiento.
+
 ## Expediente Workspace read model
 
 `GetExpediente` es el compositor server-side de un único `ExpedienteReadModel`.
@@ -57,3 +61,10 @@ Movimiento pertenece al mismo módulo y schema tenant que Expediente; el adapter
 persistencia implementa el port. El contrato no consulta ni devuelve `audit_log`.
 
 Controllers no contienen reglas de negocio. Repositories implementan ports definidos hacia el interior.
+
+## Archive Operations Unit of Work
+
+Los commands mutantes usan `ArchiveOperationsUnitOfWork` tenant-scoped. El callback
+recibe Repository, MovimientoExpedienteWriter, AuditWriter y un único
+operationOccurredAt. Update aggregate + append movimiento + audit success comparten una
+transacción PostgreSQL ALL OR NOTHING. Dominio no conoce transacciones.

@@ -16,3 +16,7 @@ READ-MODEL-COMPOSITION-DECISION. T-05 no tiene gaps bloqueantes conocidos.
 Para T-06, `TL-EW-001..017` define ownership, query port, summary, cursor pagination,
 tenant, autorización y audit. `OQ-EW-DESIGN-003` y `OQ-DOM-001` están RESOLVED.
 `OQ-EW-010` permanece abierta y no bloquea porque T-06 no decide retención.
+
+T-07 está ready: DSP-GAP-001/002 están cerrados. intendedCustodianRef es obligatorio y
+no vacío; AuditResult incorpora conflict y su append ocurre después del rollback fuera
+de la UoW mutante.

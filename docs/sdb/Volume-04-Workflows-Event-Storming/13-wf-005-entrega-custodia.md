@@ -25,6 +25,11 @@ Los siguientes pasos son **obligatoriamente distintos** y no deben fusionarse:
 3. Registrar origen, destino previsto, actor de traslado y timestamp.
 4. Ejecutar `DispatchExpediente`.
 5. Emitir `ExpedienteDispatched` → `EstadoOperativo = EN_TRASLADO`.
+
+El despacho no abre préstamo ni confirma recepción. Destination viene del command;
+origen/custodio previo del aggregate. Custodia queda pendiente con acceptedAt null hasta
+AcceptCustody. Aggregate, Movimiento DISPATCHED y audit success se persisten en una sola
+transacción tenant-scoped.
 6. El mensajero porta la hoja diaria con los expedientes.
 
 ### Fase 2 — Transporte

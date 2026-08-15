@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.7"
+version: "0.3.9"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -29,8 +29,9 @@ decisions_applied:
   - "TL-EW-001..017 APPROVED"
   - "OQ-EW-DESIGN-003 RESOLVED"
   - "OQ-DOM-001 RESOLVED"
+  - "DISPATCH-DECISION DSP-EW-001..011 APPROVED; DSP-GAP-001/002 CLOSED"
 requires:
-  - requirements.md (v0.3.7)
+  - requirements.md (v0.3.9)
 open_questions_blocking: []
 open_questions_non_blocking:
   - OQ-EW-002
@@ -531,7 +532,7 @@ interface AuditEntry {
   readonly action: string;
   readonly resourceType: string;
   readonly resourceId: string;
-  readonly result: 'success' | 'denied' | 'not-found';
+  readonly result: 'success' | 'denied' | 'not-found' | 'conflict';
   readonly changeSummary?: Readonly<Record<string, string>>;
 }
 
@@ -625,7 +626,9 @@ Orden de ejecución:
 ### 7.3 Use Case: DispatchExpediente
 
 ```
-Input: { expedienteId, destinoRef, rowVersion, context: RequestContext }
+Input: { expedienteId, destination: Ubicacion, intendedCustodianRef: string,
+         businessReference: {type:string,id:string|null},
+         expectedRowVersion: bigint, context: RequestContext }
 
 Pasos:
   1. Verificar permiso EXPEDIENT_DISPATCH en tenant
@@ -635,9 +638,17 @@ Pasos:
   5. EstadoOperativo -> EN_TRASLADO
   6. custody_accepted_at -> null
   7. Guardar con row_version+1
-  8. Emitir ExpedienteDispatched -> MovimientoExpediente
-  9. AuditWriter.append(AuditEntry, context)
+  8. Emitir ExpedienteDispatched -> MovimientoExpediente DISPATCHED
+  9. UoW: save aggregate + append movimiento + audit EXPEDIENTE_DISPATCH success
+     en una transacción tenant-scoped ALL OR NOTHING
 ```
+
+`ArchiveOperationsUnitOfWork` expone Repository, MovimientoWriter, AuditWriter y
+operationOccurredAt al callback. Writer genera movimientoId/recordedAt. Denied y
+not-found se auditan fuera de la mutación. Ante optimistic lock mismatch, la UoW
+mutante hace rollback y posteriormente se registra `result=conflict` fuera de ella;
+no se persiste aggregate ni Movimiento. `intendedCustodianRef` es obligatorio, no
+vacío, alimenta `Custodia.enTraslado.custodianReference` y no se deriva del destino.
 
 ### 7.4 Use Case: AcceptCustody
 
@@ -756,7 +767,7 @@ por `GetExpediente` (READ-MODEL-COMPOSITION-DECISION).
 ## 12. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.7"
+spec_version: "0.3.9"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

@@ -21,6 +21,11 @@ que se registran en momentos diferentes:
 | Momento | Evento | EstadoOperativo resultante |
 |---------|--------|---------------------------|
 | Expediente sale de Archivo Clínico | `ExpedienteDispatched` | `EN_TRASLADO` |
+
+Durante EN_TRASLADO se reutiliza `Custodia` con `acceptedAt=null` y
+`custodianReference: string` obligatorio y no vacío; transportista no es automáticamente
+custodio externo formal. Dispatch recibe esa referencia explícitamente y nunca la deriva
+de destination.
 | Receptor autorizado confirma recepción | `CustodyAccepted` | `EN_CONSULTA` |
 
 Durante `EN_TRASLADO`:

@@ -22,3 +22,12 @@ Inside transaction:
 - append audit metadata through coordinated mechanism.
 
 Avoid distributed transactions across tenant databases/control plane.
+
+Dispatch usa ArchiveOperationsUnitOfWork: update Expediente con expectedRowVersion,
+append Movimiento DISPATCHED y append audit success en una única transacción del tenant,
+ALL OR NOTHING. UoW aporta operationOccurredAt; MovimientoWriter establece recordedAt al
+INSERT. Ningún timestamp proviene del cliente.
+
+Ante optimistic lock mismatch, la transacción mutante hace rollback completo. Después
+del rollback se registra audit `conflict` fuera de esa UoW; no se persiste cambio de
+aggregate, Movimiento ni audit success.

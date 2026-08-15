@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.7"
+version: "0.3.9"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 traceability_model: "OS-007 / SDD-006"
@@ -23,10 +23,11 @@ decisions_applied:
   - "TL-EW-001..017 APPROVED"
   - "OQ-EW-DESIGN-003 RESOLVED"
   - "OQ-DOM-001 RESOLVED"
+  - "DISPATCH-DECISION DSP-EW-001..011 APPROVED; DSP-GAP-001/002 CLOSED"
 requires:
-  - requirements.md (v0.3.7)
-  - design.md (v0.3.7)
-  - tasks.md (v0.3.7)
+  - requirements.md (v0.3.9)
+  - design.md (v0.3.9)
+  - tasks.md (v0.3.9)
 ---
 
 # Expediente Workspace — Traceability
@@ -96,7 +97,7 @@ requires:
 | **Source / SDB** | DECISION-REGISTER OQ-EW-006, BIZ-008 v0.2.0, SRC-INT-002 | Salida física de Archivo; mensajero porta hoja diaria |
 | **Business Rule** | BR-019, INV-EXP-005 | Despacho y aceptación son eventos distintos |
 | **Workflow** | WF-005 v0.2.0 Fase 1 | DispatchExpediente -> ExpedienteDispatched -> EN_TRASLADO |
-| **Use Case** | UC (DispatchExpediente — design.md §7.3) | Validar APARTADO; rowVersion; custody_accepted_at -> null |
+| **Use Case** | UC (DispatchExpediente — design.md §7.3) | DSP-EW-001..011; UoW atómica; DSP-GAP-001/002 cerrados |
 | **SPEC** | WF-005 v0.2.0 | — |
 | **REQ** | REQ-EW-011 | Despacho con evento y transición de estado |
 | **API** | POST /api/v1/expedientes/{id}/dispatch (API-011 v0.2.0) | 409 si rowVersion o estado incorrecto |
@@ -350,13 +351,15 @@ requires:
 | 0.3.5 | 2026-08-15 | READ-EW-013 y ERR-EW-001..004 aplicadas. updatedAt eliminado; taxonomía ApplicationError, RFC7807 y no divulgación cross-tenant formalizadas. |
 | 0.3.6 | 2026-08-15 | TL-EW-001..010 aplicadas. Cursor timeline y query port definidos; OQ-EW-DESIGN-003/OQ-DOM-001 cerradas; OQ-EW-010 permanece abierta. |
 | 0.3.7 | 2026-08-15 | TL-EW-011..017 aplicadas. Audit identifiers, autorización previa, existencia tenant-scoped y semántica empty/success definidas para T-06. |
+| 0.3.8 | 2026-08-15 | DSP-EW-001..011 formalizadas: command/event/movimiento/UoW/audit. DSP-GAP-001/002 quedan bloqueantes para T-07. |
+| 0.3.9 | 2026-08-15 | DSP-GAP-001/002 cerrados: custodio destino obligatorio y audit conflict posterior al rollback formalizados. |
 
 ---
 
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.7"
+spec_version: "0.3.9"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

@@ -35,6 +35,11 @@ DeclareLost
 
 `DispatchExpediente` — registra la salida física del expediente de Archivo Clínico
   hacia el destino. Produce `ExpedienteDispatched`; estado → `EN_TRASLADO`.
+  Input: ExpedienteId, destination Ubicacion, intendedCustodianRef string obligatorio
+  y no vacío,
+  businessReference `{type:string,id:string|null}`, expectedRowVersion bigint y
+  RequestContext. Origen/custodio previos se derivan del aggregate. No abre Préstamo ni
+  confirma custodia. La referencia de custodio no se deriva de destination.
   (OQ-EW-006 RESOLVED)
 
 `AcceptCustody` — registra la confirmación del receptor autorizado en destino.
