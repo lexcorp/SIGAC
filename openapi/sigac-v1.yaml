@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: SIGAC API
-  version: 0.3.19
+  version: 0.3.20
 servers:
   - url: /api/v1
 paths:
@@ -11,6 +11,23 @@ paths:
       responses:
         '200':
           description: API health
+  /expedientes:
+    get:
+      operationId: searchExpedientesByNumero
+      parameters:
+        - in: query
+          name: numero
+          required: true
+          schema: { type: string, minLength: 1 }
+      responses:
+        '200':
+          description: Expediente matches in the active tenant; zero matches returns an empty items array.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExpedienteSearchResponse' }
+        '400': { $ref: '#/components/responses/HttpValidationError' }
+        '401': { $ref: '#/components/responses/AuthenticationRequired' }
+        '403': { $ref: '#/components/responses/PermissionDenied' }
   /expedientes/{id}:
     get:
       operationId: getExpediente
@@ -109,6 +126,36 @@ components:
         id: { type: string, format: uuid }
         codigo: { type: string }
         descripcion: { type: string }
+    ExpedienteSearchPaciente:
+      type: object
+      additionalProperties: false
+      required: [idInstitucional, curp, nombreOperativo, numeroIssste]
+      properties:
+        idInstitucional: { type: string }
+        curp: { type: string }
+        nombreOperativo: { type: string }
+        numeroIssste: { type: string }
+    ExpedienteSearchItem:
+      type: object
+      additionalProperties: false
+      required: [expedienteId, expedienteNumero, paciente, estadoOperativo, ubicacion]
+      properties:
+        expedienteId: { type: string, format: uuid }
+        expedienteNumero: { type: string }
+        paciente: { $ref: '#/components/schemas/ExpedienteSearchPaciente' }
+        estadoOperativo: { $ref: '#/components/schemas/EstadoOperativo' }
+        ubicacion:
+          oneOf:
+            - { $ref: '#/components/schemas/Ubicacion' }
+            - { type: 'null' }
+    ExpedienteSearchResponse:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/ExpedienteSearchItem' }
     PacienteReferenciaSummary:
       type: object
       additionalProperties: false
@@ -323,6 +370,17 @@ components:
                 properties:
                   status: { const: 401 }
                   code: { const: AUTHENTICATION_REQUIRED }
+    PermissionDenied:
+      description: Authenticated actor lacks EXPEDIENT_VIEW
+      content:
+        application/problem+json:
+          schema:
+            allOf:
+              - { $ref: '#/components/schemas/ProblemDetails' }
+              - type: object
+                properties:
+                  status: { const: 403 }
+                  code: { const: PERMISSION_DENIED }
     Forbidden:
       description: Authenticated actor lacks permission or an enabling source
       content:

@@ -1,4 +1,5 @@
 import { z, type ZodIssue } from 'zod';
+import { ExpedienteNumero } from '@sigac/archive-operations';
 import { HttpValidationError, type HttpFieldError, type HttpFieldErrorCode } from './api-errors.js';
 
 const requiredText = z.string();
@@ -58,6 +59,23 @@ export function parseTimelineLimit(value: unknown): number {
     throw new HttpValidationError([{ field: 'limit', code: 'OUT_OF_RANGE' }]);
   }
   return limit;
+}
+
+export function parseExpedienteNumero(value: unknown): ExpedienteNumero {
+  if (value === undefined || (typeof value === 'string' && value.trim() === '')) {
+    throw new HttpValidationError([{ field: 'numero', code: 'REQUIRED' }]);
+  }
+  if (typeof value !== 'string') {
+    throw new HttpValidationError([{ field: 'numero', code: 'INVALID_TYPE' }]);
+  }
+  try {
+    return ExpedienteNumero.parse(value);
+  } catch (error) {
+    if (error instanceof Error && error.name === 'DomainError') {
+      throw new HttpValidationError([{ field: 'numero', code: 'INVALID_FORMAT' }]);
+    }
+    throw error;
+  }
 }
 
 function toFieldError(issue: ZodIssue, input: unknown): HttpFieldError {

@@ -5,6 +5,7 @@ import {
   type DispatchExpediente,
   type GetExpediente,
   type GetExpedienteTimeline,
+  type SearchExpedientesByNumero,
 } from '@sigac/archive-operations';
 import type { RequestContext } from '@sigac/tenant';
 import { describe, expect, it, vi } from 'vitest';
@@ -64,6 +65,7 @@ function setup(options: {
   resolve?: AuthenticatedRequestContextResolver['resolve'];
   getResult?: unknown;
   timelineResult?: unknown;
+  searchResult?: unknown;
 } = {}) {
   const resolver: AuthenticatedRequestContextResolver = {
     resolve: options.resolve ?? vi.fn().mockResolvedValue(trustedContext),
@@ -86,12 +88,16 @@ function setup(options: {
   const getExpedienteTimeline = {
     execute: vi.fn().mockResolvedValue(options.timelineResult ?? { items: [], nextCursor: null }),
   };
+  const searchExpedientesByNumero = {
+    execute: vi.fn().mockResolvedValue(options.searchResult ?? []),
+  };
   const dispatchExpediente = { execute: vi.fn().mockResolvedValue({ name: 'internal-event' }) };
   const acceptCustody = { execute: vi.fn().mockResolvedValue({ name: 'internal-event' }) };
   const controller = new ExpedienteController(
     resolver,
     getExpediente as unknown as GetExpediente,
     getExpedienteTimeline as unknown as GetExpedienteTimeline,
+    searchExpedientesByNumero as unknown as SearchExpedientesByNumero,
     dispatchExpediente as unknown as DispatchExpediente,
     acceptCustody as unknown as AcceptCustody,
     new ApiProblemMapper(),
@@ -101,6 +107,7 @@ function setup(options: {
     resolver,
     getExpediente,
     getExpedienteTimeline,
+    searchExpedientesByNumero,
     dispatchExpediente,
     acceptCustody,
   };
@@ -125,6 +132,72 @@ async function expectProblem(
 }
 
 describe('ExpedienteController T-11', () => {
+  it.each([
+    [0, []],
+    [1, [{ expedienteId, expedienteNumero: 'PERR810604/10' }]],
+    [2, [
+      { expedienteId, expedienteNumero: 'PERR810604/10' },
+      { expedienteId: '2d414e5b-9ef3-45d1-8be3-e71daf358595', expedienteNumero: 'PERR810604/10' },
+    ]],
+  ] as const)('Search retorna wrapper items para %s resultado(s)', async (_count, items) => {
+    const { controller, searchExpedientesByNumero } = setup({ searchResult: items });
+    await expect(controller.search('PERR810604-10', {})).resolves.toEqual({ items });
+    expect(searchExpedientesByNumero.execute).toHaveBeenCalledWith({
+      numero: expect.objectContaining({
+        rfcBase: 'PERR810604',
+        codigoDerechohabiente: '10',
+      }),
+      context: trustedContext,
+    });
+  });
+
+  it.each([
+    [undefined, 'REQUIRED'],
+    ['', 'REQUIRED'],
+    ['numero-secreto-invalido', 'INVALID_FORMAT'],
+  ] as const)('Search valida numero %s sin reflejarlo', async (numero, fieldCode) => {
+    const { controller, resolver, searchExpedientesByNumero } = setup();
+    const problem = await expectProblem(
+      controller.search(numero, {}),
+      400,
+      'HTTP_VALIDATION_ERROR',
+    );
+    expect(problem.errors).toContainEqual({ field: 'numero', code: fieldCode });
+    if (numero) expect(JSON.stringify(problem)).not.toContain(numero);
+    expect(resolver.resolve).not.toHaveBeenCalled();
+    expect(searchExpedientesByNumero.execute).not.toHaveBeenCalled();
+  });
+
+  it('Search retorna 401 cuando RequestContext resolver rechaza autenticación', async () => {
+    const { controller, searchExpedientesByNumero } = setup({
+      resolve: vi.fn().mockRejectedValue(new AuthenticationRequiredError()),
+    });
+    await expectProblem(
+      controller.search('PERR810604/10', {}),
+      401,
+      'AUTHENTICATION_REQUIRED',
+    );
+    expect(searchExpedientesByNumero.execute).not.toHaveBeenCalled();
+  });
+
+  it('Search mapea PERMISSION_DENIED a 403', async () => {
+    const { controller, searchExpedientesByNumero } = setup();
+    searchExpedientesByNumero.execute.mockRejectedValue(
+      new ApplicationError('PERMISSION_DENIED', 'internal'),
+    );
+    await expectProblem(controller.search('PERR81060410', {}), 403, 'PERMISSION_DENIED');
+  });
+
+  it('Search usa sólo el contexto trusted aunque la request intente falsificar tenant', async () => {
+    const { controller, searchExpedientesByNumero } = setup();
+    await controller.search('PERR810604/10', {
+      query: { tenant: 'tenant-forged', databaseName: 'forged-db' },
+    });
+    expect(searchExpedientesByNumero.execute).toHaveBeenCalledWith(expect.objectContaining({
+      context: trustedContext,
+    }));
+  });
+
   it('GET delega GetExpediente, propaga RequestContext y serializa bigint sin number', async () => {
     const { controller, getExpediente } = setup();
     const response = await controller.getById(expedienteId, { authenticated: true }) as {
@@ -292,11 +365,12 @@ describe('ExpedienteController T-11', () => {
       requestContextResolver: setupResult.resolver,
       getExpediente: setupResult.getExpediente as unknown as GetExpediente,
       getExpedienteTimeline: setupResult.getExpedienteTimeline as unknown as GetExpedienteTimeline,
+      searchExpedientesByNumero: setupResult.searchExpedientesByNumero as unknown as SearchExpedientesByNumero,
       dispatchExpediente: setupResult.dispatchExpediente as unknown as DispatchExpediente,
       acceptCustody: setupResult.acceptCustody as unknown as AcceptCustody,
     });
     expect(dynamicModule.controllers).toContain(ExpedienteController);
-    expect(dynamicModule.providers).toHaveLength(6);
+    expect(dynamicModule.providers).toHaveLength(7);
     expect(Reflect.getMetadata('imports', AppModule) ?? []).not.toContain(ExpedienteApiModule);
     expect(JSON.stringify(Reflect.getMetadata('providers', AppModule) ?? [])).not.toContain('fake');
   });

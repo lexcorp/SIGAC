@@ -16,6 +16,7 @@ import {
   type DispatchExpediente,
   type GetExpediente,
   type GetExpedienteTimeline,
+  type SearchExpedientesByNumero,
 } from '@sigac/archive-operations';
 import { ApiProblemMapper } from './api-errors.js';
 import {
@@ -26,6 +27,7 @@ import {
   acceptCustodyBodySchema,
   dispatchBodySchema,
   parseHttp,
+  parseExpedienteNumero,
   parseTimelineLimit,
   parseUuid,
 } from './http-validation.js';
@@ -40,12 +42,30 @@ export class ExpedienteController {
     private readonly getExpedienteUseCase: GetExpediente,
     @Inject(EXPEDIENTE_API_TOKENS.getExpedienteTimeline)
     private readonly getExpedienteTimelineUseCase: GetExpedienteTimeline,
+    @Inject(EXPEDIENTE_API_TOKENS.searchExpedientesByNumero)
+    private readonly searchExpedientesByNumeroUseCase: SearchExpedientesByNumero,
     @Inject(EXPEDIENTE_API_TOKENS.dispatchExpediente)
     private readonly dispatchExpedienteUseCase: DispatchExpediente,
     @Inject(EXPEDIENTE_API_TOKENS.acceptCustody)
     private readonly acceptCustodyUseCase: AcceptCustody,
     private readonly problemMapper: ApiProblemMapper,
   ) {}
+
+  @Get()
+  async search(
+    @Query('numero') numero: string | undefined,
+    @Req() request: unknown,
+  ): Promise<unknown> {
+    return this.execute(async () => {
+      const parsedNumero = parseExpedienteNumero(numero);
+      const context = await this.requestContextResolver.resolve({ nativeRequest: request });
+      const items = await this.searchExpedientesByNumeroUseCase.execute({
+        numero: parsedNumero,
+        context,
+      });
+      return toJsonValue({ items });
+    });
+  }
 
   @Get(':id')
   async getById(@Param('id') id: string, @Req() request: unknown): Promise<unknown> {

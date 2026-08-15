@@ -11,15 +11,46 @@ includes('openapi: 3.1.0', 'OpenAPI 3.1 header is required');
 
 const expedientePaths = [...contract.matchAll(/^  (\/expedientes[^:]*):$/gm)].map((match) => match[1]);
 assert.deepEqual(expedientePaths, [
+  '/expedientes',
   '/expedientes/{id}',
   '/expedientes/{id}/timeline',
   '/expedientes/{id}/dispatch',
   '/expedientes/{id}/accept-custody',
-], 'Expediente Workspace must expose exactly the four T-11 paths');
+], 'Expediente Workspace must expose exactly the five approved paths');
 
-for (const operationId of ['getExpediente', 'getExpedienteTimeline', 'dispatchExpediente', 'acceptCustody']) {
+for (const operationId of ['searchExpedientesByNumero', 'getExpediente', 'getExpedienteTimeline',
+  'dispatchExpediente', 'acceptCustody']) {
   includes(`operationId: ${operationId}`, `Missing operation ${operationId}`);
 }
+
+const searchPathBlock = contract.match(/  \/expedientes:\n([\s\S]*?)  \/expedientes\/\{id\}:/)?.[1] ?? '';
+assert.match(searchPathBlock, /name: numero\n\s+required: true/, 'Search numero query must be required');
+assert.match(searchPathBlock, /ExpedienteSearchResponse/, 'Search must return ExpedienteSearchResponse');
+assert.match(searchPathBlock, /'200':/, 'Empty and non-empty searches return HTTP 200');
+assert.match(searchPathBlock, /'400':/, 'Invalid numero returns HTTP 400');
+assert.match(searchPathBlock, /'401':/, 'Unauthenticated search returns HTTP 401');
+assert.match(searchPathBlock, /'403':/, 'Unauthorized search returns HTTP 403');
+assert.match(searchPathBlock, /PermissionDenied/, 'Search 403 must use PERMISSION_DENIED');
+assert.doesNotMatch(searchPathBlock, /'404':/, 'An empty search is not HTTP 404');
+assert.doesNotMatch(searchPathBlock, /\b(total|pagination|nextCursor)\b/, 'Search is not paginated and has no total');
+
+const searchItemBlock = contract.match(/    ExpedienteSearchItem:\n([\s\S]*?)    ExpedienteSearchResponse:/)?.[1] ?? '';
+assert.match(searchItemBlock,
+  /required: \[expedienteId, expedienteNumero, paciente, estadoOperativo, ubicacion\]/,
+  'Search item must contain exactly the approved top-level fields');
+for (const forbidden of ['rowVersion', 'updatedAt', 'custodia', 'prestamo', 'solicitud',
+  'incidencias', 'capabilities', 'timeline', 'audit']) {
+  assert.doesNotMatch(searchItemBlock, new RegExp(`\\b${forbidden}\\b`, 'i'),
+    `Search item must not expose ${forbidden}`);
+}
+const searchResponseBlock = contract.match(/    ExpedienteSearchResponse:\n([\s\S]*?)    PacienteReferenciaSummary:/)?.[1] ?? '';
+assert.match(searchResponseBlock, /required: \[items\]/, 'Search response must wrap items');
+assert.doesNotMatch(searchResponseBlock, /\b(total|pagination|nextCursor)\b/,
+  'Search response must not expose pagination metadata');
+const searchPacienteBlock = contract.match(/    ExpedienteSearchPaciente:\n([\s\S]*?)    ExpedienteSearchItem:/)?.[1] ?? '';
+assert.match(searchPacienteBlock,
+  /required: \[idInstitucional, curp, nombreOperativo, numeroIssste\]/,
+  'Search patient must contain exactly the four canonical fields');
 
 assert.equal((contract.match(/^        '204':$/gm) ?? []).length, 2, 'Both commands must define 204');
 assert.equal((contract.match(/no response body\.$/gm) ?? []).length, 2, '204 responses must have no content');
@@ -61,11 +92,13 @@ for (const fieldCode of ['REQUIRED', 'INVALID_FORMAT', 'INVALID_TYPE', 'OUT_OF_R
 }
 
 excludes('updatedAt', 'updatedAt is not part of ExpedienteReadModel');
-excludes('/expedientes?numero=', 'Search by numero is not active');
+assert.doesNotMatch(contract, /^\s+unique(Item|s)?:/gmi, 'Expediente numero must not declare uniqueness');
 excludes('/current-custody', 'Current custody endpoint is deferred');
 excludes('/active-loan', 'Active loan endpoint is deferred');
 excludes('/rearchive', 'Rearchive endpoint is deferred');
-excludes('EXPEDIENT_VIEW', 'EXPEDIENT_VIEW is a permission, not a capability');
+const capabilityBlock = contract.match(/    ExpedienteCapability:\n([\s\S]*?)    ExpedienteReadModel:/)?.[1] ?? '';
+assert.doesNotMatch(capabilityBlock, /EXPEDIENT_VIEW/,
+  'EXPEDIENT_VIEW is a permission, not a capability');
 excludes('CROSS_TENANT', 'Cross-tenant existence must not be disclosed');
 
 const requestSchemas = contract.match(/    DispatchExpedienteRequest:\n([\s\S]*?)    HttpFieldError:/)?.[1] ?? '';
