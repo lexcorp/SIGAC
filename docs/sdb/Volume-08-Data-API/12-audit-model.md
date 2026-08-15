@@ -55,3 +55,8 @@ Application y contiene exclusivamente:
 El puerto no ofrece update/delete. Application no construye metadata técnica ni
 `occurredAt`; no se exige un `ClockPort` en este slice. Ningún entry/record contiene
 datos C3. Para `GetExpediente`, `action = EXPEDIENTE_VIEW` y `resourceType = EXPEDIENTE`.
+
+Para `GetExpedienteTimeline`, `action = EXPEDIENTE_TIMELINE_VIEW`,
+`resourceType = EXPEDIENTE` y `resourceId = expedienteId`. Resultados: `denied` antes de
+queries si falta permission; `not-found` si el Repository tenant-scoped no encuentra el
+Expediente; `success` para página vacía o no vacía. Este append no crea Movimiento.

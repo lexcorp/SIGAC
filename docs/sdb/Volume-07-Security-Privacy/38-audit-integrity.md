@@ -39,3 +39,8 @@ desde body/query arbitrarios.
 Para `GetExpediente`, la acción canónica es `EXPEDIENTE_VIEW`, el recurso es
 `EXPEDIENTE` y los resultados son exactamente `success`, `denied`, `not-found`.
 Los intentos fallidos también se registran sin datos C3.
+
+Para `GetExpedienteTimeline`, la acción es `EXPEDIENTE_TIMELINE_VIEW`, el recurso es
+`EXPEDIENTE` y el resource ID es `expedienteId`. Autorización precede a toda query;
+ausencia tenant-scoped se registra `not-found`. Página vacía o no vacía de un Expediente
+existente se registra `success`. El audit no crea ni se mezcla con movimientos.

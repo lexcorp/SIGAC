@@ -49,3 +49,9 @@ Para `GetExpedienteTimeline`, cubrir al menos:
 - audit de acceso separado; ninguna fila de audit en `items`;
 - cross-tenant no divulgativo;
 - el Use Case no elimina movimientos ni decide retención.
+- autorización sucede antes de Repository/query port; sin permission produce
+  `PERMISSION_DENIED` y audit `EXPEDIENTE_TIMELINE_VIEW/denied`;
+- Repository tenant-scoped nulo produce `EXPEDIENTE_NOT_FOUND` y audit `not-found`, sin
+  invocar el timeline port;
+- página vacía y página no vacía producen audit `success` sobre resourceType EXPEDIENTE;
+- auditar la consulta no crea MovimientoExpediente.

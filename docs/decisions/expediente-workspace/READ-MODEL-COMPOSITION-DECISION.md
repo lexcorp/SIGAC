@@ -2,7 +2,7 @@
 
 **Estado:** APPROVED  
 **Fecha:** 2026-08-15  
-**Scope:** Expediente Workspace v0.3.6 / T-04 a T-20
+**Scope:** Expediente Workspace v0.3.7 / T-04 a T-20
 
 ## CTX-EW-001 — Contexto canónico de Application
 
@@ -480,6 +480,46 @@ forma parte de `TimelinePage.items`; Movimiento y Audit son modelos distintos.
 
 `OQ-EW-010` permanece abierta. T-06 no define ni ejecuta retención: devuelve únicamente
 los movimientos disponibles bajo la política vigente.
+
+## TL-EW-011 — Audit action
+
+Para `GetExpedienteTimeline`, `AuditEntry.action = EXPEDIENTE_TIMELINE_VIEW`. Es distinta
+de `EXPEDIENTE_VIEW` para distinguir la consulta específica del timeline de la consulta
+general del Workspace.
+
+## TL-EW-012 — Audit resource
+
+`resourceType = EXPEDIENTE` y `resourceId = expedienteId`. El timeline es una proyección
+subordinada del Expediente. No se crea `EXPEDIENTE_TIMELINE` ni se usa
+`MOVIMIENTO_EXPEDIENTE` como resourceType para esta operación.
+
+## TL-EW-013 — Authorization
+
+La autorización ocurre antes de cualquier query. Si `context.actor.permissions` no
+contiene `EXPEDIENT_VIEW`, el Use Case escribe audit `denied` y produce
+`ApplicationError(PERMISSION_DENIED)`.
+
+## TL-EW-014 — Resource existence
+
+Después de autorizar, `GetExpedienteTimeline` ejecuta
+`ExpedienteRepository.findById(expedienteId, context.tenant)` antes del query port. Si
+devuelve `null`, escribe audit `not-found` y produce
+`ApplicationError(EXPEDIENTE_NOT_FOUND)`. Incluye IDs existentes sólo en otro tenant y
+no revela esa existencia.
+
+## TL-EW-015 — Empty timeline
+
+Para un Expediente existente, `{ items: [], nextCursor: null }` es una consulta válida y
+se audita con `result = success`; no equivale a not-found.
+
+## TL-EW-016 — Non-empty timeline
+
+Una página con uno o más movimientos también se audita con `result = success`.
+
+## TL-EW-017 — Separation
+
+Ninguna fila de `audit_log` puede aparecer en `TimelinePage.items`. Auditar la consulta
+no crea un `MovimientoExpediente`.
 
 ## OQs
 

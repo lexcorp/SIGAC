@@ -44,6 +44,11 @@ tupla, pero API/UI no interpretan su encoding. No se devuelve `total`. Ausencia:
 `items=[]`, `nextCursor=null`. Requiere `EXPEDIENT_VIEW`, opera sólo en el tenant
 server-side y registra audit separado. No decide retención.
 
+Antes de consultar movimientos, Application autoriza y comprueba la existencia del
+Expediente en el tenant activo. Falta de permission -> 403 `PERMISSION_DENIED`; ausencia
+-> 404 `EXPEDIENTE_NOT_FOUND`. Una página vacía es 200. Audit usa
+`EXPEDIENTE_TIMELINE_VIEW` sobre `EXPEDIENTE/{id}` y jamás aparece en `items`.
+
 ## Búsqueda por número — colección (OQ-EW-001/007 RESOLVED)
 
 `GET /api/v1/expedientes?numero={n}` devuelve siempre un array:

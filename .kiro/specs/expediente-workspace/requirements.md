@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.6"
+version: "0.3.7"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -27,7 +27,7 @@ decisions_applied:
   - "AUD-EW-003..006 APPROVED"
   - "READ-EW-013 APPROVED"
   - "ERR-EW-001..004 APPROVED"
-  - "TL-EW-001..010 APPROVED"
+  - "TL-EW-001..017 APPROVED"
   - "OQ-EW-DESIGN-003 RESOLVED"
   - "OQ-DOM-001 RESOLVED"
 ---
@@ -191,6 +191,11 @@ del aggregate, el rol del usuario y el contexto del negocio.
   auditado sin incluir audit entries en los items.
 - **Retención:** OQ-EW-010 permanece abierta; el Use Case sólo devuelve movimientos
   disponibles y no elimina ni decide retención.
+- **Audit:** `EXPEDIENTE_TIMELINE_VIEW`, resourceType `EXPEDIENTE`, resourceId
+  `expedienteId`; denied sin permission, not-found sin Expediente tenant-scoped y success
+  para página vacía o no vacía. Audit no crea ni se mezcla con movimientos.
+- **Existencia:** después de autorizar y antes del timeline port, comprobar mediante
+  `ExpedienteRepository.findById(expedienteId, context.tenant)`.
 - **Fuente SDB:** SPEC-009 FR-VIEW-007, DDD-020, DAT-011, API-011.
 
 ### REQ-EW-009 — Barra de comandos contextual
@@ -511,7 +516,7 @@ Ninguna. OQ-EW-001, OQ-EW-005, OQ-EW-006 y OQ-EW-007 están RESUELTAS.
 ## 7. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.6"
+spec_version: "0.3.7"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

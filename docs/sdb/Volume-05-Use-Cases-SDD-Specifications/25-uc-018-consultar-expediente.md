@@ -91,7 +91,7 @@ de tipo `CONSULTA_PROGRAMADA` o `VALE_ARCHIVO_SM_1_14`. No selecciona la fuente 
 `updatedAt` no forma parte del `ExpedienteReadModel`; no pertenece al aggregate ni al
 snapshot. `rowVersion` es el mecanismo de concurrencia del vertical slice.
 
-## Timeline de movimientos (TL-EW-001..010)
+## Timeline de movimientos (TL-EW-001..017)
 
 `GetExpedienteTimeline` recibe `{ expedienteId, pagination: { cursor?, limit }, context }`,
 requiere `EXPEDIENT_VIEW` y consulta `ExpedienteTimelineQueryPort` con
@@ -102,6 +102,15 @@ esa tupla. Ausencia: `{ items: [], nextCursor: null }`; no devuelve `total`.
 Los items son proyecciones DAT-011 sin datos clínicos. Movimiento pertenece a Archive
 Operations y jamás mezcla registros de `audit_log`. El acceso se registra mediante
 `AuditWriter`. T-06 no decide retención y `OQ-EW-010` permanece abierta.
+
+Orden del Use Case: autorizar `EXPEDIENT_VIEW`; comprobar existencia con
+`ExpedienteRepository.findById(expedienteId, context.tenant)`; consultar el timeline;
+auditar; retornar. Falta de permission produce `PERMISSION_DENIED` y audit `denied`.
+Ausencia tenant-scoped produce `EXPEDIENTE_NOT_FOUND` y audit `not-found`.
+
+La acción es `EXPEDIENTE_TIMELINE_VIEW`, con `resourceType = EXPEDIENTE` y
+`resourceId = expedienteId`. Timeline vacío y no vacío son `success`. El audit no crea
+movimientos y sus filas nunca forman parte del resultado.
 
 ## Audit
 

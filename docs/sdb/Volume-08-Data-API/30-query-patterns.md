@@ -48,3 +48,7 @@ TenantContext)` pertenece a Application de Archive Operations. Usa cursor opaco
 `occurredAt + movimientoId`, orden `occurredAt DESC, movimientoId DESC` y devuelve
 `TimelinePage { items, nextCursor }`. Ausencia: `[]/null`; no retorna `total` ni agrega
 filas de audit.
+
+El Use Case autoriza y comprueba primero la existencia mediante `ExpedienteRepository`.
+Sólo después invoca este query port. De este modo distingue Expediente inexistente de
+Expediente existente sin movimientos.

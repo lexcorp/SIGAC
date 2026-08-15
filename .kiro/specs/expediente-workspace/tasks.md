@@ -1,11 +1,11 @@
 ---
 spec: expediente-workspace
-version: "0.3.6"
+version: "0.3.7"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 requires:
-  - requirements.md (v0.3.6)
-  - design.md (v0.3.6)
+  - requirements.md (v0.3.7)
+  - design.md (v0.3.7)
 decisions_applied:
   - "OQ-EW-001 RESOLVED"
   - "OQ-EW-005 RESOLVED"
@@ -21,7 +21,7 @@ decisions_applied:
   - "AUD-EW-003..006 APPROVED"
   - "READ-EW-013 APPROVED"
   - "ERR-EW-001..004 APPROVED"
-  - "TL-EW-001..010 APPROVED"
+  - "TL-EW-001..017 APPROVED"
   - "OQ-EW-DESIGN-003 RESOLVED"
   - "OQ-DOM-001 RESOLVED"
 ready_gate: "READY-GATE.md — todos los ítems deben estar marcados antes de iniciar T-01"
@@ -58,7 +58,7 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
 ## Grupo 0 — Trazabilidad
 
 ### T-00 Completar traceability.md
-- **Descripción:** Verificar que traceability.md v0.3.6 tiene cadenas completas
+- **Descripción:** Verificar que traceability.md v0.3.7 tiene cadenas completas
   para todas las capacidades. Confirmar que GAP-002, GAP-003, GAP-007 están cerrados
   y que no quedan eslabones PENDIENTE en BR, UC o SPEC para las decisiones resueltas.
 - **Criterio de done:** Ningún REQ-EW-* sin cadena completa; matrices actualizadas.
@@ -243,6 +243,13 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
     `occurredAt DESC, movimientoId DESC`. El Use Case no interpreta el encoding.
   - Summary exacto DAT-011/TL-EW-006; sin datos clínicos.
   - Requiere EXPEDIENT_VIEW; cross-tenant usa EXPEDIENTE_NOT_FOUND sin divulgación.
+  - Dependencias: `ExpedienteRepository`, `ExpedienteTimelineQueryPort`, `AuditWriter`
+    y `RequestContext`.
+  - Autorizar antes de queries. Sin permiso: audit
+    `EXPEDIENTE_TIMELINE_VIEW/EXPEDIENTE/denied` y `PERMISSION_DENIED`.
+  - Comprobar después `ExpedienteRepository.findById(id, context.tenant)`. Null: audit
+    `not-found`, `EXPEDIENTE_NOT_FOUND` y no invocar timeline port.
+  - Página vacía o no vacía: audit `success`; resourceId = expedienteId.
   - NO mezcla con audit_log.
   - `AuditWriter.append(AuditEntry, context)`; el writer enriquece y establece occurredAt.
   - No elimina movimientos ni decide retención; OQ-EW-010 permanece abierta.
@@ -253,6 +260,9 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
   - Resultado no contiene filas de audit_log.
   - Cursor se propaga opaco; ausencia -> items [] y nextCursor null; no total.
   - Audit separado y mismo RequestContext.
+  - Autorización precede a Repository y query port.
+  - Expediente inexistente no consulta timeline; página vacía existente sí es success.
+  - Audit no crea MovimientoExpediente.
 - **Fuente SDB:** DDD-020, DAT-011, SPEC-009 FR-VIEW-007, INT-008.
 - **Dependencias:** T-03.
 
@@ -594,7 +604,7 @@ T-23 (CI pipeline) <- todas
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.6"
+spec_version: "0.3.7"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

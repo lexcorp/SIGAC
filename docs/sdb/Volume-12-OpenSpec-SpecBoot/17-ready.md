@@ -13,6 +13,6 @@ composición server-side, query ports de proyección, colección de fuentes habi
 RequestContext/audit append-only. `OQ-EW-DESIGN-004` está RESOLVED por
 READ-MODEL-COMPOSITION-DECISION. T-05 no tiene gaps bloqueantes conocidos.
 
-Para T-06, `TL-EW-001..010` define ownership, query port, summary, cursor pagination,
+Para T-06, `TL-EW-001..017` define ownership, query port, summary, cursor pagination,
 tenant, autorización y audit. `OQ-EW-DESIGN-003` y `OQ-DOM-001` están RESOLVED.
 `OQ-EW-010` permanece abierta y no bloquea porque T-06 no decide retención.

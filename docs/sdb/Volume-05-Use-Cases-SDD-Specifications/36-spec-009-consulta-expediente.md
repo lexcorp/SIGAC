@@ -67,6 +67,11 @@ FR-VIEW-014 Timeline requiere `EXPEDIENT_VIEW`, `RequestContext` y TenantContext
 server-side. Cross-tenant responde como no encontrado. El acceso se audita sin mezclar
 audit entries con movimientos. La retención permanece fuera del alcance.
 
+FR-VIEW-015 Timeline autoriza antes de queries y verifica el Expediente con el Repository
+tenant-scoped antes del query port. Audita `EXPEDIENTE_TIMELINE_VIEW` sobre
+`EXPEDIENTE/{expedienteId}`: denied sin permission, not-found sin recurso tenant-scoped y
+success tanto para página vacía como no vacía. El audit no crea movimientos.
+
 ## Non-goals
 - No mostrar diagnósticos, notas clínicas, tratamientos ni estudios.
 - No seleccionar automáticamente entre coincidencias múltiples.

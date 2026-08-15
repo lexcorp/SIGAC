@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.6"
+version: "0.3.7"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -26,11 +26,11 @@ decisions_applied:
   - "AUD-EW-003..006 APPROVED"
   - "READ-EW-013 APPROVED"
   - "ERR-EW-001..004 APPROVED"
-  - "TL-EW-001..010 APPROVED"
+  - "TL-EW-001..017 APPROVED"
   - "OQ-EW-DESIGN-003 RESOLVED"
   - "OQ-DOM-001 RESOLVED"
 requires:
-  - requirements.md (v0.3.6)
+  - requirements.md (v0.3.7)
 open_questions_blocking: []
 open_questions_non_blocking:
   - OQ-EW-002
@@ -612,6 +612,16 @@ Requiere `EXPEDIENT_VIEW`; el port recibe `context.tenant`. Orden determinista:
 interpreta el cliente. Ausencia `items=[]/nextCursor=null`; sin total. AuditWriter registra
 el acceso por separado. OQ-EW-010 permanece abierta y T-06 no decide retención.
 
+Orden de ejecución:
+
+1. Autorizar `EXPEDIENT_VIEW`; si falta, audit
+   `EXPEDIENTE_TIMELINE_VIEW/EXPEDIENTE/denied` y `PERMISSION_DENIED`.
+2. `ExpedienteRepository.findById(expedienteId, context.tenant)`; si es null, audit
+   `not-found` y `EXPEDIENTE_NOT_FOUND`.
+3. `ExpedienteTimelineQueryPort.findByExpediente(...)`.
+4. Audit `success` tanto para página vacía como no vacía.
+5. Retornar `TimelinePage` sin mezclar audit ni crear Movimiento.
+
 ### 7.3 Use Case: DispatchExpediente
 
 ```
@@ -746,7 +756,7 @@ por `GetExpediente` (READ-MODEL-COMPOSITION-DECISION).
 ## 12. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.6"
+spec_version: "0.3.7"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.6"
+version: "0.3.7"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 traceability_model: "OS-007 / SDD-006"
@@ -20,13 +20,13 @@ decisions_applied:
   - "AUD-EW-003..006 APPROVED"
   - "READ-EW-013 APPROVED"
   - "ERR-EW-001..004 APPROVED"
-  - "TL-EW-001..010 APPROVED"
+  - "TL-EW-001..017 APPROVED"
   - "OQ-EW-DESIGN-003 RESOLVED"
   - "OQ-DOM-001 RESOLVED"
 requires:
-  - requirements.md (v0.3.6)
-  - design.md (v0.3.6)
-  - tasks.md (v0.3.6)
+  - requirements.md (v0.3.7)
+  - design.md (v0.3.7)
+  - tasks.md (v0.3.7)
 ---
 
 # Expediente Workspace — Traceability
@@ -142,14 +142,14 @@ requires:
 | Eslabón | Referencia | Detalle |
 |---------|-----------|---------|
 | **Source / SDB** | DDD-020, DAT-011, DDD-011 v0.2.0 | MovimientoExpediente append-only; distinto de audit_log |
-| **Business Rule** | DDD-020; "Movimiento != Audit" | Incluye DISPATCHED, CUSTODY_ACCEPTED, etc. |
+| **Business Rule** | DDD-020; TL-EW-011..017; "Movimiento != Audit" | Autorizar, comprobar existencia, audit específico; incluye DISPATCHED/CUSTODY_ACCEPTED |
 | **Workflow** | WF (Read Models) | — |
 | **Use Case** | UC-018 v0.2.0 (historial relevante) | — |
 | **SPEC** | SPEC-009 v0.2.0 FR-VIEW-007 | Trayectoria física/operativa |
 | **REQ** | REQ-EW-008 | Historial separado de audit |
 | **API** | GET /api/v1/expedientes/{id}/timeline | Cursor opaco; occurredAt DESC, movimientoId DESC; items/nextCursor, sin total |
 | **UI** | MovimientosTab (design.md §5.2); muestra DISPATCHED, CUSTODY_ACCEPTED | — |
-| **Test** | AC-EW-015; T-06/T-17/T-21 | Unit GetTimeline; Integration no-mezcla; Component MovimientosTab |
+| **Test** | AC-EW-015; T-06/T-17/T-21 | denied/not-found/empty/non-empty; audit no-mezcla; Component MovimientosTab |
 
 ---
 
@@ -349,13 +349,14 @@ requires:
 | 0.3.4 | 2026-08-15 | CTX-EW-001..004, READ-EW-011 v2 y AUD-EW-003..006 aplicadas. RequestContext canónico y separación AuditEntry/AuditRecord formalizados. |
 | 0.3.5 | 2026-08-15 | READ-EW-013 y ERR-EW-001..004 aplicadas. updatedAt eliminado; taxonomía ApplicationError, RFC7807 y no divulgación cross-tenant formalizadas. |
 | 0.3.6 | 2026-08-15 | TL-EW-001..010 aplicadas. Cursor timeline y query port definidos; OQ-EW-DESIGN-003/OQ-DOM-001 cerradas; OQ-EW-010 permanece abierta. |
+| 0.3.7 | 2026-08-15 | TL-EW-011..017 aplicadas. Audit identifiers, autorización previa, existencia tenant-scoped y semántica empty/success definidas para T-06. |
 
 ---
 
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.6"
+spec_version: "0.3.7"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002
