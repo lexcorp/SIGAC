@@ -8,6 +8,7 @@ export interface TenantContext {
 
 export interface ActorContext {
   readonly actorId: string;
+  readonly roles: ReadonlySet<string>;
   readonly permissions: ReadonlySet<string>;
   readonly tenantIds: ReadonlySet<string>;
 }
