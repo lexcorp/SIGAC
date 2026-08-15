@@ -1,11 +1,11 @@
 ---
 spec: expediente-workspace
-version: "0.3.9"
+version: "0.3.10"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 requires:
-  - requirements.md (v0.3.9)
-  - design.md (v0.3.9)
+  - requirements.md (v0.3.10)
+  - design.md (v0.3.10)
 decisions_applied:
   - "OQ-EW-001 RESOLVED"
   - "OQ-EW-005 RESOLVED"
@@ -25,6 +25,7 @@ decisions_applied:
   - "OQ-EW-DESIGN-003 RESOLVED"
   - "OQ-DOM-001 RESOLVED"
   - "DISPATCH-DECISION DSP-EW-001..011 APPROVED; DSP-GAP-001/002 CLOSED"
+  - "DOM-EVENT-001 APPROVED"
 ready_gate: "READY-GATE.md — todos los ítems deben estar marcados antes de iniciar T-01"
 done_gate: "OS-018 — spec + tests + API/migrations + auth/tenant/audit + traceability"
 ---
@@ -59,7 +60,7 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
 ## Grupo 0 — Trazabilidad
 
 ### T-00 Completar traceability.md
-- **Descripción:** Verificar que traceability.md v0.3.9 tiene cadenas completas
+- **Descripción:** Verificar que traceability.md v0.3.10 tiene cadenas completas
   para todas las capacidades. Confirmar que GAP-002, GAP-003, GAP-007 están cerrados
   y que no quedan eslabones PENDIENTE en BR, UC o SPEC para las decisiones resueltas.
 - **Criterio de done:** Ningún REQ-EW-* sin cadena completa; matrices actualizadas.
@@ -277,6 +278,8 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
   2. findById con rowVersion -> 409 si conflicto.
   3. Validar EstadoOperativo = APARTADO -> 409 si no.
   4. EstadoOperativo -> EN_TRASLADO.
+     Invocar `Expediente.dispatch` con
+     `occurredAt: transaction.operationOccurredAt` (DOM-EVENT-001).
   5. custody_accepted_at -> null.
   6. save con rowVersion+1.
   7. Append MovimientoExpediente (movement_type = DISPATCHED) mediante writer.
@@ -289,6 +292,9 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
   - EstadoOperativo != APARTADO -> 409.
   - rowVersion incorrecto -> 409.
   - custody_accepted_at = null tras dispatch.
+  - `DomainEvent.occurredAt`, Movimiento.occurredAt y operationOccurredAt son el mismo
+    instante; el aggregate no genera timestamps.
+  - Movimiento DISPATCHED usa destinationCustodianRef string obligatorio.
   - Cross-tenant -> rechazado.
 - **Fuente SDB:** DDD-010, DDD-011, WF-005 v0.2.0, DAT-019,
   DECISION-REGISTER OQ-EW-006.
@@ -610,7 +616,7 @@ T-23 (CI pipeline) <- todas
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.9"
+spec_version: "0.3.10"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

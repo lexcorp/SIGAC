@@ -30,6 +30,8 @@ Probar invariantes, value objects, state transitions y policies.
   y Custodia acceptedAt null, y produce el payload mínimo ExpedienteDispatched.
 - Dispatch exige intendedCustodianRef string no vacío; Custodia en tránsito conserva
   custodianReference obligatorio y no lo deriva de destination.
+- Dispatch usa el occurredAt recibido; no genera timestamps. El Domain Event conserva
+  exactamente el instante proporcionado por el test.
 - `EN_TRASLADO` sin `AcceptCustody` → `custodiaActual.acceptedAt = null`.
 - `AcceptCustody` produce `EstadoOperativo = EN_CONSULTA` y establece `acceptedAt`.
 - Despacho sin aceptación no equivale a custodia formal.

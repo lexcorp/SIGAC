@@ -2,7 +2,7 @@
 
 **Estado:** APPROVED  
 **Fecha:** 2026-08-15  
-**Scope:** Expediente Workspace v0.3.9 / T-07
+**Scope:** Expediente Workspace v0.3.10 / T-07
 
 ## DSP-EW-001 — Semántica
 
@@ -48,6 +48,7 @@ dispatch(input: {
     readonly type: string;
     readonly id: string | null;
   };
+  readonly occurredAt: Date;
 }): ExpedienteDispatched;
 ```
 
@@ -57,6 +58,9 @@ pendiente con `acceptedAt=null`, y no persiste ni conoce audit. La comprobación
 
 `intendedCustodianRef` es obligatorio y no vacío. `Custodia.enTraslado` conserva
 `custodianReference: string` obligatorio; la referencia no se deriva de `destination`.
+`occurredAt` es proporcionado por Application desde
+`ArchiveOperationsTransaction.operationOccurredAt`; no procede del cliente ni se genera
+dentro del aggregate.
 
 ## DSP-EW-005 — Domain Event
 
@@ -115,6 +119,28 @@ INSERT. Ninguno procede del cliente.
 No se introduce `ClockPort`. Un fake de `ArchiveOperationsUnitOfWork` puede proporcionar
 un `operationOccurredAt` determinista en tests; la fuente temporal interna del adapter
 queda encapsulada en infraestructura.
+
+## DOM-EVENT-001 — Timestamp efectivo de Domain Events
+
+Cuando un método de aggregate produce un `DomainEvent` cuyo `occurredAt` representa el
+instante efectivo de la operación, Application/UoW proporciona explícitamente ese
+timestamp al método de dominio. El aggregate no llama `Date.now()`, no crea `new Date()`
+para fechar eventos, no obtiene un Clock y no construye timestamps implícitos.
+
+Para Dispatch, Application invoca dentro de la UoW:
+
+```typescript
+expediente.dispatch({
+  destination,
+  intendedCustodianRef,
+  businessReference,
+  occurredAt: transaction.operationOccurredAt,
+});
+```
+
+`DomainEvent.occurredAt`, `MovimientoExpedienteAppend.occurredAt` y
+`transaction.operationOccurredAt` representan exactamente el mismo instante. No se
+introduce event factory ni envelope diferido en T-07.
 
 ## DSP-EW-009 — Unit of Work
 

@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.9"
+version: "0.3.10"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -30,8 +30,9 @@ decisions_applied:
   - "OQ-EW-DESIGN-003 RESOLVED"
   - "OQ-DOM-001 RESOLVED"
   - "DISPATCH-DECISION DSP-EW-001..011 APPROVED; DSP-GAP-001/002 CLOSED"
+  - "DOM-EVENT-001 APPROVED"
 requires:
-  - requirements.md (v0.3.9)
+  - requirements.md (v0.3.10)
 open_questions_blocking: []
 open_questions_non_blocking:
   - OQ-EW-002
@@ -634,7 +635,8 @@ Pasos:
   1. Verificar permiso EXPEDIENT_DISPATCH en tenant
   2. findById con row_version                       -> 409 si conflicto
   3. Validar EstadoOperativo = APARTADO             -> 409 si no
-  4. Ejecutar DispatchExpediente
+  4. Ejecutar `Expediente.dispatch` pasando
+     `occurredAt: transaction.operationOccurredAt`
   5. EstadoOperativo -> EN_TRASLADO
   6. custody_accepted_at -> null
   7. Guardar con row_version+1
@@ -649,6 +651,11 @@ not-found se auditan fuera de la mutación. Ante optimistic lock mismatch, la Uo
 mutante hace rollback y posteriormente se registra `result=conflict` fuera de ella;
 no se persiste aggregate ni Movimiento. `intendedCustodianRef` es obligatorio, no
 vacío, alimenta `Custodia.enTraslado.custodianReference` y no se deriva del destino.
+Conforme DOM-EVENT-001, el aggregate usa el occurredAt recibido y no llama Date.now(),
+no crea new Date() para fechar el evento ni obtiene un Clock. Para DISPATCHED,
+`destinationCustodianRef: string` es obligatorio. Se verifica que
+`DomainEvent.occurredAt === MovimientoExpedienteAppend.occurredAt ===
+transaction.operationOccurredAt`. No se introduce event factory/envelope diferido.
 
 ### 7.4 Use Case: AcceptCustody
 
@@ -767,7 +774,7 @@ por `GetExpediente` (READ-MODEL-COMPOSITION-DECISION).
 ## 12. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.9"
+spec_version: "0.3.10"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

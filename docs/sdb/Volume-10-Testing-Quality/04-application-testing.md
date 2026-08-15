@@ -60,3 +60,6 @@ Para Dispatch, cubrir permission/tenant/not-found, expectedRowVersion, transici√
 payload/evento, Movimiento DAT-011 sin C3, timestamps no-client y atomicidad rollback de
 aggregate+movimiento+audit. Cubrir intendedCustodianRef obligatorio/no vac√≠o y optimistic
 conflict: rollback sin aggregate ni Movimiento, seguido de audit `conflict` externo.
+Comprobar identidad temporal:
+`DomainEvent.occurredAt === MovimientoExpedienteAppend.occurredAt ===
+transaction.operationOccurredAt`, y destinationCustodianRef obligatorio en DISPATCHED.

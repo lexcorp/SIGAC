@@ -42,9 +42,17 @@ de Archivo y entra en traslado. Payload mínimo: expedienteId, originLocation,
 destinationLocation, originCustodianRef, intendedCustodianRef,
 businessReferenceType y businessReferenceId. No incluye requestId, source ni recordedAt.
 `intendedCustodianRef` es string obligatorio y no vacío.
+Su `DomainEvent.occurredAt` se recibe explícitamente desde Application/UoW y coincide
+con el occurredAt del Movimiento DISPATCHED. El aggregate no genera timestamps.
   de Archivo Clínico; `EstadoOperativo` → `EN_TRASLADO`. Registra actor (archivista/mensajero),
   destino previsto, timestamp y correlación con la jornada/solicitud.
   (OQ-EW-006 RESOLVED)
+
+## DOM-EVENT-001
+
+Cuando `occurredAt` representa el instante efectivo de una operación, Application/UoW
+lo entrega explícitamente al método del aggregate. El dominio no llama `Date.now()`, no
+crea `new Date()` para fechar el evento, no obtiene Clock ni usa timestamps implícitos.
 
 `CustodyAccepted` — emitido por `AcceptCustody`. El receptor autorizado confirma la
   recepción en destino; `EstadoOperativo` → `EN_CONSULTA`. Registra receptor, ubicación

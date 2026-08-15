@@ -27,6 +27,9 @@ Dispatch usa ArchiveOperationsUnitOfWork: update Expediente con expectedRowVersi
 append Movimiento DISPATCHED y append audit success en una única transacción del tenant,
 ALL OR NOTHING. UoW aporta operationOccurredAt; MovimientoWriter establece recordedAt al
 INSERT. Ningún timestamp proviene del cliente.
+Application entrega `operationOccurredAt` a `Expediente.dispatch` como occurredAt. El
+Domain Event y el Movimiento DISPATCHED conservan exactamente ese mismo instante; el
+aggregate no lo genera y no se introduce event factory/envelope diferido para T-07.
 
 Ante optimistic lock mismatch, la transacción mutante hace rollback completo. Después
 del rollback se registra audit `conflict` fuera de esa UoW; no se persiste cambio de

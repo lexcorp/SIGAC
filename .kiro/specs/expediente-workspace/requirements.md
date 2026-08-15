@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.9"
+version: "0.3.10"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -31,6 +31,7 @@ decisions_applied:
   - "OQ-EW-DESIGN-003 RESOLVED"
   - "OQ-DOM-001 RESOLVED"
   - "DISPATCH-DECISION DSP-EW-001..011 APPROVED; DSP-GAP-001/002 CLOSED"
+  - "DOM-EVENT-001 APPROVED"
 ---
 
 # Expediente Workspace — Requirements
@@ -269,6 +270,12 @@ operativos; `EXPEDIENT_VIEW` no es una capability.
   audit `conflict` fuera de ella; no persiste aggregate ni Movimiento.
 - **AuditResult:** `success | denied | not-found | conflict`; respectivamente mutación
   confirmada, permission ausente, recurso tenant-scoped ausente y optimistic lock mismatch.
+- **Tiempo efectivo (DOM-EVENT-001):** Application pasa
+  `transaction.operationOccurredAt` a `Expediente.dispatch` como `occurredAt`; el
+  Domain Event y Movimiento DISPATCHED comparten exactamente ese instante. No procede
+  del cliente ni se genera en el aggregate.
+- **Movimiento DISPATCHED:** `destinationCustodianRef: string` obligatorio. DAT-011
+  conserva su nulabilidad general para otros tipos de movimiento.
 
 ### REQ-EW-012 — Aceptación de custodia en destino
 - **Actor:** Receptor de Servicio autenticado (Enfermería o médico/solicitante).
@@ -529,7 +536,7 @@ Ninguna. OQ-EW-001, OQ-EW-005, OQ-EW-006 y OQ-EW-007 están RESUELTAS.
 ## 7. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.9"
+spec_version: "0.3.10"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

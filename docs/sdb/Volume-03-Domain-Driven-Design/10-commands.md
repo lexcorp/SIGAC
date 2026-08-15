@@ -40,6 +40,8 @@ DeclareLost
   businessReference `{type:string,id:string|null}`, expectedRowVersion bigint y
   RequestContext. Origen/custodio previos se derivan del aggregate. No abre Préstamo ni
   confirma custodia. La referencia de custodio no se deriva de destination.
+  Application pasa `operationOccurredAt` explícitamente a `Expediente.dispatch` como
+  `occurredAt`; no procede del command cliente.
   (OQ-EW-006 RESOLVED)
 
 `AcceptCustody` — registra la confirmación del receptor autorizado en destino.

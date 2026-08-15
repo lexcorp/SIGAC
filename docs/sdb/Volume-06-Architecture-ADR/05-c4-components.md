@@ -68,3 +68,5 @@ Los commands mutantes usan `ArchiveOperationsUnitOfWork` tenant-scoped. El callb
 recibe Repository, MovimientoExpedienteWriter, AuditWriter y un único
 operationOccurredAt. Update aggregate + append movimiento + audit success comparten una
 transacción PostgreSQL ALL OR NOTHING. Dominio no conoce transacciones.
+Application pasa ese instante explícitamente a `Expediente.dispatch`; conforme
+DOM-EVENT-001, el aggregate no genera timestamps ni obtiene un Clock.

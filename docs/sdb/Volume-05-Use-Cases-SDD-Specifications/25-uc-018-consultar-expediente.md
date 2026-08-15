@@ -118,6 +118,9 @@ Input: ExpedienteId, destination Ubicacion, intendedCustodianRef string obligato
 businessReference `{type,id}`, expectedRowVersion bigint y RequestContext. Autoriza
 EXPEDIENT_DISPATCH, carga tenant-scoped, ejecuta la transición APARTADO→EN_TRASLADO y en
 una UoW guarda aggregate, Movimiento DISPATCHED y audit success ALL OR NOTHING.
+Dentro del callback invoca `Expediente.dispatch` con
+`occurredAt = transaction.operationOccurredAt`; el evento y el movimiento usan
+exactamente ese mismo instante.
 
 Audit: `EXPEDIENTE_DISPATCH/EXPEDIENTE/{expedienteId}`. Denied/not-found quedan fuera de
 la transacción mutante. Optimistic conflict provoca rollback completo y después se
