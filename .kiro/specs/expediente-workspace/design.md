@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.16"
+version: "0.3.17"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -35,11 +35,11 @@ decisions_applied:
   - "DSP-EW-014..016 APPROVED"
   - "CST-EW-001..010 APPROVED; CST-GAP-001/002 CLOSED"
   - "POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014 APPROVED"
-  - "TENANT-TRANSACTION-AUDIT-DECISION TX-EW-001..012 APPROVED; AUD-DB-GAP BLOCKING"
+  - "TENANT-TRANSACTION-AUDIT-DECISION TX-EW-001..012 APPROVED"
+  - "AUDIT-PHYSICAL-MODEL-DECISION AUD-DB-EW-001..013 APPROVED; AUD-DB-GAP CLOSED"
 requires:
-  - requirements.md (v0.3.16)
-open_questions_blocking:
-  - AUD-DB-GAP
+  - requirements.md (v0.3.17)
+open_questions_blocking: []
 open_questions_non_blocking:
   - OQ-EW-002
   - OQ-EW-003
@@ -202,19 +202,18 @@ POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014.
 
 ```
 audit_log
-  id               UUID  PK
-  actor_ref        varchar
-  action           varchar
-  resource_type    varchar
-  resource_id      UUID
-  result           varchar
-  occurred_at      timestamptz
-  request_id       TEXT
-  correlation_id   TEXT | null
-  source_ip_hash   varchar | null
-  source           varchar
-  change_summary   jsonb | null   -- sin payload clínico completo
-  security_context jsonb | null
+  id               UUID PK                         -- generado por adapter; sin DB default
+  actor_ref        TEXT NOT NULL
+  action           TEXT NOT NULL                   -- sin CHECK
+  resource_type    TEXT NOT NULL                   -- sin CHECK
+  resource_id      TEXT NOT NULL                   -- sin FK; no asume UUID
+  result           TEXT NOT NULL CHECK             -- cinco AuditResult canónicos
+  request_id       TEXT NOT NULL
+  correlation_id   TEXT NOT NULL
+  source           TEXT NOT NULL CHECK             -- WEB | INTERNAL
+  occurred_at      timestamptz NOT NULL            -- adapter; sin DB default
+  change_summary   jsonb | null                    -- Record<string,string>; sin C3
+  security_context jsonb | null                    -- metadata técnica permitida
 ```
 
 Acceso de la aplicación: INSERT únicamente.
@@ -222,7 +221,8 @@ Acceso de la aplicación: INSERT únicamente.
 Ownership lógico: Security / Audit. Storage físico: cada tenant database. Su schema se
 compone en platform/database sin transferir ownership. Un binder de infraestructura
 crea AuditWriter ligado a la transacción existente; Archive Operations no ejecuta SQL
-directo en audit_log. El DDL exacto permanece bloqueado por AUD-DB-GAP.
+directo en audit_log. AUD-DB-EW-001..013 define el DDL exacto, sin tenant_id,
+source_ip_hash, FKs ni índices secundarios y con append-only estricto.
 
 ### 3.6 TenantDatabaseRouter y UoW PostgreSQL
 
@@ -836,9 +836,8 @@ por `GetExpediente` (READ-MODEL-COMPOSITION-DECISION).
 ## 12. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.16"
-blocking_open_questions:
-  - AUD-DB-GAP
+spec_version: "0.3.17"
+blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002
   - OQ-EW-003
@@ -850,5 +849,5 @@ non_blocking_open_questions:
   - OQ-EW-DESIGN-002
   - OQ-EW-DESIGN-005
 contradictions_found: []
-implementation_ready: false
+implementation_ready: true
 ```

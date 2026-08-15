@@ -27,3 +27,7 @@ baseline:
 audit success atómico con mutaciones operacionales. Security / Audit proporciona el
 AuditWriter transaction-bound; los módulos operacionales no escriben SQL directo en
 `audit_log`. El audit standalone de fallos también usa una transacción tenant-local.
+
+AUD-DB-EW-001..013 fija append-only sin FKs ni índices secundarios. `source_ip_hash`
+queda excluido. change_summary/security_context no almacenan tokens, cookies, secretos,
+datos clínicos, connection strings ni stack traces.

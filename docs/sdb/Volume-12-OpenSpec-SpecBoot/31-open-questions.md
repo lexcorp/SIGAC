@@ -73,9 +73,9 @@ Ubicacion, Custodia inline, rowVersion, ExpedienteNumero no unique, tipos de Mov
 RequestSource, FKs y mapping Repository. T-10 queda listo para implementación conforme a
 `POSTGRES-PHYSICAL-MODEL-DECISION.md`; no se abre una OQ nueva.
 
-## Tenant transaction/audit T-09 (v0.3.16)
+## Tenant transaction/audit T-09 (v0.3.17)
 
 TX-EW-001..012 aprueba TenantDatabaseRouter, transacción tenant única, ownership y
 storage tenant-local de audit_log, AuditWriter transaction-bound, UoW y audit standalone.
-`AUD-DB-GAP` permanece BLOCKING: DAT-012 no permite derivar todavía el DDL completo de
-audit_log. T-09 no está ready hasta resolverlo.
+AUD-DB-EW-001..013 cierra `AUD-DB-GAP`: DDL, checks, mapping, exclusión de
+source_ip_hash y migration ownership quedan definidos. T-09 está ready.

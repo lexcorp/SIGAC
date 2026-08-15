@@ -22,7 +22,7 @@ High-value indexes:
 - prestamos(expediente_id, estado)
 - incidencias(estado, tipo)
 - cualquier índice adicional de `movimientos_expediente` requiere aprobación posterior
-- audit_log(resource_type, resource_id, occurred_at desc)
+- `audit_log` no recibe índices secundarios en expediente-workspace v0.3.17; sólo PK
 - outbox(processed_at, available_at)
 
 Indexes are validated against EXPLAIN during pilot.

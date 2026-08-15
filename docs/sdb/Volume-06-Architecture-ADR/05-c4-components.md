@@ -76,3 +76,7 @@ para resolver el pool desde un TenantContext previamente validado. La UoW abre u
 transacción y construye Repository, MovimientoWriter y un AuditWriter ligado al mismo
 handle mediante infraestructura Security / Audit. Los tipos de DB no cruzan hacia
 Application. Fuente: TENANT-TRANSACTION-AUDIT-DECISION TX-EW-001..012.
+
+El schema compuesto incluye `audit_log` propiedad de Security / Audit conforme a
+AUD-DB-EW-001..013. Su adapter genera UUID y occurredAt explícitamente, permanece
+append-only y no expone detalles físicos al port AuditWriter.

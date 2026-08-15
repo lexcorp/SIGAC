@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.16"
+version: "0.3.17"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 traceability_model: "OS-007 / SDD-006"
@@ -29,11 +29,12 @@ decisions_applied:
   - "DSP-EW-014..016 APPROVED"
   - "CST-EW-001..010 APPROVED; CST-GAP-001/002 CLOSED"
   - "POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014 APPROVED"
-  - "TENANT-TRANSACTION-AUDIT-DECISION TX-EW-001..012 APPROVED; AUD-DB-GAP BLOCKING"
+  - "TENANT-TRANSACTION-AUDIT-DECISION TX-EW-001..012 APPROVED"
+  - "AUDIT-PHYSICAL-MODEL-DECISION AUD-DB-EW-001..013 APPROVED; AUD-DB-GAP CLOSED"
 requires:
-  - requirements.md (v0.3.16)
-  - design.md (v0.3.16)
-  - tasks.md (v0.3.16)
+  - requirements.md (v0.3.17)
+  - design.md (v0.3.17)
+  - tasks.md (v0.3.17)
 ---
 
 # Expediente Workspace — Traceability
@@ -340,7 +341,7 @@ requires:
 | GAP-008 | Codificación de ubicaciones temporales | OQ-EW-008 | Abierto; categoría genérica provisional |
 | GAP-009 | SLA de performance (<= 1 s) | NFR-EW-001 | Pendiente UAT con carga real |
 | GAP-010 | Política de retención del timeline | OQ-EW-010 | Abierto; sin límite provisional |
-| AUD-DB-GAP | DDL incompleto de audit_log bloquea AuditWriter/UoW PostgreSQL | DAT-012, TX-EW-011 | BLOCKING para T-09 |
+| AUD-DB-GAP | DDL de audit_log, mapping y migration ownership | DAT-012, TX-EW-011, AUD-DB-EW-001..013 | CERRADO; T-09 ready |
 
 ---
 
@@ -367,15 +368,15 @@ requires:
 | 0.3.14 | 2026-08-15 | CST-GAP-001/002 cerrados: businessReference explícita y audit CUSTODY_ACCEPTED formalizados. |
 | 0.3.15 | 2026-08-15 | DB-EW-001..014 aprobadas: DDL PostgreSQL tenant, nombres físicos, PacienteReferencia, Ubicacion, Custodia inline, bigint, Movimiento, FKs y mapping Repository definidos; T-10 listo. |
 | 0.3.16 | 2026-08-15 | TX-EW-001..012 aprobadas: TenantDatabaseRouter, transaction-bound AuditWriter, UoW tenant y audit local formalizados; AUD-DB-GAP bloquea T-09. |
+| 0.3.17 | 2026-08-15 | AUD-DB-EW-001..013 aprobadas: DDL audit_log, checks, mapping, exclusión source_ip_hash y migration ownership definidos; AUD-DB-GAP cerrado. |
 
 ---
 
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.16"
-blocking_open_questions:
-  - AUD-DB-GAP
+spec_version: "0.3.17"
+blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002
   - OQ-EW-003
@@ -384,5 +385,5 @@ non_blocking_open_questions:
   - OQ-EW-009
   - OQ-EW-010
 contradictions_found: []
-implementation_ready: false
+implementation_ready: true
 ```

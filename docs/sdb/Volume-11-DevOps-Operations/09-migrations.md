@@ -6,3 +6,6 @@ El registry de schemas tenant puede componerse desde módulos propietarios. T-10
 su migración inicial; Security / Audit publica después la migración tenant de audit_log
 y mantiene ownership. El runner la aplica a cada database tenant con status/retry; no
 se crea una tabla audit global como sustituto del audit transaccional local.
+
+La migración Security / Audit posterior usa el DDL AUD-DB-EW-001..013 y no altera la
+migración inicial T-10.

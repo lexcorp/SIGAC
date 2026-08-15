@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.16"
+version: "0.3.17"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -36,7 +36,8 @@ decisions_applied:
   - "DSP-EW-014..016 APPROVED"
   - "CST-EW-001..010 APPROVED; CST-GAP-001/002 CLOSED"
   - "POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014 APPROVED"
-  - "TENANT-TRANSACTION-AUDIT-DECISION TX-EW-001..012 APPROVED; AUD-DB-GAP BLOCKING"
+  - "TENANT-TRANSACTION-AUDIT-DECISION TX-EW-001..012 APPROVED"
+  - "AUDIT-PHYSICAL-MODEL-DECISION AUD-DB-EW-001..013 APPROVED; AUD-DB-GAP CLOSED"
 ---
 
 # Expediente Workspace — Requirements
@@ -392,6 +393,13 @@ success mediante AuditWriter transaction-bound. Cualquier fallo hace rollback to
 Los audits de fallo usan el mismo port en una transacción tenant-local independiente.
 Fuente: TX-EW-001..012, DAT-020, SEC-032.
 
+### NFR-EW-011 — Audit físico tenant-local
+
+`audit_log` usa el DDL AUD-DB-EW-001..013: UUID generado por adapter, campos semánticos
+y RequestContext obligatorios, result/source con CHECK, JSONB opcional permitido y sin
+tenant_id, FKs, índices secundarios ni source_ip_hash. Es append-only y su migración
+tenant posterior pertenece a Security / Audit. No almacena datos C3 ni secretos.
+
 ---
 
 ## 5. Criterios de aceptación
@@ -564,9 +572,7 @@ And foco siempre visible
 
 ### Bloqueantes para implementación
 
-`AUD-DB-GAP`: DAT-012 no define tipos/nullability completos de audit_log; bloquea T-09,
-su AuditWriter PostgreSQL y las pruebas de atomicidad. Las demás OQs históricamente
-bloqueantes permanecen resueltas.
+Ninguna. `AUD-DB-GAP` y las OQs históricamente bloqueantes están cerradas.
 
 ### No bloqueantes (decisión provisional disponible)
 
@@ -584,9 +590,8 @@ bloqueantes permanecen resueltas.
 ## 7. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.16"
-blocking_open_questions:
-  - AUD-DB-GAP
+spec_version: "0.3.17"
+blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002
   - OQ-EW-003
@@ -595,5 +600,5 @@ non_blocking_open_questions:
   - OQ-EW-009
   - OQ-EW-010
 contradictions_found: []
-implementation_ready: false
+implementation_ready: true
 ```

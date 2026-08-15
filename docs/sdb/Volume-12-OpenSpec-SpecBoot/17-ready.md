@@ -37,6 +37,6 @@ quedan definidos. OQ-DAT-004 está RESOLVED; no quedan gaps bloqueantes conocido
 la migración.
 
 T-09 tiene definidos routing, transaction binding, ownership de audit_log, UoW y
-operationOccurredAt mediante TX-EW-001..012. Permanece **NOT READY** por AUD-DB-GAP:
-DAT-012 no define todavía el DDL completo de audit_log necesario para su migration y
-AuditWriter PostgreSQL.
+operationOccurredAt mediante TX-EW-001..012. AUD-DB-EW-001..013 cierra AUD-DB-GAP con
+DDL, mapping y migration ownership completos. T-09 está ready y no tiene gaps
+bloqueantes conocidos.

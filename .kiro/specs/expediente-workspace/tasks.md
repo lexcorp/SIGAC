@@ -1,11 +1,11 @@
 ---
 spec: expediente-workspace
-version: "0.3.16"
+version: "0.3.17"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 requires:
-  - requirements.md (v0.3.16)
-  - design.md (v0.3.16)
+  - requirements.md (v0.3.17)
+  - design.md (v0.3.17)
 decisions_applied:
   - "OQ-EW-001 RESOLVED"
   - "OQ-EW-005 RESOLVED"
@@ -30,7 +30,8 @@ decisions_applied:
   - "DSP-EW-014..016 APPROVED"
   - "CST-EW-001..010 APPROVED; CST-GAP-001/002 CLOSED"
   - "POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014 APPROVED"
-  - "TENANT-TRANSACTION-AUDIT-DECISION TX-EW-001..012 APPROVED; AUD-DB-GAP BLOCKING"
+  - "TENANT-TRANSACTION-AUDIT-DECISION TX-EW-001..012 APPROVED"
+  - "AUDIT-PHYSICAL-MODEL-DECISION AUD-DB-EW-001..013 APPROVED; AUD-DB-GAP CLOSED"
 ready_gate: "READY-GATE.md — todos los ítems deben estar marcados antes de iniciar T-01"
 done_gate: "OS-018 — spec + tests + API/migrations + auth/tenant/audit + traceability"
 ---
@@ -65,7 +66,7 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
 ## Grupo 0 — Trazabilidad
 
 ### T-00 Completar traceability.md
-- **Descripción:** Verificar que traceability.md v0.3.16 tiene cadenas completas
+- **Descripción:** Verificar que traceability.md v0.3.17 tiene cadenas completas
   para todas las capacidades. Confirmar que GAP-002, GAP-003, GAP-007 están cerrados
   y que no quedan eslabones PENDIENTE en BR, UC o SPEC para las decisiones resueltas.
 - **Criterio de done:** Ningún REQ-EW-* sin cadena completa; matrices actualizadas.
@@ -373,10 +374,11 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
   - save con rowVersion incorrecto -> error de concurrencia.
 - **Fuente SDB:** DAT-006 v0.2.0, DAT-016 v0.2.0, SEC-032, AGENTS.md,
   POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014,
-  TENANT-TRANSACTION-AUDIT-DECISION TX-EW-001..012, DAT-012, DAT-020.
+  TENANT-TRANSACTION-AUDIT-DECISION TX-EW-001..012,
+  AUDIT-PHYSICAL-MODEL-DECISION AUD-DB-EW-001..013, DAT-012, DAT-020.
 - **Dependencias:** T-03, T-10 (migración de esquema).
-- **Bloqueo vigente:** `AUD-DB-GAP`; no iniciar adapter audit/UoW hasta que DAT-012
-  defina el DDL completo y exista su migration tenant posterior propietaria.
+- **Readiness:** `AUD-DB-GAP` CLOSED; la migration tenant posterior de audit_log y su
+  adapter pertenecen a Security / Audit.
 
 ### T-10 Migración de esquema
 - **Descripción:** Migración para tablas `expediente` y `movimientos_expediente`.
@@ -654,9 +656,8 @@ T-23 (CI pipeline) <- todas
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.16"
-blocking_open_questions:
-  - AUD-DB-GAP
+spec_version: "0.3.17"
+blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002
   - OQ-EW-003
@@ -668,5 +669,5 @@ non_blocking_open_questions:
   - OQ-EW-DESIGN-002
   - OQ-EW-DESIGN-005
 contradictions_found: []
-implementation_ready: false
+implementation_ready: true
 ```

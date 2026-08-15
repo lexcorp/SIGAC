@@ -295,8 +295,10 @@ de Application.
 | `correlation_id` | `context.correlationId` |
 | `source` | `context.source` |
 | `change_summary` | `entry.changeSummary`, sólo si está permitido |
-| `source_ip_hash` candidate | adapter, sólo si dispone del dato permitido |
 | `security_context` mínimo | adapter, limitado a metadata técnica permitida |
+
+`source_ip_hash` está excluido del schema v0.3.17 por AUD-DB-EW-010; requiere una
+decisión futura de hashing, salt/pepper, retención y privacidad.
 
 ## AUD-EW-006 — Append-only
 

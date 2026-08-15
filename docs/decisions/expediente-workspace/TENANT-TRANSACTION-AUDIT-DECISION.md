@@ -1,8 +1,8 @@
 # Tenant Transaction & Audit Decision — Expediente Workspace
 
-**Estado:** APPROVED WITH BLOCKING GAP  
-**Fecha:** 2026-08-15  
-**Scope:** Expediente Workspace v0.3.16 / T-09
+**Estado:** APPROVED
+**Fecha:** 2026-08-15
+**Scope:** Expediente Workspace v0.3.17 / T-09
 
 ## TX-EW-001 — TenantDatabaseRouter
 
@@ -108,13 +108,10 @@ T-10 permanece PASS y su migración inicial no se reescribe. Security / Audit es
 propietario de una migración tenant posterior para `audit_log`, aplicada a cada tenant
 database por el migration runner. DAT-012 debe ser la autoridad de su DDL.
 
-### AUD-DB-GAP — BLOCKING
+### AUD-DB-GAP — CLOSED
 
-DAT-012 todavía no define inequívocamente tipo y nullability de `id`, `actor_ref`,
-`action`, `resource_type`, `resource_id`, `result`, `occurred_at`, `source`,
-`source_ip_hash` y `security_context`, ni resuelve si los campos candidatos forman parte
-del contrato físico. No se puede generar la migración ni implementar el adapter audit
-sin inventar columnas/tipos. T-09 permanece bloqueada hasta cerrar este gap.
+AUD-DB-EW-001..013 define el DDL completo, mapping, restricciones y migration ownership
+de `audit_log`. `source_ip_hash` queda expresamente excluido.
 
 ## TX-EW-012 — operationOccurredAt
 
@@ -124,6 +121,5 @@ Movimiento reutilizan ese instante conforme a DOM-EVENT-001. No se introduce Clo
 
 ## Readiness
 
-El routing, ownership, binding y flujo transaccional quedan decididos. T-09 no está
-implementation-ready únicamente por `AUD-DB-GAP`; no quedan otros gaps conocidos en
-estas decisiones.
+El routing, ownership, binding, flujo transaccional y audit_log físico quedan decididos.
+No quedan gaps bloqueantes conocidos para T-09.

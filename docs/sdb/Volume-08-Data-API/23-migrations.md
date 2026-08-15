@@ -33,5 +33,5 @@ POSTGRES-PHYSICAL-MODEL-DECISION DB-EW-001..014: elimina el UNIQUE previo de
 `expedientes` y `movimientos_expediente`. No modifica `audit_log` ni crea `hospital_id`.
 
 Security / Audit agrega en una migración tenant posterior su tabla `audit_log`; no
-reescribe la migración inicial T-10. Esa migración queda bloqueada por AUD-DB-GAP hasta
-que DAT-012 defina tipos y nullability completos.
+reescribe la migración inicial T-10. AUD-DB-EW-001..013 cierra su DDL y migration
+ownership; `packages/platform/database` sólo compone el registry físico.
