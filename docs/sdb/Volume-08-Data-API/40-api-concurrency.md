@@ -15,6 +15,7 @@ Mutable resources expose version/ETag candidate.
 
 Commands may require `If-Match`.
 
-Stale version → 409/412 according to chosen API convention.
+Stale version → `OPTIMISTIC_LOCK_CONFLICT`, HTTP 409 para Expediente Workspace.
 
-Decision to standardize exact HTTP code remains open.
+La convención global 409/412 para otros slices permanece abierta; no modifica la
+decisión explícita de este vertical slice.

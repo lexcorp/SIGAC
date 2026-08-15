@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.4"
+version: "0.3.5"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 traceability_model: "OS-007 / SDD-006"
@@ -18,10 +18,12 @@ decisions_applied:
   - "AUTH-EW-006/007 APPROVED"
   - "CTX-EW-001..004 APPROVED"
   - "AUD-EW-003..006 APPROVED"
+  - "READ-EW-013 APPROVED"
+  - "ERR-EW-001..004 APPROVED"
 requires:
-  - requirements.md (v0.3.4)
-  - design.md (v0.3.4)
-  - tasks.md (v0.3.4)
+  - requirements.md (v0.3.5)
+  - design.md (v0.3.5)
+  - tasks.md (v0.3.5)
 ---
 
 # Expediente Workspace — Traceability
@@ -173,7 +175,7 @@ requires:
 | **Workflow** | Transversal | — |
 | **Use Case** | UC-018 paso 1 | — |
 | **REQ** | REQ-EW-001 (precondición), REQ-EW-016 (tenant) | — |
-| **API** | 403 sin permiso; 404 cross-tenant | — |
+| **API** | `PERMISSION_DENIED` -> 403; `EXPEDIENTE_NOT_FOUND` -> 404, incluido cross-tenant | RFC7807 futuro en T-11/T-12 |
 | **Test** | AC-EW-013; T-19; TQ-007 | Unit UC; API contract; Tenant isolation gate |
 
 ---
@@ -342,13 +344,14 @@ requires:
 | 0.3.2 | 2026-08-15 | READ-MODEL-COMPOSITION-DECISION aplicada. OQ-EW-DESIGN-004 resuelta; query ports de proyección y AuditWriter definidos para T-05..T-08. |
 | 0.3.3 | 2026-08-15 | READ-EW-008..012 y AUTH-EW-006/007 aplicadas. ExitEnablingSourceQueryPort 0..N y capabilities por existencia de fuente validada formalizadas. |
 | 0.3.4 | 2026-08-15 | CTX-EW-001..004, READ-EW-011 v2 y AUD-EW-003..006 aplicadas. RequestContext canónico y separación AuditEntry/AuditRecord formalizados. |
+| 0.3.5 | 2026-08-15 | READ-EW-013 y ERR-EW-001..004 aplicadas. updatedAt eliminado; taxonomía ApplicationError, RFC7807 y no divulgación cross-tenant formalizadas. |
 
 ---
 
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.4"
+spec_version: "0.3.5"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

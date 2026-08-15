@@ -30,3 +30,13 @@ packages/integrations/simef/
 
 ## Technology baseline
 TypeScript on a maintained Node.js LTS line. NestJS provides modules, DI, guards, pipes and HTTP integration without dictating the domain model.
+
+## Application errors
+
+`DomainError` se reserva para invariantes/validaciones de dominio.
+`ApplicationError` expresa resultados de Use Cases y usa un code cerrado. Para
+Expediente Workspace puede residir en Application de `archive-operations`; no se crea
+un package nuevo ni se coloca en `domain-kernel`. Extraerlo posteriormente a un
+componente Application compartido es un refactor no bloqueante si aparece reutilización.
+
+La capa API traduce posteriormente los codes a RFC7807; Application no depende de HTTP.

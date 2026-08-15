@@ -40,6 +40,12 @@ No se delega la verificación al frontend.
 `roles`, `permissions` y `tenantIds`. La membresía actor -> tenant se valida server-side
 antes del CapabilityService; éste recibe ActorContext y TenantContext ya validados.
 
+La falta de una permission requerida produce `PERMISSION_DENIED`; no se confunde con
+`INSUFFICIENT_ENABLING_SOURCE`. Ambas se traducen a 403, pero expresan causas distintas.
+Un Expediente fuera del tenant activo se trata como `EXPEDIENTE_NOT_FOUND`/404. No se
+publica un código `CROSS_TENANT_*` ni se revela la existencia en otro tenant; cualquier
+señal interna del intento pertenece a security/audit.
+
 ## Aplicación a préstamos/salidas (OQ-EW-005)
 - `CONSULTA_PROGRAMADA`: el rol Archivo/Jefatura es suficiente; no se requiere
   verificación de actor emisor adicional.

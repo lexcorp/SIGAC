@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.4"
+version: "0.3.5"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -24,8 +24,10 @@ decisions_applied:
   - "AUTH-EW-006/007 APPROVED"
   - "CTX-EW-001..004 APPROVED"
   - "AUD-EW-003..006 APPROVED"
+  - "READ-EW-013 APPROVED"
+  - "ERR-EW-001..004 APPROVED"
 requires:
-  - requirements.md (v0.3.4)
+  - requirements.md (v0.3.5)
 open_questions_blocking: []
 open_questions_non_blocking:
   - OQ-EW-002
@@ -288,14 +290,17 @@ Acceso de la aplicación: INSERT únicamente.
     "openedAt": "ISO8601"
   }],
   "capabilities": ["DISPATCH", "SOLICITAR", "REPORTAR_INCIDENCIA", ...],
-  "rowVersion": 42,
-  "updatedAt": "ISO8601"
+  "rowVersion": 42
 }
 ```
 
 capabilities[] es calculado server-side por ExpedienteCapabilityService considerando:
 EstadoOperativo + rol del actor + FuenteHabilitanteSalida disponible + contexto.
 Frontend solo renderiza lo que capabilities contiene.
+
+`updatedAt` no pertenece al aggregate, `ExpedienteSnapshot` ni read model de este
+vertical slice. No existe un query port para obtenerlo. `rowVersion` conserva la
+responsabilidad de optimistic concurrency.
 
 ### 4.5 Manejo de errores (API-006)
 
@@ -311,6 +316,13 @@ Frontend solo renderiza lo que capabilities contiene.
 { "type": "https://sigac/errors/authorization", "status": 403,
   "code": "INSUFFICIENT_ENABLING_SOURCE", "traceId": "..." }
 ```
+
+Taxonomía cerrada de `ApplicationError`: `PERMISSION_DENIED` (403),
+`INSUFFICIENT_ENABLING_SOURCE` (403), `EXPEDIENTE_NOT_FOUND` (404),
+`OPTIMISTIC_LOCK_CONFLICT` (409), `REQUEST_INVALID_TRANSITION` (409).
+`AUTHENTICATION_REQUIRED` (401) pertenece a API/BFF. Falta de `EXPEDIENT_VIEW` usa
+`PERMISSION_DENIED`. Cross-tenant no tiene code público propio: retorna
+`EXPEDIENTE_NOT_FOUND`.
 
 Sin stack trace, sin nombre de DB, sin datos clínicos en errores.
 
@@ -524,6 +536,13 @@ interface AuditEntry {
 interface AuditWriter {
   append(entry: AuditEntry, context: RequestContext): Promise<void>;
 }
+
+type ApplicationErrorCode =
+  | 'PERMISSION_DENIED'
+  | 'INSUFFICIENT_ENABLING_SOURCE'
+  | 'EXPEDIENTE_NOT_FOUND'
+  | 'OPTIMISTIC_LOCK_CONFLICT'
+  | 'REQUEST_INVALID_TRANSITION';
 ```
 
 `RequestContext`, `AuditEntry`, los summaries y `AuditRecord` tienen exactamente los campos definidos en
@@ -535,7 +554,7 @@ Los query ports no exponen aggregates. `AuditWriter` no ofrece update/delete.
 Input: { expedienteId: ExpedienteId, context: RequestContext }
 
 Pasos:
-  1. Verificar EXPEDIENT_VIEW con context.actor     -> 403 si no
+  1. Verificar EXPEDIENT_VIEW con context.actor     -> PERMISSION_DENIED si no
   2. context construido server-side                 -> nunca del body/query
   3. findById(id, context.tenant)                   -> 404 si no existe
   4. ActiveLoanQueryPort.findActiveByExpedienteId(id, context.tenant)
@@ -681,7 +700,7 @@ por `GetExpediente` (READ-MODEL-COMPOSITION-DECISION).
 ## 12. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.4"
+spec_version: "0.3.5"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

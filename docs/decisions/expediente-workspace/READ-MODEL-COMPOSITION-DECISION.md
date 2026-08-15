@@ -2,7 +2,7 @@
 
 **Estado:** APPROVED  
 **Fecha:** 2026-08-15  
-**Scope:** Expediente Workspace v0.3.4 / T-04 a T-20
+**Scope:** Expediente Workspace v0.3.5 / T-04 a T-20
 
 ## CTX-EW-001 — Contexto canónico de Application
 
@@ -212,6 +212,16 @@ existe al menos una fuente habilitante para ofrecer `ABRIR_PRESTAMO`; no selecci
 se utilizará. La selección y el registro de la fuente concreta pertenecen al command/use
 case `OpenLoan`.
 
+## READ-EW-013 — updatedAt fuera del vertical slice
+
+`updatedAt` no pertenece al aggregate `Expediente` ni a `ExpedienteSnapshot`. Se elimina
+de `ExpedienteReadModel` y del contrato API de este vertical slice. `rowVersion`
+continúa siendo el mecanismo canónico de optimistic concurrency.
+
+No se crea un query port exclusivamente para obtener `updatedAt`. Una futura necesidad
+funcional podrá introducirlo como metadata de proyección mediante una decisión
+específica.
+
 ## AUTH-EW-006 — Fuentes que habilitan ABRIR_PRESTAMO
 
 Además de permission, rol, EstadoOperativo y ausencia de préstamo activo,
@@ -307,6 +317,69 @@ Para `GetExpediente`:
 - `result = not-found` cuando no existe en el tenant.
 
 Los intentos se registran sin `expedienteNumero`, referencia de paciente ni otros datos C3.
+
+## ERR-EW-001 — DomainError y ApplicationError
+
+`DomainError != ApplicationError`. `DomainError` queda reservado para invariantes y
+validaciones de dominio. Los Use Cases usan conceptualmente un `ApplicationError` con
+un `code` cerrado para autorización, ausencia y concurrencia.
+
+Para T-05, el tipo reside en Application de `archive-operations`. La arquitectura actual
+no exige un package compartido ni autoriza colocarlo en `domain-kernel`. Una extracción
+futura a un componente Application compartido será un refactor no bloqueante cuando
+exista evidencia de reutilización.
+
+```typescript
+type ApplicationErrorCode =
+  | 'PERMISSION_DENIED'
+  | 'INSUFFICIENT_ENABLING_SOURCE'
+  | 'EXPEDIENTE_NOT_FOUND'
+  | 'OPTIMISTIC_LOCK_CONFLICT'
+  | 'REQUEST_INVALID_TRANSITION';
+
+interface ApplicationError extends Error {
+  readonly name: 'ApplicationError';
+  readonly code: ApplicationErrorCode;
+}
+```
+
+## ERR-EW-002 — Taxonomía mínima canónica
+
+| Application/API error code | HTTP futuro | Semántica |
+|---|---:|---|
+| `PERMISSION_DENIED` | 403 | Actor autenticado sin la permission requerida |
+| `INSUFFICIENT_ENABLING_SOURCE` | 403 | Falta fuente habilitante válida para la operación contextual |
+| `EXPEDIENTE_NOT_FOUND` | 404 | Expediente inexistente dentro del tenant activo |
+| `OPTIMISTIC_LOCK_CONFLICT` | 409 | `rowVersion` no coincide |
+| `REQUEST_INVALID_TRANSITION` | 409 | Operación inválida para el estado actual |
+
+`AUTHENTICATION_REQUIRED` se mapea a HTTP 401 en la frontera API/BFF y no es un error
+producido por `GetExpediente`. Cuando `context.actor.permissions` no contiene
+`EXPEDIENT_VIEW`, `GetExpediente` produce `ApplicationError` con
+`code = PERMISSION_DENIED`; no usa `INSUFFICIENT_ENABLING_SOURCE`.
+
+## ERR-EW-003 — Tenant y no divulgación
+
+No existe un identifier público `CROSS_TENANT_*`. El Repository opera exclusivamente en
+`context.tenant`. Si el Expediente no existe en el tenant activo, incluso si existe en
+otro tenant, Application produce `EXPEDIENTE_NOT_FOUND` y la API responde 404. Una señal
+interna de manipulación pertenece a security/audit y no modifica la respuesta pública.
+
+## ERR-EW-004 — Mapping RFC7807
+
+La futura capa API de T-11/T-12 mapeará `ApplicationError.code` a RFC7807. `code` será
+una extensión estable, por ejemplo:
+
+```json
+{
+  "status": 403,
+  "title": "Forbidden",
+  "code": "PERMISSION_DENIED"
+}
+```
+
+El Problem Details no contiene datos sensibles, stack trace, nombres de base de datos
+ni información sobre existencia cross-tenant. Esta decisión no implementa el mapper.
 
 ## OQs
 

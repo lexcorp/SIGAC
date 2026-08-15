@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.4"
+version: "0.3.5"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -25,6 +25,8 @@ decisions_applied:
   - "AUTH-EW-006/007 APPROVED"
   - "CTX-EW-001..004 APPROVED"
   - "AUD-EW-003..006 APPROVED"
+  - "READ-EW-013 APPROVED"
+  - "ERR-EW-001..004 APPROVED"
 ---
 
 # Expediente Workspace — Requirements
@@ -107,6 +109,8 @@ del aggregate, el rol del usuario y el contexto del negocio.
   `readonly FuenteHabilitanteSalidaContext[]` (`0..N`; ausencia `[]`). Su input público
   es `{ expedienteId: ExpedienteId; context: RequestContext }`; internamente usa
   `context.actor` y `context.tenant`.
+- **Concurrencia:** `rowVersion` forma parte del read model. `updatedAt` no pertenece al
+  aggregate, snapshot ni contrato API de este vertical slice.
 
 ### REQ-EW-001A — Contratos de proyección del Workspace
 - **Ownership:** Application de Expediente Workspace es propietario consumidor de
@@ -295,6 +299,16 @@ entry contiene sólo intención semántica y el writer completa el `AuditRecord`
 incluido `occurredAt`. Sólo permite append. Para `GetExpediente`, acción
 `EXPEDIENTE_VIEW`, recurso `EXPEDIENTE` y resultado `success|denied|not-found`. No se
 registran datos C3.
+
+### NFR-EW-008 — Taxonomía de errores de Application
+
+`DomainError` se reserva para invariantes/validaciones de dominio. `ApplicationError`
+usa exclusivamente `PERMISSION_DENIED`, `INSUFFICIENT_ENABLING_SOURCE`,
+`EXPEDIENTE_NOT_FOUND`, `OPTIMISTIC_LOCK_CONFLICT` y
+`REQUEST_INVALID_TRANSITION`. La falta de `EXPEDIENT_VIEW` usa `PERMISSION_DENIED`.
+Cross-tenant se presenta como `EXPEDIENTE_NOT_FOUND` sin revelar existencia externa al
+tenant. `AUTHENTICATION_REQUIRED` pertenece a API/BFF. T-11/T-12 realizará el mapping
+RFC7807.
 
 ---
 
@@ -486,7 +500,7 @@ Ninguna. OQ-EW-001, OQ-EW-005, OQ-EW-006 y OQ-EW-007 están RESUELTAS.
 ## 7. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.4"
+spec_version: "0.3.5"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

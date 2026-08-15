@@ -1,11 +1,11 @@
 ---
 spec: expediente-workspace
-version: "0.3.4"
+version: "0.3.5"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 requires:
-  - requirements.md (v0.3.4)
-  - design.md (v0.3.4)
+  - requirements.md (v0.3.5)
+  - design.md (v0.3.5)
 decisions_applied:
   - "OQ-EW-001 RESOLVED"
   - "OQ-EW-005 RESOLVED"
@@ -19,6 +19,8 @@ decisions_applied:
   - "AUTH-EW-006/007 APPROVED"
   - "CTX-EW-001..004 APPROVED"
   - "AUD-EW-003..006 APPROVED"
+  - "READ-EW-013 APPROVED"
+  - "ERR-EW-001..004 APPROVED"
 ready_gate: "READY-GATE.md — todos los ítems deben estar marcados antes de iniciar T-01"
 done_gate: "OS-018 — spec + tests + API/migrations + auth/tenant/audit + traceability"
 ---
@@ -53,7 +55,7 @@ OQ-EW-DESIGN-001 a OQ-EW-DESIGN-005.
 ## Grupo 0 — Trazabilidad
 
 ### T-00 Completar traceability.md
-- **Descripción:** Verificar que traceability.md v0.3.4 tiene cadenas completas
+- **Descripción:** Verificar que traceability.md v0.3.5 tiene cadenas completas
   para todas las capacidades. Confirmar que GAP-002, GAP-003, GAP-007 están cerrados
   y que no quedan eslabones PENDIENTE en BR, UC o SPEC para las decisiones resueltas.
 - **Criterio de done:** Ningún REQ-EW-* sin cadena completa; matrices actualizadas.
@@ -188,7 +190,7 @@ OQ-EW-DESIGN-001 a OQ-EW-DESIGN-005.
 - **Descripción:** `packages/modules/expediente/application/GetExpediente.ts`.
   Pasos:
   1. Recibir `{ expedienteId, context: RequestContext }` y verificar
-     EXPEDIENT_VIEW mediante `context.actor` -> 403 si no.
+     EXPEDIENT_VIEW mediante `context.actor` -> `ApplicationError(PERMISSION_DENIED)`.
   2. Usar exclusivamente `context.tenant`, resuelto server-side.
   3. findById(id, context.tenant) -> 404 si no existe.
   4. Consultar los puertos Application propiedad del Workspace:
@@ -207,6 +209,7 @@ OQ-EW-DESIGN-001 a OQ-EW-DESIGN-005.
      `resourceType=EXPEDIENTE`, resultado `success|denied|not-found`; el writer establece
      `occurredAt` y enriquece el AuditRecord sin datos C3. El controller no escribe audit.
   7. Retornar ExpedienteReadModel con capabilities[].
+     Incluye `rowVersion`; no incluye `updatedAt` y no crea un port para obtenerlo.
 - **Tests requeridos (Vitest):**
   - Actor autorizado + expediente existente -> read model completo.
   - Actor sin EXPEDIENT_VIEW -> 403; no loguear datos del expediente en error.
@@ -218,6 +221,10 @@ OQ-EW-DESIGN-001 a OQ-EW-DESIGN-005.
   - El input público es `{ expedienteId, context }`; fuentes se consultan dentro.
   - AuditWriter recibe el mismo RequestContext y requestId/correlationId no se sustituyen.
   - Los intentos success/denied/not-found escriben audit sin datos C3.
+  - Falta de permission usa `PERMISSION_DENIED`, nunca
+    `INSUFFICIENT_ENABLING_SOURCE`.
+  - ID existente sólo en otro tenant produce `EXPEDIENTE_NOT_FOUND` sin divulgación.
+  - Read model no contiene `updatedAt` y conserva `rowVersion`.
 - **Fuente SDB:** UC-018 v0.2.0, SPEC-009 v0.2.0, SEC-017, SEC-032, SEC-038,
   DAT-012, READ-MODEL-COMPOSITION-DECISION.
 - **Dependencias:** T-03, T-04.
@@ -337,6 +344,8 @@ OQ-EW-DESIGN-001 a OQ-EW-DESIGN-005.
   - La frontera server-side construye un único `RequestContext` (`WEB`) por request y lo
     entrega a los Use Cases; body/query no aportan actor, tenant ni IDs de trazabilidad.
   - Errores: RFC7807; sin stack trace, sin nombre DB, sin datos clínicos.
+  - Mapear `ApplicationError.code` según ERR-EW-002; `code` es extensión estable.
+    Cross-tenant usa 404 `EXPEDIENTE_NOT_FOUND`, nunca un code público específico.
 - **Tests requeridos (contract):**
   - GET ?numero= con N=0 -> 200 {data:[], total:0}.
   - GET ?numero= con N=1 -> 200 {data:[...], total:1}.
@@ -573,7 +582,7 @@ T-23 (CI pipeline) <- todas
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.4"
+spec_version: "0.3.5"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

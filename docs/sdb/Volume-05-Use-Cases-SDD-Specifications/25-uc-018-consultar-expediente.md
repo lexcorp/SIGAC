@@ -56,6 +56,11 @@ Actor autenticado con permiso `EXPEDIENT_VIEW` en el tenant resuelto server-side
 RequestContext }`. La frontera server-side construye el contexto inmutable; Application
 usa `context.actor` y `context.tenant` y no acepta esos valores desde body/query.
 
+Si falta `EXPEDIENT_VIEW`, produce `ApplicationError(PERMISSION_DENIED)` antes de
+consultar el Repository. Si el Repository tenant-scoped no encuentra el Expediente,
+produce `ApplicationError(EXPEDIENTE_NOT_FOUND)`, incluso si el mismo identificador
+existe en otro tenant.
+
 ## Composición del read model (READ-EW-001..012)
 
 `GetExpediente` compone server-side un único `ExpedienteReadModel`. Obtiene el Expediente
@@ -82,6 +87,9 @@ El provider determina `validada`. `GetExpediente` pasa la colección completa a
 `ExpedienteCapabilityService`, que sólo comprueba si existe al menos una fuente validada
 de tipo `CONSULTA_PROGRAMADA` o `VALE_ARCHIVO_SM_1_14`. No selecciona la fuente de
 `OpenLoan`. `ORDEN_SUPERIOR` no habilita la capability aunque llegue validada.
+
+`updatedAt` no forma parte del `ExpedienteReadModel`; no pertenece al aggregate ni al
+snapshot. `rowVersion` es el mecanismo de concurrencia del vertical slice.
 
 ## Audit
 

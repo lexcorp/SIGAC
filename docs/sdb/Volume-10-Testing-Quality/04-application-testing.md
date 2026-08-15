@@ -33,3 +33,9 @@ Para `GetExpediente` y sus puertos de proyección, cubrir al menos:
 - `requestId` y `correlationId` se conservan distintos, y `occurredAt` no lo establece
   el Use Case;
 - success, denied y not-found generan entry append-only sin datos C3.
+- falta de `EXPEDIENT_VIEW` produce `PERMISSION_DENIED` y audit `denied` sin consultar
+  el Repository;
+- ausencia dentro del tenant, incluido un ID existente sólo en otro tenant, produce
+  `EXPEDIENTE_NOT_FOUND`, audit `not-found` y no revela existencia cross-tenant;
+- `INSUFFICIENT_ENABLING_SOURCE` nunca representa falta de permission;
+- el read model contiene `rowVersion` y no contiene `updatedAt`.

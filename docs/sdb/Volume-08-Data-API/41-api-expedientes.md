@@ -100,8 +100,7 @@ El parámetro `numero` se normaliza internamente (sin separador) antes de la bú
     "openedAt": "ISO8601"
   }],
   "capabilities": ["DISPATCH", "SOLICITAR", "REPORTAR_INCIDENCIA", ...],
-  "rowVersion": 42,
-  "updatedAt": "ISO8601"
+  "rowVersion": 42
 }
 ```
 
@@ -109,6 +108,10 @@ El backend compone este único read model mediante query ports tenant-scoped pro
 Application de Expediente Workspace. Cardinalidades: solicitud `0..1`, préstamo `0..1`,
 incidencias `0..N`. Ausencia: `null`, `null`, `[]`, respectivamente. El frontend no
 orquesta dominios para construir la respuesta.
+
+`updatedAt` no pertenece a este read model, al aggregate ni a su snapshot. No se crea un
+query port para obtenerlo. `rowVersion` es el mecanismo canónico de optimistic
+concurrency; metadata temporal futura requiere una decisión de proyección específica.
 
 Para calcular capabilities, `GetExpediente` consume internamente
 `ExitEnablingSourceQueryPort.findAvailableByExpediente(ExpedienteId, TenantContext)` ->
