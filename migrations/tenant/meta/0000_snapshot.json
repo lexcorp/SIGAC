@@ -1,0 +1,320 @@
+{
+  "id": "827bfccd-1c1a-478c-9e20-812d3282446a",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.expedientes": {
+      "name": "expedientes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "expediente_numero": {
+          "name": "expediente_numero",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expediente_numero_normalizado": {
+          "name": "expediente_numero_normalizado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "paciente_id_institucional": {
+          "name": "paciente_id_institucional",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "paciente_curp": {
+          "name": "paciente_curp",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "paciente_nombre_operativo": {
+          "name": "paciente_nombre_operativo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "paciente_numero_issste": {
+          "name": "paciente_numero_issste",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estado_operativo": {
+          "name": "estado_operativo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ubicacion_actual_id": {
+          "name": "ubicacion_actual_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "custodio_tipo": {
+          "name": "custodio_tipo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "custodio_ref": {
+          "name": "custodio_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "custodio_servicio": {
+          "name": "custodio_servicio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "custodio_location": {
+          "name": "custodio_location",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "custodio_accepted_at": {
+          "name": "custodio_accepted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "row_version": {
+          "name": "row_version",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "0"
+        }
+      },
+      "indexes": {
+        "expedientes_numero_normalizado_idx": {
+          "name": "expedientes_numero_normalizado_idx",
+          "columns": [
+            {
+              "expression": "expediente_numero_normalizado",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "expedientes_ubicacion_actual_id_ubicaciones_id_fk": {
+          "name": "expedientes_ubicacion_actual_id_ubicaciones_id_fk",
+          "tableFrom": "expedientes",
+          "tableTo": "ubicaciones",
+          "columnsFrom": [
+            "ubicacion_actual_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "expedientes_estado_operativo_check": {
+          "name": "expedientes_estado_operativo_check",
+          "value": "\"expedientes\".\"estado_operativo\" IN ('DISPONIBLE', 'APARTADO', 'EN_TRASLADO', 'EN_CONSULTA', 'NO_LOCALIZADO', 'EXTRAVIADO')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.movimientos_expediente": {
+      "name": "movimientos_expediente",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "expediente_id": {
+          "name": "expediente_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "movement_type": {
+          "name": "movement_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "origin_location_id": {
+          "name": "origin_location_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "destination_location_id": {
+          "name": "destination_location_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "origin_custodian_ref": {
+          "name": "origin_custodian_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "destination_custodian_ref": {
+          "name": "destination_custodian_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "business_reference_type": {
+          "name": "business_reference_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "business_reference_id": {
+          "name": "business_reference_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "occurred_at": {
+          "name": "occurred_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "recorded_at": {
+          "name": "recorded_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actor_ref": {
+          "name": "actor_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "correlation_id": {
+          "name": "correlation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "movimientos_expediente_expediente_id_expedientes_id_fk": {
+          "name": "movimientos_expediente_expediente_id_expedientes_id_fk",
+          "tableFrom": "movimientos_expediente",
+          "tableTo": "expedientes",
+          "columnsFrom": [
+            "expediente_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "movimientos_expediente_source_check": {
+          "name": "movimientos_expediente_source_check",
+          "value": "\"movimientos_expediente\".\"source\" IN ('WEB', 'INTERNAL')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.ubicaciones": {
+      "name": "ubicaciones",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "codigo": {
+          "name": "codigo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "descripcion": {
+          "name": "descripcion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
