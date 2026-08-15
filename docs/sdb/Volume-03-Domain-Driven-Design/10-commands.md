@@ -35,11 +35,11 @@ DeclareLost
 
 `DispatchExpediente` — registra la salida física del expediente de Archivo Clínico
   hacia el destino. Produce `ExpedienteDispatched`; estado → `EN_TRASLADO`.
-  Input: ExpedienteId, destination Ubicacion, intendedCustodianRef string obligatorio
-  y no vacío,
+  Input: ExpedienteId, destination Ubicacion, intendedCustodian `{type,reference}` con
+  ambos strings obligatorios y no vacíos,
   businessReference `{type:string,id:string|null}`, expectedRowVersion bigint y
   RequestContext. Origen/custodio previos se derivan del aggregate. No abre Préstamo ni
-  confirma custodia. La referencia de custodio no se deriva de destination.
+  confirma custodia. Ningún dato del custodio previsto se deriva de destination.
   Application pasa `operationOccurredAt` explícitamente a `Expediente.dispatch` como
   `occurredAt`; no procede del command cliente.
   (OQ-EW-006 RESOLVED)

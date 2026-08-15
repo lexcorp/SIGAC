@@ -58,11 +58,14 @@ Para `GetExpedienteTimeline`, cubrir al menos:
 
 Para Dispatch, cubrir permission/tenant/not-found, expectedRowVersion, transición,
 payload/evento, Movimiento DAT-011 sin C3, timestamps no-client y atomicidad rollback de
-aggregate+movimiento+audit. Cubrir intendedCustodianRef obligatorio/no vacío y optimistic
+aggregate+movimiento+audit. Cubrir intendedCustodian type/reference obligatorios/no
+vacíos, Custodia con service/location/acceptedAt null y optimistic
 conflict: rollback sin aggregate ni Movimiento, seguido de audit `conflict` externo.
 Comprobar identidad temporal:
 `DomainEvent.occurredAt === MovimientoExpedienteAppend.occurredAt ===
 transaction.operationOccurredAt`, y destinationCustodianRef obligatorio en DISPATCHED.
+Comprobar que destinationCustodianRef equivale a intendedCustodian.reference y que el
+evento conserva intendedCustodian type/reference sin metadata técnica.
 Para estado incompatible, comprobar rollback sin aggregate/Movimiento/audit success,
 append externo `invalid-transition` y `ApplicationError(REQUEST_INVALID_TRANSITION)`.
 Comprobar además que sólo optimistic rowVersion mismatch usa audit `conflict`.

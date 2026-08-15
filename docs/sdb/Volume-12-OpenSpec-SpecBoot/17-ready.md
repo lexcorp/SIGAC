@@ -17,9 +17,11 @@ Para T-06, `TL-EW-001..017` define ownership, query port, summary, cursor pagina
 tenant, autorización y audit. `OQ-EW-DESIGN-003` y `OQ-DOM-001` están RESOLVED.
 `OQ-EW-010` permanece abierta y no bloquea porque T-06 no decide retención.
 
-T-07 está ready: DSP-GAP-001/002 están cerrados. intendedCustodianRef es obligatorio y
-no vacío; AuditResult incorpora conflict y su append ocurre después del rollback fuera
-de la UoW mutante.
+T-07 está ready: DSP-GAP-001/002 están cerrados. intendedCustodian type/reference son
+obligatorios y no vacíos; AuditResult incorpora conflict y su append ocurre después del
+rollback fuera de la UoW mutante.
+DSP-EW-014..016 cierran la construcción de Custodia: Dispatch recibe type/reference
+explícitos; service/location/acceptedAt quedan null y nada se deriva de destination.
 El gap temporal también está cerrado por DOM-EVENT-001: Application pasa
 operationOccurredAt al aggregate y evento/movimiento comparten exactamente el instante.
 El audit de estado incompatible está cerrado por AUD-EW-010..013:

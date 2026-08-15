@@ -2,7 +2,7 @@
 
 **Estado:** APPROVED  
 **Fecha:** 2026-08-15  
-**Scope:** Expediente Workspace v0.3.11 / T-07
+**Scope:** Expediente Workspace v0.3.12 / T-07
 
 ## DSP-EW-001 — Semántica
 
@@ -23,7 +23,10 @@ externo formal. `AcceptCustody` confirma posteriormente la recepción. Se reutil
 interface DispatchExpedienteInput {
   readonly expedienteId: ExpedienteId;
   readonly destination: Ubicacion;
-  readonly intendedCustodianRef: string;
+  readonly intendedCustodian: {
+    readonly type: string;
+    readonly reference: string;
+  };
   readonly businessReference: {
     readonly type: string;
     readonly id: string | null;
@@ -43,7 +46,10 @@ La firma canónica es:
 ```typescript
 dispatch(input: {
   readonly destination: Ubicacion;
-  readonly intendedCustodianRef: string;
+  readonly intendedCustodian: {
+    readonly type: string;
+    readonly reference: string;
+  };
   readonly businessReference: {
     readonly type: string;
     readonly id: string | null;
@@ -56,8 +62,9 @@ La transición valida `APARTADO`, cambia a `EN_TRASLADO`, establece destino y cu
 pendiente con `acceptedAt=null`, y no persiste ni conoce audit. La comprobación de
 `expectedRowVersion` pertenece al Repository/UoW al guardar.
 
-`intendedCustodianRef` es obligatorio y no vacío. `Custodia.enTraslado` conserva
-`custodianReference: string` obligatorio; la referencia no se deriva de `destination`.
+`intendedCustodian.type` y `intendedCustodian.reference` son obligatorios y no vacíos.
+No existe todavía un enum/catálogo para `type`; ningún componente del custodio previsto
+se deriva de `destination`.
 `occurredAt` es proporcionado por Application desde
 `ArchiveOperationsTransaction.operationOccurredAt`; no procede del cliente ni se genera
 dentro del aggregate.
@@ -70,7 +77,10 @@ interface ExpedienteDispatchedPayload {
   readonly originLocation: Ubicacion | null;
   readonly destinationLocation: Ubicacion;
   readonly originCustodianRef: string | null;
-  readonly intendedCustodianRef: string;
+  readonly intendedCustodian: {
+    readonly type: string;
+    readonly reference: string;
+  };
   readonly businessReferenceType: string;
   readonly businessReferenceId: string | null;
 }
@@ -132,7 +142,7 @@ Para Dispatch, Application invoca dentro de la UoW:
 ```typescript
 expediente.dispatch({
   destination,
-  intendedCustodianRef,
+  intendedCustodian,
   businessReference,
   occurredAt: transaction.operationOccurredAt,
 });
@@ -141,6 +151,44 @@ expediente.dispatch({
 `DomainEvent.occurredAt`, `MovimientoExpedienteAppend.occurredAt` y
 `transaction.operationOccurredAt` representan exactamente el mismo instante. No se
 introduce event factory ni envelope diferido en T-07.
+
+## DSP-EW-014 — Intended custodian
+
+Dispatch recibe explícitamente `intendedCustodian: { type: string; reference: string }`.
+Ambos valores son obligatorios y no vacíos. No se crea todavía un enum para `type` y no
+se deriva ningún valor desde destination.
+
+## DSP-EW-015 — Aggregate
+
+La firma de DSP-EW-004 queda refinada con `intendedCustodian` y conserva
+`occurredAt` explícito conforme DOM-EVENT-001.
+
+## DSP-EW-016 — Custodia en traslado
+
+La factory canónica es semánticamente:
+
+```typescript
+Custodia.enTraslado({
+  custodianType: intendedCustodian.type,
+  custodianReference: intendedCustodian.reference,
+});
+```
+
+Su estado resultante es exactamente:
+
+```typescript
+{
+  custodianType: intendedCustodian.type,
+  custodianReference: intendedCustodian.reference,
+  service: null,
+  location: null,
+  acceptedAt: null,
+}
+```
+
+Durante `EN_TRASLADO` describe al receptor previsto, no una aceptación. No utiliza
+valores sintéticos y no deriva type, reference, service ni location desde destination.
+`AcceptCustody` será responsable de materializar la recepción confirmada en T-08.
 
 ## DSP-EW-009 — Unit of Work
 
@@ -221,8 +269,9 @@ ninguna sustituye a otra.
 
 ### DSP-GAP-001 — CLOSED
 
-El command exige `intendedCustodianRef: string` no vacío. La misma referencia alimenta
-`Custodia.enTraslado({ custodianReference })`; no se deriva de `destination`.
+El command exige `intendedCustodian.type/reference` no vacíos. Alimentan explícitamente
+`Custodia.enTraslado`; service/location/acceptedAt quedan null y nada se deriva de
+`destination`.
 
 ### DSP-GAP-002 — CLOSED
 

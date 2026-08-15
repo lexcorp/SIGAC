@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.11"
+version: "0.3.12"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -33,6 +33,7 @@ decisions_applied:
   - "DISPATCH-DECISION DSP-EW-001..011 APPROVED; DSP-GAP-001/002 CLOSED"
   - "DOM-EVENT-001 APPROVED"
   - "AUD-EW-010..013 APPROVED"
+  - "DSP-EW-014..016 APPROVED"
 ---
 
 # Expediente Workspace — Requirements
@@ -259,14 +260,15 @@ operativos; `EXPEDIENT_VIEW` no es una capability.
 - **Resultado:** ExpedienteDispatched emitido; EstadoOperativo → EN_TRASLADO.
   Custodia sigue siendo de Archivo hasta CustodyAccepted.
 - **Fuente SDB:** WF-005 Fase 1, DDD-010, DDD-011, BIZ-008, DECISION-REGISTER OQ-EW-006.
-- **Input:** expedienteId, destination Ubicacion, intendedCustodianRef string obligatorio
-  y no vacío,
+- **Input:** expedienteId, destination Ubicacion, intendedCustodian
+  `{type:string,reference:string}` con ambos valores obligatorios y no vacíos,
   businessReference `{type:string,id:string|null}`, expectedRowVersion bigint y context.
 - **Atomicidad:** update aggregate + Movimiento DISPATCHED + audit success en una única
   UoW PostgreSQL tenant-scoped, ALL OR NOTHING.
 - **Audit:** EXPEDIENTE_DISPATCH / EXPEDIENTE / expedienteId.
-- **Custodia:** `Custodia.enTraslado` conserva `custodianReference: string` obligatorio;
-  no se usa string vacío ni se deriva desde destination.
+- **Custodia:** `Custodia.enTraslado` conserva type/reference recibidos como
+  custodianType/custodianReference y produce service/location/acceptedAt null. Describe
+  al receptor previsto, no aceptación; ningún campo se deriva desde destination.
 - **Concurrencia:** optimistic lock mismatch revierte la UoW mutante y después registra
   audit `conflict` fuera de ella; no persiste aggregate ni Movimiento.
 - **AuditResult:** `success | denied | not-found | conflict | invalid-transition`;
@@ -282,7 +284,8 @@ operativos; `EXPEDIENT_VIEW` no es una capability.
   Domain Event y Movimiento DISPATCHED comparten exactamente ese instante. No procede
   del cliente ni se genera en el aggregate.
 - **Movimiento DISPATCHED:** `destinationCustodianRef: string` obligatorio. DAT-011
-  conserva su nulabilidad general para otros tipos de movimiento.
+  conserva su nulabilidad general para otros tipos de movimiento. Su valor es
+  `intendedCustodian.reference`; no se añade destinationCustodianType.
 
 ### REQ-EW-012 — Aceptación de custodia en destino
 - **Actor:** Receptor de Servicio autenticado (Enfermería o médico/solicitante).
@@ -543,7 +546,7 @@ Ninguna. OQ-EW-001, OQ-EW-005, OQ-EW-006 y OQ-EW-007 están RESUELTAS.
 ## 7. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.11"
+spec_version: "0.3.12"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

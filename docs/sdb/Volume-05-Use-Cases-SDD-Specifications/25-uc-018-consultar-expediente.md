@@ -114,13 +114,18 @@ movimientos y sus filas nunca forman parte del resultado.
 
 ## DispatchExpediente (DSP-EW-001..011)
 
-Input: ExpedienteId, destination Ubicacion, intendedCustodianRef string obligatorio y no vacío,
+Input: ExpedienteId, destination Ubicacion, intendedCustodian `{type,reference}` con
+ambos strings obligatorios y no vacíos,
 businessReference `{type,id}`, expectedRowVersion bigint y RequestContext. Autoriza
 EXPEDIENT_DISPATCH, carga tenant-scoped, ejecuta la transición APARTADO→EN_TRASLADO y en
 una UoW guarda aggregate, Movimiento DISPATCHED y audit success ALL OR NOTHING.
 Dentro del callback invoca `Expediente.dispatch` con
 `occurredAt = transaction.operationOccurredAt`; el evento y el movimiento usan
 exactamente ese mismo instante.
+El aggregate construye Custodia en traslado con type/reference recibidos y
+service/location/acceptedAt null. El evento transporta intendedCustodian
+`{type,reference}`. Movimiento DISPATCHED usa
+`destinationCustodianRef=intendedCustodian.reference` y no añade el type.
 
 Audit: `EXPEDIENTE_DISPATCH/EXPEDIENTE/{expedienteId}`. Denied/not-found quedan fuera de
 la transacción mutante. Optimistic conflict provoca rollback completo y después se

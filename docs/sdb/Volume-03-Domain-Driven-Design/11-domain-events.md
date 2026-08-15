@@ -39,9 +39,9 @@ AuditEvent no es sinónimo de DomainEvent.
 
 `ExpedienteDispatched` — emitido por `DispatchExpediente`. El expediente sale físicamente
 de Archivo y entra en traslado. Payload mínimo: expedienteId, originLocation,
-destinationLocation, originCustodianRef, intendedCustodianRef,
+destinationLocation, originCustodianRef, intendedCustodian `{type,reference}`,
 businessReferenceType y businessReferenceId. No incluye requestId, source ni recordedAt.
-`intendedCustodianRef` es string obligatorio y no vacío.
+`intendedCustodian.type/reference` son strings obligatorios y no vacíos.
 Su `DomainEvent.occurredAt` se recibe explícitamente desde Application/UoW y coincide
 con el occurredAt del Movimiento DISPATCHED. El aggregate no genera timestamps.
   de Archivo Clínico; `EstadoOperativo` → `EN_TRASLADO`. Registra actor (archivista/mensajero),

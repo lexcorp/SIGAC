@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.11"
+version: "0.3.12"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 sdb_sources:
@@ -32,8 +32,9 @@ decisions_applied:
   - "DISPATCH-DECISION DSP-EW-001..011 APPROVED; DSP-GAP-001/002 CLOSED"
   - "DOM-EVENT-001 APPROVED"
   - "AUD-EW-010..013 APPROVED"
+  - "DSP-EW-014..016 APPROVED"
 requires:
-  - requirements.md (v0.3.11)
+  - requirements.md (v0.3.12)
 open_questions_blocking: []
 open_questions_non_blocking:
   - OQ-EW-002
@@ -633,7 +634,8 @@ Orden de ejecución:
 ### 7.3 Use Case: DispatchExpediente
 
 ```
-Input: { expedienteId, destination: Ubicacion, intendedCustodianRef: string,
+Input: { expedienteId, destination: Ubicacion,
+         intendedCustodian: {type:string,reference:string},
          businessReference: {type:string,id:string|null},
          expectedRowVersion: bigint, context: RequestContext }
 
@@ -655,13 +657,16 @@ Pasos:
 operationOccurredAt al callback. Writer genera movimientoId/recordedAt. Denied y
 not-found se auditan fuera de la mutación. Ante optimistic lock mismatch, la UoW
 mutante hace rollback y posteriormente se registra `result=conflict` fuera de ella;
-no se persiste aggregate ni Movimiento. `intendedCustodianRef` es obligatorio, no
-vacío, alimenta `Custodia.enTraslado.custodianReference` y no se deriva del destino.
+no se persiste aggregate ni Movimiento. `intendedCustodian.type/reference` son
+obligatorios y no vacíos. Alimentan custodianType/custodianReference; service, location
+y acceptedAt quedan null y ningún campo se deriva del destino.
 Conforme DOM-EVENT-001, el aggregate usa el occurredAt recibido y no llama Date.now(),
 no crea new Date() para fechar el evento ni obtiene un Clock. Para DISPATCHED,
 `destinationCustodianRef: string` es obligatorio. Se verifica que
 `DomainEvent.occurredAt === MovimientoExpedienteAppend.occurredAt ===
 transaction.operationOccurredAt`. No se introduce event factory/envelope diferido.
+El evento conserva `intendedCustodian: {type,reference}`; Movimiento usa únicamente
+`destinationCustodianRef=intendedCustodian.reference` porque DAT-011 no contiene type.
 Si el estado no permite Dispatch, la UoW hace rollback sin aggregate, Movimiento ni
 audit success. Después se registra `EXPEDIENTE_DISPATCH/EXPEDIENTE/expedienteId` con
 `invalid-transition` fuera de la UoW y se lanza `REQUEST_INVALID_TRANSITION`/409.
@@ -784,7 +789,7 @@ por `GetExpediente` (READ-MODEL-COMPOSITION-DECISION).
 ## 12. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.11"
+spec_version: "0.3.12"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

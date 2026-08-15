@@ -1,6 +1,6 @@
 ---
 spec: expediente-workspace
-version: "0.3.11"
+version: "0.3.12"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 traceability_model: "OS-007 / SDD-006"
@@ -26,10 +26,11 @@ decisions_applied:
   - "DISPATCH-DECISION DSP-EW-001..011 APPROVED; DSP-GAP-001/002 CLOSED"
   - "DOM-EVENT-001 APPROVED"
   - "AUD-EW-010..013 APPROVED"
+  - "DSP-EW-014..016 APPROVED"
 requires:
-  - requirements.md (v0.3.11)
-  - design.md (v0.3.11)
-  - tasks.md (v0.3.11)
+  - requirements.md (v0.3.12)
+  - design.md (v0.3.12)
+  - tasks.md (v0.3.12)
 ---
 
 # Expediente Workspace — Traceability
@@ -357,13 +358,14 @@ requires:
 | 0.3.9 | 2026-08-15 | DSP-GAP-001/002 cerrados: custodio destino obligatorio y audit conflict posterior al rollback formalizados. |
 | 0.3.10 | 2026-08-15 | DOM-EVENT-001 aprobado: operationOccurredAt se pasa al aggregate y se comparte con Movimiento; destinationCustodianRef obligatorio para DISPATCHED. |
 | 0.3.11 | 2026-08-15 | AUD-EW-010..013 aprobadas: invalid-transition para REQUEST_INVALID_TRANSITION; conflict exclusivo de optimistic locking. |
+| 0.3.12 | 2026-08-15 | DSP-EW-014..016 aprobadas: custodio previsto type/reference explícito; Custodia en traslado con service/location/acceptedAt null. |
 
 ---
 
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.11"
+spec_version: "0.3.12"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

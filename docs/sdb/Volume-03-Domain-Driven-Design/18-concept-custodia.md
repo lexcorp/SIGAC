@@ -26,6 +26,10 @@ Durante EN_TRASLADO se reutiliza `Custodia` con `acceptedAt=null` y
 `custodianReference: string` obligatorio y no vacío; transportista no es automáticamente
 custodio externo formal. Dispatch recibe esa referencia explícitamente y nunca la deriva
 de destination.
+Para Dispatch, la factory recibe type/reference del custodio previsto y produce
+exactamente custodianType/type, custodianReference/reference, service=null,
+location=null y acceptedAt=null. Los datos describen al receptor previsto; no confirman
+aceptación. No se usan valores sintéticos ni se deriva ningún campo de destination.
 | Receptor autorizado confirma recepción | `CustodyAccepted` | `EN_CONSULTA` |
 
 Durante `EN_TRASLADO`:

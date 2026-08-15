@@ -1,11 +1,11 @@
 ---
 spec: expediente-workspace
-version: "0.3.11"
+version: "0.3.12"
 status: "Draft — pending stakeholder validation"
 date: "2026-08-15"
 requires:
-  - requirements.md (v0.3.11)
-  - design.md (v0.3.11)
+  - requirements.md (v0.3.12)
+  - design.md (v0.3.12)
 decisions_applied:
   - "OQ-EW-001 RESOLVED"
   - "OQ-EW-005 RESOLVED"
@@ -27,6 +27,7 @@ decisions_applied:
   - "DISPATCH-DECISION DSP-EW-001..011 APPROVED; DSP-GAP-001/002 CLOSED"
   - "DOM-EVENT-001 APPROVED"
   - "AUD-EW-010..013 APPROVED"
+  - "DSP-EW-014..016 APPROVED"
 ready_gate: "READY-GATE.md — todos los ítems deben estar marcados antes de iniciar T-01"
 done_gate: "OS-018 — spec + tests + API/migrations + auth/tenant/audit + traceability"
 ---
@@ -61,7 +62,7 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
 ## Grupo 0 — Trazabilidad
 
 ### T-00 Completar traceability.md
-- **Descripción:** Verificar que traceability.md v0.3.11 tiene cadenas completas
+- **Descripción:** Verificar que traceability.md v0.3.12 tiene cadenas completas
   para todas las capacidades. Confirmar que GAP-002, GAP-003, GAP-007 están cerrados
   y que no quedan eslabones PENDIENTE en BR, UC o SPEC para las decisiones resueltas.
 - **Criterio de done:** Ningún REQ-EW-* sin cadena completa; matrices actualizadas.
@@ -271,7 +272,8 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
 
 ### T-07 Implementar Use Case DispatchExpediente
 - **Descripción:** `packages/modules/expediente/application/DispatchExpediente.ts`.
-  - Input: `{ expedienteId, destination: Ubicacion, intendedCustodianRef: string,
+  - Input: `{ expedienteId, destination: Ubicacion,
+    intendedCustodian: {type:string,reference:string},
     businessReference: {type:string,id:string|null}, expectedRowVersion: bigint,
     context: RequestContext }`.
   Pasos:
@@ -296,9 +298,12 @@ OQ-EW-DESIGN-001, OQ-EW-DESIGN-002 y OQ-EW-DESIGN-005.
   - Estado incompatible -> audit `invalid-transition`, sin persistencia parcial.
   - rowVersion incorrecto -> 409.
   - custody_accepted_at = null tras dispatch.
+  - intendedCustodian type/reference obligatorios/no vacíos; Custodia resultante conserva
+    ambos y deja service/location/acceptedAt null, sin derivarlos de destination.
   - `DomainEvent.occurredAt`, Movimiento.occurredAt y operationOccurredAt son el mismo
     instante; el aggregate no genera timestamps.
-  - Movimiento DISPATCHED usa destinationCustodianRef string obligatorio.
+  - Evento conserva intendedCustodian type/reference; Movimiento DISPATCHED usa
+    destinationCustodianRef = intendedCustodian.reference, sin añadir type.
   - Cross-tenant -> rechazado.
 - **Fuente SDB:** DDD-010, DDD-011, WF-005 v0.2.0, DAT-019,
   DECISION-REGISTER OQ-EW-006.
@@ -620,7 +625,7 @@ T-23 (CI pipeline) <- todas
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.11"
+spec_version: "0.3.12"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

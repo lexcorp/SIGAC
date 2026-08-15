@@ -50,6 +50,7 @@ Para DISPATCHED, el append contiene expedienteId, movementType, origin/destinati
 location, origin/destination custodian ref, business reference type/id, occurredAt,
 actorRef, source y correlationId. Writer genera id y recordedAt al persistir. Sin C3.
 Específicamente para `MovimientoExpedienteAppend` con `movementType='DISPATCHED'`,
-`destinationCustodianRef: string` es obligatorio porque procede del
-`intendedCustodianRef` requerido. Esto no cambia la nulabilidad general de DAT-011 para
+`destinationCustodianRef: string` es obligatorio y equivale a
+`intendedCustodian.reference`. No se añade destinationCustodianType porque DAT-011 no
+lo contiene. Esto no cambia la nulabilidad general de DAT-011 para
 otros tipos de movimiento. Su occurredAt es exactamente operationOccurredAt de la UoW.

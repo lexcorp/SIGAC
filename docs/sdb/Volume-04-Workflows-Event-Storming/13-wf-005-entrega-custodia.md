@@ -25,6 +25,8 @@ Los siguientes pasos son **obligatoriamente distintos** y no deben fusionarse:
 3. Registrar origen, destino previsto, actor de traslado y timestamp.
 4. Ejecutar `DispatchExpediente`.
 5. Emitir `ExpedienteDispatched` → `EstadoOperativo = EN_TRASLADO`.
+   El custodio previsto se recibe como type/reference explícitos. Durante traslado,
+   service/location/acceptedAt permanecen null; esto no representa recepción aceptada.
 
 El despacho no abre préstamo ni confirma recepción. Destination viene del command;
 origen/custodio previo del aggregate. Custodia queda pendiente con acceptedAt null hasta

@@ -35,9 +35,10 @@ y proteger coherencia entre disponibilidad, ubicación y custodia.
   son transiciones de estado distintas (INV-EXP-005).
 - `dispatch` sólo parte de APARTADO, cambia a EN_TRASLADO, establece destination y una
   Custodia no aceptada (`acceptedAt=null`), y devuelve `ExpedienteDispatched`. No persiste
-  ni conoce audit. Recibe `intendedCustodianRef: string` obligatorio y no vacío junto
-  con destination, businessReference y `occurredAt: Date`; no deriva el custodio desde
-  destination. Application proporciona occurredAt desde la UoW conforme DOM-EVENT-001.
+  ni conoce audit. Recibe `intendedCustodian: {type:string;reference:string}` con ambos
+  valores obligatorios y no vacíos, además de destination, businessReference y
+  `occurredAt: Date`; no deriva el custodio desde destination. Application proporciona
+  occurredAt desde la UoW conforme DOM-EVENT-001.
 
 ## Fuente
 SRC-INT-002, SRC-INT-003, DECISION-REGISTER OQ-EW-001, OQ-EW-007, DEC-EW-STATE-001.

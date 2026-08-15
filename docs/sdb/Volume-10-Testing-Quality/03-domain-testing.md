@@ -28,8 +28,9 @@ Probar invariantes, value objects, state transitions y policies.
 - `DispatchExpediente` produce `EstadoOperativo = EN_TRASLADO`.
 - Dispatch parte sólo de APARTADO, deriva origin/custodian previos, establece destination
   y Custodia acceptedAt null, y produce el payload mínimo ExpedienteDispatched.
-- Dispatch exige intendedCustodianRef string no vacío; Custodia en tránsito conserva
-  custodianReference obligatorio y no lo deriva de destination.
+- Dispatch exige intendedCustodian type/reference no vacíos; Custodia en tránsito los
+  conserva como custodianType/custodianReference, deja service/location/acceptedAt null
+  y no deriva ningún campo de destination.
 - Dispatch usa el occurredAt recibido; no genera timestamps. El Domain Event conserva
   exactamente el instante proporcionado por el test.
 - `EN_TRASLADO` sin `AcceptCustody` → `custodiaActual.acceptedAt = null`.
