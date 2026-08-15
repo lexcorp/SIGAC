@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: SIGAC API
-  version: 0.1.0
+  version: 0.3.19
 servers:
   - url: /api/v1
 paths:
@@ -15,30 +15,344 @@ paths:
     get:
       operationId: getExpediente
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema: { type: string, format: uuid }
+        - $ref: '#/components/parameters/ExpedienteId'
       responses:
         '200':
-          description: Operational expediente view
+          description: Operational Expediente Workspace read model
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/Expediente'
-        '404':
-          description: Not found
+              schema: { $ref: '#/components/schemas/ExpedienteReadModel' }
+        '400': { $ref: '#/components/responses/HttpValidationError' }
+        '401': { $ref: '#/components/responses/AuthenticationRequired' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/ExpedienteNotFound' }
+  /expedientes/{id}/timeline:
+    get:
+      operationId: getExpedienteTimeline
+      parameters:
+        - $ref: '#/components/parameters/ExpedienteId'
+        - in: query
+          name: cursor
+          required: false
+          description: Opaque cursor returned by the preceding page.
+          schema: { type: string }
+        - in: query
+          name: limit
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: Cursor-paginated Expediente movement timeline
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TimelinePage' }
+        '400': { $ref: '#/components/responses/HttpValidationError' }
+        '401': { $ref: '#/components/responses/AuthenticationRequired' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/ExpedienteNotFound' }
+  /expedientes/{id}/dispatch:
+    post:
+      operationId: dispatchExpediente
+      parameters:
+        - $ref: '#/components/parameters/ExpedienteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DispatchExpedienteRequest' }
+      responses:
+        '204':
+          description: Expediente dispatched successfully; no response body.
+        '400': { $ref: '#/components/responses/HttpValidationError' }
+        '401': { $ref: '#/components/responses/AuthenticationRequired' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/ExpedienteNotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /expedientes/{id}/accept-custody:
+    post:
+      operationId: acceptCustody
+      parameters:
+        - $ref: '#/components/parameters/ExpedienteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AcceptCustodyRequest' }
+      responses:
+        '204':
+          description: Custody accepted successfully; no response body.
+        '400': { $ref: '#/components/responses/HttpValidationError' }
+        '401': { $ref: '#/components/responses/AuthenticationRequired' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/ExpedienteNotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
 components:
+  parameters:
+    ExpedienteId:
+      in: path
+      name: id
+      required: true
+      schema: { type: string, format: uuid }
   schemas:
-    Expediente:
+    DecimalBigint:
+      type: string
+      pattern: '^[0-9]+$'
+      example: '42'
+    EstadoOperativo:
+      type: string
+      enum: [DISPONIBLE, APARTADO, EN_TRASLADO, EN_CONSULTA, NO_LOCALIZADO, EXTRAVIADO]
+    Ubicacion:
       type: object
-      required: [id, expedienteNumero, estadoOperativo, rowVersion]
+      additionalProperties: false
+      required: [id, codigo, descripcion]
+      properties:
+        id: { type: string, format: uuid }
+        codigo: { type: string }
+        descripcion: { type: string }
+    PacienteReferenciaSummary:
+      type: object
+      additionalProperties: false
+      required: [id, displayLabel]
+      properties:
+        id: { type: string }
+        displayLabel: { type: string }
+    CustodiaActual:
+      type: object
+      additionalProperties: false
+      required: [custodioTipo, custodioRef, servicio, aceptadaEn]
+      properties:
+        custodioTipo: { type: string }
+        custodioRef: { type: string }
+        servicio: { type: [string, 'null'] }
+        aceptadaEn: { type: [string, 'null'], format: date-time }
+    ActiveRequestSummary:
+      type: object
+      additionalProperties: false
+      required: [solicitudId, tipo, origen, estado, asignadoA]
+      properties:
+        solicitudId: { type: string }
+        tipo: { type: string }
+        origen: { type: string }
+        estado:
+          type: string
+          enum: [Pendiente, Asignada, EnBusqueda, Localizada, Preparada, Entregada, Cancelada, NoLocalizada]
+        asignadoA: { type: [string, 'null'] }
+    ActiveLoanSummary:
+      type: object
+      additionalProperties: false
+      required: [prestamoId, finalidad, custodioRef, destinoTipo, destinoRef, dueAt, fuenteHabilitanteSalida, estado]
+      properties:
+        prestamoId: { type: string }
+        finalidad: { type: string }
+        custodioRef: { type: string }
+        destinoTipo: { type: string }
+        destinoRef: { type: string }
+        dueAt: { type: string, format: date-time }
+        fuenteHabilitanteSalida:
+          type: string
+          enum: [CONSULTA_PROGRAMADA, VALE_ARCHIVO_SM_1_14, ORDEN_SUPERIOR]
+        estado: { type: string, enum: [Activo, Vencido] }
+    OpenIncidentSummary:
+      type: object
+      additionalProperties: false
+      required: [incidenciaId, tipo, severidad, estado, resumen, asignadoA, openedAt]
+      properties:
+        incidenciaId: { type: string }
+        tipo: { type: string }
+        severidad: { type: string }
+        estado: { type: string, enum: [Abierta, EnInvestigacion, Escalada] }
+        resumen: { type: string }
+        asignadoA: { type: [string, 'null'] }
+        openedAt: { type: string, format: date-time }
+    ExpedienteCapability:
+      type: string
+      enum:
+        - SOLICITAR
+        - INICIAR_BUSQUEDA
+        - MARCAR_LOCALIZADO
+        - MARCAR_NO_LOCALIZADO
+        - DISPATCH
+        - ACCEPT_CUSTODY
+        - ABRIR_PRESTAMO
+        - RENOVAR_PRESTAMO
+        - RECIBIR_DEVOLUCION
+        - CONFIRMAR_REARCHIVO
+        - REPORTAR_INCIDENCIA
+    ExpedienteReadModel:
+      type: object
+      additionalProperties: false
+      required: [id, expedienteNumero, pacienteRef, estadoOperativo, ubicacionActual, custodiaActual, prestamoActivo, solicitudActiva, incidenciasAbiertas, capabilities, rowVersion]
       properties:
         id: { type: string, format: uuid }
         expedienteNumero: { type: string }
-        pacienteRef: { type: [string, 'null'] }
-        pacienteNombre: { type: [string, 'null'] }
-        estadoOperativo: { type: string }
-        ubicacionActualId: { type: [string, 'null'], format: uuid }
-        custodioRef: { type: [string, 'null'] }
-        rowVersion: { type: integer }
+        pacienteRef: { $ref: '#/components/schemas/PacienteReferenciaSummary' }
+        estadoOperativo: { $ref: '#/components/schemas/EstadoOperativo' }
+        ubicacionActual:
+          oneOf:
+            - { $ref: '#/components/schemas/Ubicacion' }
+            - { type: 'null' }
+        custodiaActual:
+          oneOf:
+            - { $ref: '#/components/schemas/CustodiaActual' }
+            - { type: 'null' }
+        prestamoActivo:
+          oneOf:
+            - { $ref: '#/components/schemas/ActiveLoanSummary' }
+            - { type: 'null' }
+        solicitudActiva:
+          oneOf:
+            - { $ref: '#/components/schemas/ActiveRequestSummary' }
+            - { type: 'null' }
+        incidenciasAbiertas:
+          type: array
+          items: { $ref: '#/components/schemas/OpenIncidentSummary' }
+        capabilities:
+          type: array
+          items: { $ref: '#/components/schemas/ExpedienteCapability' }
+        rowVersion: { $ref: '#/components/schemas/DecimalBigint' }
+    MovimientoExpedienteSummary:
+      type: object
+      additionalProperties: false
+      required: [movimientoId, movementType, originLocation, destinationLocation, originCustodianRef, destinationCustodianRef, businessReferenceType, businessReferenceId, occurredAt, recordedAt, actorRef, source, correlationId]
+      properties:
+        movimientoId: { type: string }
+        movementType: { type: string }
+        originLocation: { type: [string, 'null'] }
+        destinationLocation: { type: [string, 'null'] }
+        originCustodianRef: { type: [string, 'null'] }
+        destinationCustodianRef: { type: [string, 'null'] }
+        businessReferenceType: { type: string }
+        businessReferenceId: { type: [string, 'null'] }
+        occurredAt: { type: string, format: date-time }
+        recordedAt: { type: string, format: date-time }
+        actorRef: { type: string }
+        source: { type: string }
+        correlationId: { type: [string, 'null'] }
+    TimelinePage:
+      type: object
+      additionalProperties: false
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/MovimientoExpedienteSummary' }
+        nextCursor: { type: [string, 'null'] }
+    BusinessReference:
+      type: object
+      additionalProperties: false
+      required: [type, id]
+      properties:
+        type: { type: string }
+        id: { type: [string, 'null'] }
+    IntendedCustodian:
+      type: object
+      additionalProperties: false
+      required: [type, reference]
+      properties:
+        type: { type: string }
+        reference: { type: string }
+    CustodyReceptor:
+      type: object
+      additionalProperties: false
+      required: [type, reference, service]
+      properties:
+        type: { type: string }
+        reference: { type: string }
+        service: { type: [string, 'null'] }
+    DispatchExpedienteRequest:
+      type: object
+      additionalProperties: false
+      required: [destination, intendedCustodian, businessReference, expectedRowVersion]
+      properties:
+        destination: { $ref: '#/components/schemas/Ubicacion' }
+        intendedCustodian: { $ref: '#/components/schemas/IntendedCustodian' }
+        businessReference: { $ref: '#/components/schemas/BusinessReference' }
+        expectedRowVersion: { $ref: '#/components/schemas/DecimalBigint' }
+    AcceptCustodyRequest:
+      type: object
+      additionalProperties: false
+      required: [receptor, ubicacionDestino, businessReference, expectedRowVersion]
+      properties:
+        receptor: { $ref: '#/components/schemas/CustodyReceptor' }
+        ubicacionDestino: { $ref: '#/components/schemas/Ubicacion' }
+        businessReference: { $ref: '#/components/schemas/BusinessReference' }
+        expectedRowVersion: { $ref: '#/components/schemas/DecimalBigint' }
+    HttpFieldError:
+      type: object
+      additionalProperties: false
+      required: [field, code]
+      properties:
+        field: { type: string }
+        code: { type: string, enum: [REQUIRED, INVALID_FORMAT, INVALID_TYPE, OUT_OF_RANGE] }
+    ProblemDetails:
+      type: object
+      additionalProperties: false
+      required: [type, title, status, code]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        code:
+          type: string
+          enum: [HTTP_VALIDATION_ERROR, AUTHENTICATION_REQUIRED, PERMISSION_DENIED, INSUFFICIENT_ENABLING_SOURCE, EXPEDIENTE_NOT_FOUND, OPTIMISTIC_LOCK_CONFLICT, REQUEST_INVALID_TRANSITION]
+        detail: { type: string }
+        errors:
+          type: array
+          items: { $ref: '#/components/schemas/HttpFieldError' }
+  responses:
+    HttpValidationError:
+      description: Structurally invalid or malformed request
+      content:
+        application/problem+json:
+          schema:
+            allOf:
+              - { $ref: '#/components/schemas/ProblemDetails' }
+              - type: object
+                required: [detail]
+                properties:
+                  status: { const: 400 }
+                  code: { const: HTTP_VALIDATION_ERROR }
+    AuthenticationRequired:
+      description: Authentication is required
+      content:
+        application/problem+json:
+          schema:
+            allOf:
+              - { $ref: '#/components/schemas/ProblemDetails' }
+              - type: object
+                properties:
+                  status: { const: 401 }
+                  code: { const: AUTHENTICATION_REQUIRED }
+    Forbidden:
+      description: Authenticated actor lacks permission or an enabling source
+      content:
+        application/problem+json:
+          schema:
+            allOf:
+              - { $ref: '#/components/schemas/ProblemDetails' }
+              - type: object
+                properties:
+                  status: { const: 403 }
+                  code: { enum: [PERMISSION_DENIED, INSUFFICIENT_ENABLING_SOURCE] }
+    ExpedienteNotFound:
+      description: Expediente is not visible in the active tenant
+      content:
+        application/problem+json:
+          schema:
+            allOf:
+              - { $ref: '#/components/schemas/ProblemDetails' }
+              - type: object
+                properties:
+                  status: { const: 404 }
+                  code: { const: EXPEDIENTE_NOT_FOUND }
+    Conflict:
+      description: Optimistic lock conflict or invalid business transition
+      content:
+        application/problem+json:
+          schema:
+            allOf:
+              - { $ref: '#/components/schemas/ProblemDetails' }
+              - type: object
+                properties:
+                  status: { const: 409 }
+                  code: { enum: [OPTIMISTIC_LOCK_CONFLICT, REQUEST_INVALID_TRANSITION] }
