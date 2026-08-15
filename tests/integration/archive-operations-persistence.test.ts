@@ -6,6 +6,7 @@ import {
   DispatchExpediente,
   ExpedienteId,
   ExpedienteNumero,
+  SearchExpedientesByNumero,
   Ubicacion,
 } from '../../packages/modules/archive-operations/src/index.js';
 import {
@@ -224,6 +225,52 @@ describe('T-09 PostgreSQL tenant infrastructure', () => {
     });
   });
 
+  it('persiste los identifiers de lectura y mantiene Timeline separado de audit', async () => {
+    const writer = new PostgresAuditWriter(router);
+    for (const [action, resourceId] of [
+      ['EXPEDIENTE_VIEW', expedienteA],
+      ['EXPEDIENTE_TIMELINE_VIEW', expedienteA],
+    ] as const) {
+      await writer.append({ action, resourceType: 'EXPEDIENTE', resourceId, result: 'success' }, context(0, ['EXPEDIENT_VIEW']));
+    }
+    const audit = await clients[0]!.query(
+      `SELECT DISTINCT action, resource_type, resource_id, result FROM audit_log
+       WHERE action IN ('EXPEDIENTE_VIEW', 'EXPEDIENTE_TIMELINE_VIEW') ORDER BY action`,
+    );
+    expect(audit.rows).toEqual([
+      { action: 'EXPEDIENTE_TIMELINE_VIEW', resource_type: 'EXPEDIENTE', resource_id: expedienteA, result: 'success' },
+      { action: 'EXPEDIENTE_VIEW', resource_type: 'EXPEDIENTE', resource_id: expedienteA, result: 'success' },
+    ]);
+    const timeline = await new PostgresExpedienteTimelineQueryPort(router).findByExpediente(
+      ExpedienteId.parse(expedienteA), { limit: 25 }, tenant(0),
+    );
+    expect(timeline.items.every((item) => !item.movementType.includes('VIEW'))).toBe(true);
+  });
+
+  it('audita Search success para 0 y N sin datos de resultados ni C3', async () => {
+    const useCase = new SearchExpedientesByNumero({
+      expedienteRepository: new PostgresExpedienteRepository(router),
+      auditWriter: new PostgresAuditWriter(router),
+    });
+    await expect(useCase.execute({
+      numero: ExpedienteNumero.parse('ABCD123456/20'),
+      context: context(0, ['EXPEDIENT_VIEW']),
+    })).resolves.toEqual([]);
+    await expect(useCase.execute({
+      numero: ExpedienteNumero.parse('PERR810604/10'),
+      context: context(0, ['EXPEDIENT_VIEW']),
+    })).resolves.toHaveLength(2);
+    const rows = await clients[0]!.query(
+      `SELECT action, resource_id, result, change_summary FROM audit_log
+       WHERE action='EXPEDIENTE_SEARCH' ORDER BY resource_id`,
+    );
+    expect(rows.rows).toEqual([
+      { action: 'EXPEDIENTE_SEARCH', resource_id: 'ABCD12345620', result: 'success', change_summary: null },
+      { action: 'EXPEDIENTE_SEARCH', resource_id: 'PERR81060410', result: 'success', change_summary: null },
+    ]);
+    expect(JSON.stringify(rows.rows)).not.toMatch(/OPERATIVO|CURP-1|ISSSTE-1|patient|paciente/i);
+  });
+
   it('confirma Dispatch aggregate + Movimiento + audit en una sola transacción', async () => {
     const useCase = new DispatchExpediente({
       unitOfWork: new PostgresArchiveOperationsUnitOfWork(router),
@@ -328,5 +375,21 @@ describe('T-09 PostgreSQL tenant infrastructure', () => {
     expect(audit.rows).toContainEqual({ result: 'denied' });
     const otherTenantAudit = await clients[1]!.query(`SELECT count(*) FROM audit_log`);
     expect(otherTenantAudit.rows[0].count).toBe('0');
+  });
+
+  it('persiste exclusivamente los cinco AuditResult canónicos', async () => {
+    const writer = new PostgresAuditWriter(router);
+    for (const result of ['not-found', 'conflict', 'invalid-transition'] as const) {
+      await writer.append({
+        action: 'EXPEDIENTE_DISPATCH', resourceType: 'EXPEDIENTE',
+        resourceId: duplicateA, result,
+      }, context(0, ['EXPEDIENT_DISPATCH']));
+    }
+    const persisted = await clients[0]!.query<{ result: string }>(
+      `SELECT DISTINCT result FROM audit_log ORDER BY result`,
+    );
+    expect(persisted.rows.map((row) => row.result)).toEqual([
+      'conflict', 'denied', 'invalid-transition', 'not-found', 'success',
+    ]);
   });
 });

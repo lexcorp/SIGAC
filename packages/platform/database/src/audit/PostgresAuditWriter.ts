@@ -3,6 +3,12 @@ import type { AuditEntry, AuditWriter } from '@sigac/archive-operations';
 import type { RequestContext } from '@sigac/tenant';
 import type { TenantDatabaseRouter, TenantDatabaseSession } from '../TenantDatabaseRouter.js';
 
+const FORBIDDEN_METADATA_KEY = /(token|cookie|secret|password|connection.?string|stack|sql|patient|paciente|curp|issste|clinical|clinico|clínico)/i;
+
+export class UnsafeAuditMetadataError extends Error {
+  readonly name = 'UnsafeAuditMetadataError';
+}
+
 export class PostgresAuditWriter implements AuditWriter {
   constructor(
     private readonly router: TenantDatabaseRouter,
@@ -23,6 +29,8 @@ export class PostgresAuditWriter implements AuditWriter {
     entry: AuditEntry,
     context: RequestContext,
   ): Promise<void> {
+    assertSafeMetadata(entry.changeSummary);
+    assertSafeMetadata(this.securityContext);
     await session.client.query(
       `INSERT INTO audit_log (
         id, actor_ref, action, resource_type, resource_id, result,
@@ -43,5 +51,15 @@ export class PostgresAuditWriter implements AuditWriter {
         this.securityContext ? JSON.stringify(this.securityContext) : null,
       ],
     );
+  }
+}
+
+function assertSafeMetadata(value: unknown): void {
+  if (value === null || value === undefined || typeof value !== 'object') return;
+  for (const [key, nested] of Object.entries(value)) {
+    if (FORBIDDEN_METADATA_KEY.test(key)) {
+      throw new UnsafeAuditMetadataError('Audit metadata contiene una clave no permitida.');
+    }
+    assertSafeMetadata(nested);
   }
 }
