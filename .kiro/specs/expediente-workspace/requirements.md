@@ -1,8 +1,8 @@
 ---
 spec: expediente-workspace
-version: "0.3.0"
+version: "0.3.1"
 status: "Draft — pending stakeholder validation"
-date: "2026-08-14"
+date: "2026-08-15"
 sdb_sources:
   - "Volume-02 / BIZ-006 (BR-016–019), BIZ-007, BIZ-008, BIZ-010, BIZ-016"
   - "Volume-03 / DDD-007, DDD-009–013, DDD-018–020"
@@ -18,6 +18,7 @@ decisions_applied:
   - "OQ-EW-006 RESOLVED — DECISION-REGISTER"
   - "OQ-EW-007 RESOLVED — DECISION-REGISTER"
   - "DEC-EW-STATE-001 ACCEPTED — DECISION-REGISTER"
+  - "AUTHORIZATION-DECISION APPROVED"
 ---
 
 # Expediente Workspace — Requirements
@@ -148,6 +149,23 @@ del aggregate, el rol del usuario y el contexto del negocio.
 - **Resultado:** Solo comandos válidos para EstadoOperativo, rol y FuenteHabilitanteSalida.
 - **Regla:** Comandos derivados de capabilities[] del API; no calculados en frontend.
 
+`Role != Permission != Capability != Command`. `capabilities[]` contiene comandos
+operativos; `EXPEDIENT_VIEW` no es una capability.
+
+| Capability | Permission |
+|---|---|
+| SOLICITAR | REQUEST_CREATE |
+| INICIAR_BUSQUEDA | SEARCH_START |
+| MARCAR_LOCALIZADO | SEARCH_MARK_LOCATED |
+| MARCAR_NO_LOCALIZADO | SEARCH_MARK_NOT_LOCATED |
+| DISPATCH | EXPEDIENT_DISPATCH |
+| ACCEPT_CUSTODY | CUSTODY_ACCEPT |
+| ABRIR_PRESTAMO | LOAN_OPEN |
+| RENOVAR_PRESTAMO | LOAN_RENEW |
+| RECIBIR_DEVOLUCION | RETURN_RECEIVE |
+| CONFIRMAR_REARCHIVO | REARCHIVE_CONFIRM |
+| REPORTAR_INCIDENCIA | INCIDENT_OPEN |
+
 | EstadoOperativo | Comandos candidatos |
 |-----------------|---------------------|
 | DISPONIBLE sin solicitud activa | Solicitar |
@@ -166,9 +184,10 @@ del aggregate, el rol del usuario y el contexto del negocio.
 - **Precondición:** Expediente en estado compatible; actor con permiso; fuente válida.
 - **Regla (BIZ-010, OQ-EW-005 RESOLVED):**
   - CONSULTA_PROGRAMADA: Archivista/Jefatura; sin autorización individual adicional.
-  - VALE_ARCHIVO_SM_1_14: Director/Subdirector/Coord. Médica; plazo máx. 24 h;
-    si se necesita más tiempo se genera nuevo préstamo.
-  - ORDEN_SUPERIOR: fuente válida; detalles fuera de este slice.
+  - VALE_ARCHIVO_SM_1_14: DIRECCION o COORDINACION_MEDICA emite/autoriza;
+    ARCHIVISTA o ARCHIVO_JEFE ejecuta con fuente previamente validada; emitir no
+    concede LOAN_OPEN; plazo máx. 24 h; si se necesita más tiempo se genera nuevo préstamo.
+  - ORDEN_SUPERIOR: fuente reconocida, pero no habilita ABRIR_PRESTAMO en este slice.
 - **Resultado:** Préstamo abierto con FuenteHabilitanteSalida registrada.
 - **Fuente SDB:** UC-010, SPEC-006 FR-LOAN-001/007, BIZ-010, DECISION-REGISTER OQ-EW-005.
 
@@ -187,7 +206,8 @@ del aggregate, el rol del usuario y el contexto del negocio.
 - **Fuente SDB:** WF-005 Fase 3, DDD-018, BIZ-008, DECISION-REGISTER OQ-EW-006.
 
 ### REQ-EW-013 — Tab Auditoría (acceso restringido)
-- **Precondición:** capabilities[] incluye permiso de auditoría.
+- **Precondición:** permiso de auditoría pendiente de definición bajo OQ-EW-003;
+  se evalúa fuera de capabilities[] operativas.
 - **Resultado:** Registros de audit_log separados del tab Movimientos.
 - **Fuente SDB:** SEC-038, INT-008.
 - **OQ no-bloqueante:** OQ-EW-003 — roles exactos con acceso.
@@ -311,8 +331,8 @@ And no se requiere autorización de Director/Coordinación
 
 **AC-EW-009 — Préstamo SM 1-14: actor incorrecto**
 ```gherkin
-Given un archivista (no Director/Subdirector/Coord. Médica)
-And FuenteHabilitanteSalida = VALE_ARCHIVO_SM_1_14
+Given un archivista con LOAN_OPEN
+And FuenteHabilitanteSalida = VALE_ARCHIVO_SM_1_14 no validada
 When intenta abrir el préstamo
 Then el sistema rechaza con error de autorización
 And la UI muestra mensaje claro sin datos clínicos
@@ -320,8 +340,9 @@ And la UI muestra mensaje claro sin datos clínicos
 
 **AC-EW-010 — Préstamo SM 1-14: actor correcto**
 ```gherkin
-Given un Director o Coordinación Médica autenticado
-And FuenteHabilitanteSalida = VALE_ARCHIVO_SM_1_14
+Given un vale SM 1-14 emitido/autorizado por DIRECCION o COORDINACION_MEDICA
+And un ARCHIVISTA o ARCHIVO_JEFE con LOAN_OPEN
+And FuenteHabilitanteSalida = VALE_ARCHIVO_SM_1_14 previamente validada
 When abre el préstamo
 Then préstamo creado con plazo máximo 24 horas
 And referencia del formato SM 1-14 registrada
@@ -405,7 +426,7 @@ Ninguna. OQ-EW-001, OQ-EW-005, OQ-EW-006 y OQ-EW-007 están RESUELTAS.
 | ID | Pregunta | Fuente SDB | Impacto | Decisión provisional |
 |----|----------|------------|---------|----------------------|
 | OQ-EW-002 | Campo mínimo de pacienteRef.displayLabel en header | OQ-SPEC-012, SEC-003 | REQ-EW-014 | Nombre corto operativo hasta resolución |
-| OQ-EW-003 | Roles exactos con acceso al tab Auditoría | OQ-UX-008, SEC-038 | REQ-EW-013 | Capability flag; visible solo si API lo incluye |
+| OQ-EW-003 | Permiso exacto del tab Auditoría | OQ-UX-008, SEC-038 | REQ-EW-013 | Fuera de capabilities[] operativas; no bloquea T-04 |
 | OQ-EW-004 | MarkNotLocated abre Incidencia en qué condiciones | OQ-DOM-006, INV-INC-002 | REQ-EW-007 | No automático; acción explícita hasta resolución |
 | OQ-EW-008 | Codificación exacta de ubicaciones temporales | OQ-DOM-009 | REQ-EW-003 | Categoría genérica hasta confirmación de Archivo |
 | OQ-EW-009 | Barcode scanner en MVP | OQ-UX-003 | REQ-EW-002 | Búsqueda manual; scanner en iteración posterior |
@@ -416,7 +437,7 @@ Ninguna. OQ-EW-001, OQ-EW-005, OQ-EW-006 y OQ-EW-007 están RESUELTAS.
 ## 7. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.0"
+spec_version: "0.3.1"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

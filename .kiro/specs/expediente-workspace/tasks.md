@@ -1,17 +1,18 @@
 ---
 spec: expediente-workspace
-version: "0.3.0"
+version: "0.3.1"
 status: "Draft — pending stakeholder validation"
-date: "2026-08-14"
+date: "2026-08-15"
 requires:
-  - requirements.md (v0.3.0)
-  - design.md (v0.3.0)
+  - requirements.md (v0.3.1)
+  - design.md (v0.3.1)
 decisions_applied:
   - "OQ-EW-001 RESOLVED"
   - "OQ-EW-005 RESOLVED"
   - "OQ-EW-006 RESOLVED"
   - "OQ-EW-007 RESOLVED"
   - "DEC-EW-STATE-001 ACCEPTED"
+  - "AUTHORIZATION-DECISION APPROVED"
 ready_gate: "READY-GATE.md — todos los ítems deben estar marcados antes de iniciar T-01"
 done_gate: "OS-018 — spec + tests + API/migrations + auth/tenant/audit + traceability"
 ---
@@ -45,7 +46,7 @@ OQ-EW-DESIGN-001 a OQ-EW-DESIGN-005.
 ## Grupo 0 — Trazabilidad
 
 ### T-00 Completar traceability.md
-- **Descripción:** Verificar que traceability.md v0.3.0 tiene cadenas completas
+- **Descripción:** Verificar que traceability.md v0.3.1 tiene cadenas completas
   para todas las capacidades. Confirmar que GAP-002, GAP-003, GAP-007 están cerrados
   y que no quedan eslabones PENDIENTE en BR, UC o SPEC para las decisiones resueltas.
 - **Criterio de done:** Ningún REQ-EW-* sin cadena completa; matrices actualizadas.
@@ -121,13 +122,32 @@ OQ-EW-DESIGN-001 a OQ-EW-DESIGN-005.
   - EstadoOperativo (6 valores aceptados).
   - Estado de SolicitudActiva.
   - Estado de PrestamoActivo.
-  - actor.roles, actor.permisos.
-  - FuenteHabilitanteSalida disponible en el contexto.
+  - actor.roles, actor.permissions.
+  - ActorContext y TenantContext ya validados server-side; el servicio no resuelve tenant.
+  - FuenteHabilitanteSalida previamente validada cuando aplique.
+  - Estados canónicos de Solicitud: Pendiente, Asignada, EnBusqueda, Localizada,
+    Preparada, Entregada, Cancelada, NoLocalizada.
+  - Estados canónicos de Préstamo: Activo, Vencido, Renovado, Devuelto, Cerrado.
+
+  Mapeo obligatorio Capability -> Permission:
+  - SOLICITAR -> REQUEST_CREATE
+  - INICIAR_BUSQUEDA -> SEARCH_START
+  - MARCAR_LOCALIZADO -> SEARCH_MARK_LOCATED
+  - MARCAR_NO_LOCALIZADO -> SEARCH_MARK_NOT_LOCATED
+  - DISPATCH -> EXPEDIENT_DISPATCH
+  - ACCEPT_CUSTODY -> CUSTODY_ACCEPT
+  - ABRIR_PRESTAMO -> LOAN_OPEN
+  - RENOVAR_PRESTAMO -> LOAN_RENEW
+  - RECIBIR_DEVOLUCION -> RETURN_RECEIVE
+  - CONFIRMAR_REARCHIVO -> REARCHIVE_CONFIRM
+  - REPORTAR_INCIDENCIA -> INCIDENT_OPEN
   
   Reglas de ABRIR_PRESTAMO (OQ-EW-005 RESOLVED — sin política provisional):
   - CONSULTA_PROGRAMADA: actor es Archivo o Jefatura -> capability habilitada.
-  - VALE_ARCHIVO_SM_1_14: actor es Director/Subdirector/Coord. Médica -> habilitada.
-  - ORDEN_SUPERIOR: validación pendiente de spec -> no incluir aún.
+  - VALE_ARCHIVO_SM_1_14: fuente previamente validada + ARCHIVISTA/ARCHIVO_JEFE
+    con LOAN_OPEN -> habilitada. DIRECCION/COORDINACION_MEDICA emite/autoriza y no
+    obtiene LOAN_OPEN por esa emisión.
+  - ORDEN_SUPERIOR: fail-closed -> no incluir en T-04.
   
   Reglas de DISPATCH:
   - EstadoOperativo = APARTADO + actor es Archivo/Jefatura -> habilitada.
@@ -142,10 +162,12 @@ OQ-EW-DESIGN-001 a OQ-EW-DESIGN-005.
   - APARTADO + Archivista -> DISPATCH incluida; ABRIR_PRESTAMO no.
   - EN_TRASLADO + receptor autorizado -> ACCEPT_CUSTODY incluida.
   - CONSULTA_PROGRAMADA + Archivista -> ABRIR_PRESTAMO incluida.
-  - VALE_ARCHIVO_SM_1_14 + Archivista (no Director) -> ABRIR_PRESTAMO NO incluida.
-  - VALE_ARCHIVO_SM_1_14 + Director -> ABRIR_PRESTAMO incluida.
+  - VALE_ARCHIVO_SM_1_14 no validada + Archivista -> ABRIR_PRESTAMO NO incluida.
+  - VALE_ARCHIVO_SM_1_14 validada + Archivista -> ABRIR_PRESTAMO incluida.
+  - DIRECCION/COORDINACION_MEDICA emisor -> ABRIR_PRESTAMO NO incluida.
+  - ORDEN_SUPERIOR -> ABRIR_PRESTAMO NO incluida.
   - Sin EXPEDIENT_VIEW -> capabilities vacías.
-  - Auditor -> solo capabilities de lectura.
+  - AUDITOR_CONSULTA + EXPEDIENT_VIEW -> capabilities vacías.
 - **Fuente SDB:** SEC-017, SDD-005, DDD-010, DDD-012 v0.2.0, PERM-MATRIX v0.2.0,
   DECISION-REGISTER OQ-EW-005.
 - **Dependencias:** T-02.
@@ -186,7 +208,7 @@ OQ-EW-DESIGN-001 a OQ-EW-DESIGN-005.
 ### T-07 Implementar Use Case DispatchExpediente
 - **Descripción:** `packages/modules/expediente/application/DispatchExpediente.ts`.
   Pasos:
-  1. Verificar permiso DISPATCH en tenant.
+  1. Verificar permiso EXPEDIENT_DISPATCH en tenant.
   2. findById con rowVersion -> 409 si conflicto.
   3. Validar EstadoOperativo = APARTADO -> 409 si no.
   4. EstadoOperativo -> EN_TRASLADO.
@@ -207,7 +229,7 @@ OQ-EW-DESIGN-001 a OQ-EW-DESIGN-005.
 ### T-08 Implementar Use Case AcceptCustody
 - **Descripción:** `packages/modules/expediente/application/AcceptCustody.ts`.
   Pasos:
-  1. Verificar permiso ACCEPT_CUSTODY en tenant (actor = receptor autorizado).
+  1. Verificar permiso CUSTODY_ACCEPT en tenant (actor = receptor autorizado).
   2. findById con rowVersion -> 409 si conflicto.
   3. Validar EstadoOperativo = EN_TRASLADO -> 409 si no.
   4. EstadoOperativo -> EN_CONSULTA.
@@ -373,11 +395,11 @@ OQ-EW-DESIGN-001 a OQ-EW-DESIGN-005.
   - MovimientosTab: timeline MovimientoExpediente; incluye DISPATCHED y CUSTODY_ACCEPTED;
     paginado; no mezcla audit.
   - SolicitudesTab, PrestamosTab, IncidenciasTab: listados; scope = solo listado.
-  - AuditoriaTab: visible SOLO si capabilities incluye permiso de auditoría.
+  - AuditoriaTab: sujeto al permiso pendiente OQ-EW-003, fuera de capabilities operativas.
 - **Tests requeridos:**
   - ResumenTab: muestra acceptedAt solo si EN_CONSULTA.
   - MovimientosTab: muestra DISPATCHED y CUSTODY_ACCEPTED; no muestra login/config.
-  - AuditoriaTab: oculto sin capability; visible con capability.
+  - AuditoriaTab: oculto sin el permiso de auditoría que defina OQ-EW-003.
   - Cada tab: loading/empty/error states.
 - **Fuente SDB:** APP-003 v0.2.0, INT-008, TQ-009.
 - **Dependencias:** T-14, T-16.
@@ -403,10 +425,11 @@ OQ-EW-DESIGN-001 a OQ-EW-DESIGN-005.
   - Sin EXPEDIENT_VIEW -> UC lanza error; controller 403.
   - Tenant-A solicita expediente Tenant-B -> 404.
   - Token forjado / tenant forjado en body -> rechazado.
-  - VALE_ARCHIVO_SM_1_14 + Archivista (no Director) -> 403.
-  - AuditoriaTab sin capability -> no retorna datos.
-  - Dispatch sin permiso DISPATCH -> 403.
-  - AcceptCustody por actor no receptor -> 403.
+  - VALE_ARCHIVO_SM_1_14 no validada + Archivista -> 403.
+  - DIRECCION/COORDINACION_MEDICA emisor sin LOAN_OPEN -> no ejecuta OpenLoan.
+  - AuditoriaTab sin permiso (OQ-EW-003) -> no retorna datos.
+  - Dispatch sin permiso EXPEDIENT_DISPATCH -> 403.
+  - AcceptCustody sin permiso CUSTODY_ACCEPT o por actor no receptor -> 403.
 - **Fuente SDB:** SEC-017, SEC-032, TQ-007, AGENTS.md,
   DECISION-REGISTER OQ-EW-005, OQ-EW-006.
 - **Dependencias:** T-05, T-07, T-08, T-11.
@@ -446,7 +469,7 @@ OQ-EW-DESIGN-001 a OQ-EW-DESIGN-005.
   6. Dispatch -> EstadoOperativo cambia a EN_TRASLADO; acceptedAt null.
   7. AcceptCustody -> EstadoOperativo cambia a EN_CONSULTA; acceptedAt visible.
   8. CommandBar con CONSULTA_PROGRAMADA + Archivista -> ABRIR_PRESTAMO disponible.
-  9. CommandBar con VALE_ARCHIVO_SM_1_14 + Archivista (no Dir.) -> ABRIR_PRESTAMO ausente.
+  9. CommandBar con VALE_ARCHIVO_SM_1_14 validada + Archivista con LOAN_OPEN -> ABRIR_PRESTAMO disponible; no validada -> ausente.
   10. Conflicto 409 -> banner de conflicto visible; datos preservados.
   11. Tab Auditoría oculto sin permiso; visible con permiso.
   12. Navegación completa por teclado.
@@ -514,7 +537,7 @@ T-23 (CI pipeline) <- todas
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.0"
+spec_version: "0.3.1"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

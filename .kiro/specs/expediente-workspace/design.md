@@ -1,8 +1,8 @@
 ---
 spec: expediente-workspace
-version: "0.3.0"
+version: "0.3.1"
 status: "Draft — pending stakeholder validation"
-date: "2026-08-14"
+date: "2026-08-15"
 sdb_sources:
   - "Volume-02 / BIZ-006, BIZ-007, BIZ-008, BIZ-010, BIZ-016"
   - "Volume-03 / DDD-007, DDD-009–013, DDD-018–020"
@@ -17,8 +17,9 @@ decisions_applied:
   - "OQ-EW-006 RESOLVED"
   - "OQ-EW-007 RESOLVED"
   - "DEC-EW-STATE-001 ACCEPTED"
+  - "AUTHORIZATION-DECISION APPROVED"
 requires:
-  - requirements.md (v0.3.0)
+  - requirements.md (v0.3.1)
 open_questions_blocking: []
 open_questions_non_blocking:
   - OQ-EW-002
@@ -314,7 +315,7 @@ Sin stack trace, sin nombre de DB, sin datos clínicos en errores.
 +------------------------------------------------------+
 | 7. Región persistente de feedback / error            |
 +------------------------------------------------------+
-* Tab Auditoría: visible solo si capabilities lo incluye
+* Tab Auditoría: permiso pendiente OQ-EW-003; fuera de capabilities operativas
 ```
 
 ### 5.2 Badges de EstadoOperativo
@@ -360,7 +361,7 @@ Cuando la búsqueda devuelve N > 1:
 | **Solicitudes** | Historial de solicitudes | Según permisos |
 | **Préstamos** | Historial con FuenteHabilitanteSalida visible | Según permisos |
 | **Incidencias** | Abiertas y cerradas | Según permisos |
-| **Auditoría** | audit_log (DAT-012); distinto de Movimientos | Roles con capability — OQ-EW-003 |
+| **Auditoría** | audit_log (DAT-012); distinto de Movimientos | Permiso exacto pendiente — OQ-EW-003; fuera de capabilities operativas |
 
 ### 5.6 Privacidad en presentación (INT-009)
 
@@ -387,7 +388,7 @@ apps/web/src/features/expediente-workspace/
       SolicitudesTab.tsx
       PrestamosTab.tsx
       IncidenciasTab.tsx
-      AuditoriaTab.tsx             # solo si capability presente
+      AuditoriaTab.tsx             # permiso pendiente OQ-EW-003; fuera de capabilities
   hooks/
     useExpediente.ts               # fetch + cache; invalidar en 409
     useExpedienteSearch.ts         # búsqueda 0..N; normaliza separadores
@@ -459,7 +460,7 @@ Pasos:
 Input: { expedienteId, destinoRef, actor, tenant, rowVersion }
 
 Pasos:
-  1. Verificar permiso DISPATCH en tenant
+  1. Verificar permiso EXPEDIENT_DISPATCH en tenant
   2. findById con row_version                       -> 409 si conflicto
   3. Validar EstadoOperativo = APARTADO             -> 409 si no
   4. Ejecutar DispatchExpediente
@@ -476,7 +477,7 @@ Pasos:
 Input: { expedienteId, receptorRef, ubicacionDestino, actor, tenant, rowVersion }
 
 Pasos:
-  1. Verificar permiso ACCEPT_CUSTODY en tenant (actor es receptor autorizado)
+  1. Verificar permiso CUSTODY_ACCEPT en tenant (actor es receptor autorizado)
   2. findById con row_version                       -> 409 si conflicto
   3. Validar EstadoOperativo = EN_TRASLADO          -> 409 si no
   4. Ejecutar AcceptCustody
@@ -491,21 +492,32 @@ Pasos:
 ### 7.5 ExpedienteCapabilityService (actualizado)
 
 Entradas: EstadoOperativo, SolicitudActiva?, PrestamoActivo?, actor.roles,
-          actor.permisos, FuenteHabilitanteSalida disponible (del contexto).
+          actor.permissions, TenantContext validado y FuenteHabilitanteSalida
+          previamente validada cuando aplique.
 
-Salida: string[] de nombres de capabilities.
+Salida: string[] de capabilities operativas. EXPEDIENT_VIEW no forma parte del array.
+
+ActorContext conserva actorId, permissions y tenantIds, y añade roles. ActorContext y
+TenantContext llegan validados server-side; el servicio no resuelve tenant.
+
+Estados de contexto admitidos:
+- Solicitud: Pendiente, Asignada, EnBusqueda, Localizada, Preparada, Entregada,
+  Cancelada, NoLocalizada.
+- Préstamo: Activo, Vencido, Renovado, Devuelto, Cerrado.
 
 Reglas de capabilities para préstamo:
 - ABRIR_PRESTAMO incluido SOLO si:
   - EstadoOperativo compatible (ej. DISPONIBLE)
   - FuenteHabilitanteSalida = CONSULTA_PROGRAMADA + actor es Archivo/Jefatura, O
-  - FuenteHabilitanteSalida = VALE_ARCHIVO_SM_1_14 + actor es Director/Subdirector/Coord., O
-  - FuenteHabilitanteSalida = ORDEN_SUPERIOR + validación pendiente de spec.
-- Sin política conservadora temporal; usar la decisión aprobada directamente.
+  - FuenteHabilitanteSalida = VALE_ARCHIVO_SM_1_14 previamente validada + actor es
+    ARCHIVISTA/ARCHIVO_JEFE. DIRECCION/COORDINACION_MEDICA emite o autoriza el vale,
+    pero no recibe LOAN_OPEN por emitirlo.
+  - FuenteHabilitanteSalida = ORDEN_SUPERIOR -> no incluir (fail-closed en T-04).
 
 Reglas de capabilities para despacho/custodia:
 - DISPATCH incluido si EstadoOperativo = APARTADO + actor es Archivo/Jefatura.
 - ACCEPT_CUSTODY incluido si EstadoOperativo = EN_TRASLADO + actor es receptor autorizado.
+- AUDITOR_CONSULTA con EXPEDIENT_VIEW recibe capabilities operativas vacías.
 
 ---
 
@@ -569,7 +581,7 @@ Reglas de capabilities para despacho/custodia:
 ## 12. Implementation Readiness
 
 ```yaml
-spec_version: "0.3.0"
+spec_version: "0.3.1"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

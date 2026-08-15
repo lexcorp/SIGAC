@@ -1,7 +1,7 @@
 ---
 project: SIGAC
 sdb_volume: "09 - UI/UX & Design System"
-version: "0.2.0"
+version: "0.3.0"
 status: "Draft for UX/UI validation"
 date: "2026-08-14"
 amended: "2026-08-14 — DEC-EW-STATE-001, OQ-EW-001/007: estados y desambiguación actualizados"
@@ -33,13 +33,18 @@ Muestra únicamente los comandos del array `capabilities[]` devuelto por el API.
 No calcula transiciones en el frontend.
 
 Ejemplos de comandos posibles (según estado y rol):
-`SOLICITAR`, `DISPATCH`, `ACCEPT_CUSTODY`, `ABRIR_PRESTAMO`, `RENOVAR_PRESTAMO`,
+`SOLICITAR`, `INICIAR_BUSQUEDA`, `MARCAR_LOCALIZADO`, `MARCAR_NO_LOCALIZADO`,
+`DISPATCH`, `ACCEPT_CUSTODY`, `ABRIR_PRESTAMO`, `RENOVAR_PRESTAMO`,
 `RECIBIR_DEVOLUCION`, `CONFIRMAR_REARCHIVO`, `REPORTAR_INCIDENCIA`.
+
+El array contiene comandos operativos. `EXPEDIENT_VIEW` no se incluye.
+`AUDITOR_CONSULTA` puede consultar con `EXPEDIENT_VIEW`, pero recibe `capabilities: []`.
 
 ## Tabs
 `Resumen` | `Movimientos` | `Solicitudes` | `Préstamos` | `Incidencias` | `Auditoría*`
 
-`*` Tab Auditoría: visible solo si `capabilities` incluye permiso de auditoría (OQ-EW-003).
+`*` El permiso exacto del tab Auditoría permanece bajo OQ-EW-003 y se trata fuera
+del array de capabilities operativas; no bloquea T-04.
 
 ## Flujo de búsqueda y desambiguación (OQ-EW-001/007 RESOLVED)
 

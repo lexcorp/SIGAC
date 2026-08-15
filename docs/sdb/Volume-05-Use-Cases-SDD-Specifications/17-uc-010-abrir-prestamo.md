@@ -19,9 +19,10 @@ Formalizar una salida que requiera préstamo, evaluando la fuente habilitante ap
 ## Flujo
 1. Determinar `FuenteHabilitanteSalida` del contexto de la operación:
    - `CONSULTA_PROGRAMADA`: no requiere autorización individual adicional.
-   - `VALE_ARCHIVO_SM_1_14`: verificar que el actor emisor es Director, Subdirector
-     o Coordinación Médica; registrar referencia del formato SM 1-14.
-   - `ORDEN_SUPERIOR`: verificar fuente; detalles pendientes de spec.
+   - `VALE_ARCHIVO_SM_1_14`: la fuente llega previamente validada; `DIRECCION` o
+     `COORDINACION_MEDICA` emite/autoriza y `ARCHIVISTA` o `ARCHIVO_JEFE` ejecuta
+     con `LOAN_OPEN`; registrar referencia del formato SM 1-14.
+   - `ORDEN_SUPERIOR`: no habilita OpenLoan en este slice (fail-closed).
 2. Validar tipo de solicitud y autorización según la fuente.
 3. Validar que el expediente está disponible para préstamo (`EstadoOperativo` compatible).
 4. Registrar solicitante, custodio, finalidad y `FuenteHabilitanteSalida`.
@@ -33,6 +34,7 @@ Formalizar una salida que requiera préstamo, evaluando la fuente habilitante ap
 `subject + permission + tenant + resource + business context + enabling source`
 
 No existe la regla "cualquier médico puede solicitar" (BIZ-016, BR-018).
+Emitir o autorizar SM 1-14 no concede `LOAN_OPEN` al emisor.
 
 ## Notas
 - 24h es la política observada para `VALE_ARCHIVO_SM_1_14`, no constante universal.

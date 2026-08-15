@@ -1,7 +1,7 @@
 ---
 project: SIGAC
 sdb_volume: "05 - Use Cases & Spec-Driven Development Specifications"
-version: "0.1.0"
+version: "0.2.0"
 status: "Draft for use-case/spec validation"
 date: "2026-08-13"
 methodology:
@@ -27,6 +27,8 @@ SEARCH_MARK_LOCATED
 SEARCH_MARK_NOT_LOCATED
 PREPARATION_MARK_READY
 CUSTODY_TRANSFER
+EXPEDIENT_DISPATCH
+CUSTODY_ACCEPT
 LOAN_OPEN
 LOAN_RENEW
 RETURN_RECEIVE
@@ -36,3 +38,11 @@ INCIDENT_RESOLVE
 EXPEDIENT_VIEW
 REPORT_VIEW
 ADMIN_CONFIGURE
+
+## Separación y asignación del Expediente Workspace
+
+`Role != Permission != Capability != Command`.
+
+El mapeo canónico Capability -> Permission y la asignación mínima Role -> Permission
+se definen en `docs/decisions/expediente-workspace/AUTHORIZATION-DECISION.md`.
+`EXPEDIENT_VIEW` es una permission de lectura y no una capability operativa.

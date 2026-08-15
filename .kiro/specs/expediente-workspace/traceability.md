@@ -1,8 +1,8 @@
 ---
 spec: expediente-workspace
-version: "0.3.0"
+version: "0.3.1"
 status: "Draft — pending stakeholder validation"
-date: "2026-08-14"
+date: "2026-08-15"
 traceability_model: "OS-007 / SDD-006"
 chain: "Source/SDB -> BR -> WF -> UC -> SPEC -> REQ -> API -> UI -> Test"
 decisions_applied:
@@ -11,10 +11,11 @@ decisions_applied:
   - "OQ-EW-006 RESOLVED"
   - "OQ-EW-007 RESOLVED"
   - "DEC-EW-STATE-001 ACCEPTED"
+  - "AUTHORIZATION-DECISION APPROVED"
 requires:
-  - requirements.md (v0.3.0)
-  - design.md (v0.3.0)
-  - tasks.md (v0.3.0)
+  - requirements.md (v0.3.1)
+  - design.md (v0.3.1)
+  - tasks.md (v0.3.1)
 ---
 
 # Expediente Workspace — Traceability
@@ -145,8 +146,8 @@ requires:
 
 | Eslabón | Referencia | Detalle |
 |---------|-----------|---------|
-| **Source / SDB** | DDD-010 v0.2.0, DDD-012 v0.2.0, SDD-005, DS-014, DEL-002 | Comandos derivados de estado + rol + contexto + fuente habilitante |
-| **Business Rule** | INV-EXP-002, SEC-017 v0.2.0 (tupla extendida) | Solo transiciones válidas + permisos del actor + FuenteHabilitanteSalida |
+| **Source / SDB** | AUTHORIZATION-DECISION, DDD-010 v0.2.0, DDD-012 v0.2.0, SDD-005 v0.2.0, DS-014 | Capability -> Permission aprobado; estados canónicos de Solicitud/Préstamo |
+| **Business Rule** | INV-EXP-002, SEC-017 v0.3.0 | Role != Permission != Capability != Command; contexto y fuente previamente validados |
 | **Workflow** | DDD-012 v0.2.0 (máquinas de estado) | — |
 | **Use Case** | UC-018 (capabilities derivadas) | — |
 | **SPEC** | SPEC-009 + PERM-MATRIX v0.2.0 | — |
@@ -161,8 +162,8 @@ requires:
 
 | Eslabón | Referencia | Detalle |
 |---------|-----------|---------|
-| **Source / SDB** | SEC-017 v0.2.0, SDD-005, NOM-004-SSA3-2012, LGPDPPSO | Tupla: sujeto+permiso+tenant+recurso+contexto+fuente |
-| **Business Rule** | EXPEDIENT_VIEW requerido; backend re-verifica siempre | — |
+| **Source / SDB** | AUTHORIZATION-DECISION, SEC-017 v0.3.0, SDD-005 v0.2.0 | Tupla y asignación mínima Role -> Permission aprobadas |
+| **Business Rule** | EXPEDIENT_VIEW requerido; capabilities operativas separadas; auditor recibe [] | — |
 | **Workflow** | Transversal | — |
 | **Use Case** | UC-018 paso 1 | — |
 | **REQ** | REQ-EW-001 (precondición), REQ-EW-016 (tenant) | — |
@@ -176,7 +177,7 @@ requires:
 | Eslabón | Referencia | Detalle |
 |---------|-----------|---------|
 | **Source / SDB** | SEC-032, API-005, AGENTS.md | database-per-tenant; TenantContext server-side |
-| **Business Rule** | "No cross-tenant queries" (AGENTS.md) | — |
+| **Business Rule** | "No cross-tenant queries"; actor -> tenant validado antes de CapabilityService | — |
 | **REQ** | REQ-EW-016 | — |
 | **API** | API-005; tenant del host/claim de sesión | — |
 | **Test** | AC-EW-013; T-19; T-21; TQ-007 | Integration PG; E2E; tenant isolation gate |
@@ -315,7 +316,7 @@ requires:
 |----|------------|-----|--------|
 | GAP-001 | Condición exacta de MarkNotLocated -> Incidencia automática | OQ-EW-004 | Abierto; no automático hasta resolución |
 | GAP-004 | Campo de pacienteRef.displayLabel en read model | OQ-EW-002 | Abierto; usar nombre corto operativo provisional |
-| GAP-005 | Roles exactos del tab Auditoría | OQ-EW-003 | Abierto; capability flag provisional |
+| GAP-005 | Permiso exacto del tab Auditoría | OQ-EW-003 | Abierto; fuera de capabilities operativas; no bloquea T-04 |
 | GAP-006 | Schema de MovimientoExpediente (módulo o dedicado) | OQ-DOM-001 | Abierto; schema expediente provisional |
 | GAP-008 | Codificación de ubicaciones temporales | OQ-EW-008 | Abierto; categoría genérica provisional |
 | GAP-009 | SLA de performance (<= 1 s) | NFR-EW-001 | Pendiente UAT con carga real |
@@ -330,13 +331,14 @@ requires:
 | 0.1.0 | — | Bootstrap vacío |
 | 0.2.0 | 2026-08-14 | Primera versión completa: 10 cadenas TR, matrices REQ/AC, 10 GAPs |
 | 0.3.0 | 2026-08-14 | Decisiones OQ-EW-001/005/006/007 y DEC-EW-STATE-001 aplicadas. GAP-002/003/007 cerrados. 15 cadenas TR. REQ-EW-011/012 añadidas. Búsqueda 0..N, normalización, desambiguación, FuenteHabilitanteSalida, dispatch, custodia aceptada integrados. |
+| 0.3.1 | 2026-08-15 | AUTHORIZATION-DECISION aplicada. AUTH-GAP-001..013 cerrados para T-04; roles, permissions, capabilities, estados contextuales, SM 1-14 y tenant prevalidado formalizados. |
 
 ---
 
 ## Implementation Readiness
 
 ```yaml
-spec_version: "0.3.0"
+spec_version: "0.3.1"
 blocking_open_questions: []
 non_blocking_open_questions:
   - OQ-EW-002

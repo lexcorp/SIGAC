@@ -1,7 +1,7 @@
 ---
 project: SIGAC
 sdb_volume: "07 - Security & Privacy"
-version: "0.2.0"
+version: "0.3.0"
 status: "Draft for security/privacy validation"
 date: "2026-08-14"
 amended: "2026-08-14 — OQ-EW-005 RESOLVED: enabling source añadida a la tupla"
@@ -36,12 +36,17 @@ baseline:
 El backend **siempre** re-verifica autorización completa en cada petición.
 No se delega la verificación al frontend.
 
+`Role != Permission != Capability != Command`. `ActorContext` contiene `actorId`,
+`roles`, `permissions` y `tenantIds`. La membresía actor -> tenant se valida server-side
+antes del CapabilityService; éste recibe ActorContext y TenantContext ya validados.
+
 ## Aplicación a préstamos/salidas (OQ-EW-005)
 - `CONSULTA_PROGRAMADA`: el rol Archivo/Jefatura es suficiente; no se requiere
   verificación de actor emisor adicional.
-- `VALE_ARCHIVO_SM_1_14`: además del rol, se verifica que el actor emisor del vale
-  sea Director, Subdirector o Coordinación Médica.
-- `ORDEN_SUPERIOR`: verificación pendiente de spec detallada.
+- `VALE_ARCHIVO_SM_1_14`: `DIRECCION` o `COORDINACION_MEDICA` emite/autoriza;
+  `ARCHIVISTA` o `ARCHIVO_JEFE` ejecuta con fuente previamente validada. Emitir no
+  concede `LOAN_OPEN`.
+- `ORDEN_SUPERIOR`: fail-closed para T-04; no habilita `ABRIR_PRESTAMO`.
 
 ## Fuente
 BIZ-016, DDD-010, DECISION-REGISTER OQ-EW-005, NIST SP 800-207.

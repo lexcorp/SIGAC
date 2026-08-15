@@ -1,7 +1,7 @@
 ---
 project: SIGAC
 sdb_volume: "05 - Use Cases & Spec-Driven Development Specifications"
-version: "0.2.0"
+version: "0.3.0"
 status: "Draft for use-case/spec validation"
 date: "2026-08-14"
 amended: "2026-08-14 — OQ-EW-005 RESOLVED: columna préstamo actualizada con FuenteHabilitanteSalida"
@@ -22,8 +22,8 @@ methodology:
 | Aceptar custodia (AcceptCustody) | No | No | Sí | No | No | No |
 | Transferir custodia | Sí | Sí | Recibir* | No | No | No |
 | Abrir préstamo — CONSULTA_PROGRAMADA | Sí | Sí | No | No | No | No |
-| Abrir préstamo — VALE_ARCHIVO_SM_1_14 | Ejecutar | Ejecutar | No | Emitir vale | Emitir vale | No |
-| Abrir préstamo — ORDEN_SUPERIOR | [pendiente] | [pendiente] | No | [pendiente] | [pendiente] | No |
+| Abrir préstamo — VALE_ARCHIVO_SM_1_14 | Ejecutar con fuente validada | Ejecutar con fuente validada | No | Emitir/autorizar vale; no ejecutar | Emitir/autorizar vale; no ejecutar | No |
+| Abrir préstamo — ORDEN_SUPERIOR | No en este slice | No en este slice | No | No en este slice | No en este slice | No |
 | Renovar préstamo | Sí* | Sí | No | C* | C* | No |
 | Recibir devolución | Sí | Sí | Entregar* | No | No | No |
 | Resolver incidencia | Sí* | Sí | No | C* | C* | No |
@@ -40,4 +40,6 @@ methodology:
 - `AcceptCustody` es ejecutada por el receptor autorizado en destino (Enfermería
   o médico/solicitante). No por Archivo. Ver WF-005, DDD-018.
 - Esta matriz es orientativa de UX. SEC-017 (Volume 07) es la autoridad para RBAC/ABAC.
-- Pendiente: detalles de `ORDEN_SUPERIOR` como fuente habilitante.
+- Emitir/autorizar SM 1-14 no concede `LOAN_OPEN`; Archivo/Jefatura ejecuta con una
+  fuente habilitante previamente validada.
+- `ORDEN_SUPERIOR` permanece pendiente de spec detallada y opera fail-closed para T-04.

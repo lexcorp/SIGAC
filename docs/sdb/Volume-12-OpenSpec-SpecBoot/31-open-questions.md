@@ -15,5 +15,12 @@ han sido RESUELTAS y propagadas al SDB canónico:
 | OQ-EW-007 | RESOLVED | DDD-007, DDD-009, DAT-006, DAT-016, API-011, UC-018, SPEC-009 |
 | DEC-EW-STATE-001 | ACCEPTED | DDD-012, DDD-013, BIZ-007, V04-state-matrix, API-011, APP-003, TQ-003, TQ-010 |
 
-Estas decisiones están disponibles para consumo directo en expediente-workspace v0.3.0.
+Estas decisiones están disponibles para consumo directo en expediente-workspace v0.3.1.
 No se requiere política conservadora temporal para ninguna de ellas.
+
+## Authorization gaps de T-04 (2026-08-15)
+
+`AUTH-GAP-001` a `AUTH-GAP-013` están cerrados para T-04 mediante
+`docs/decisions/expediente-workspace/AUTHORIZATION-DECISION.md`.
+OQ-EW-003 permanece abierta y no bloqueante; el permiso del tab Auditoría queda
+fuera de las capabilities operativas.

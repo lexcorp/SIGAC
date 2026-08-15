@@ -1,7 +1,7 @@
 ---
 project: SIGAC
 sdb_volume: 02-Business-Compliance
-version: 0.2.0
+version: 0.3.0
 status: Draft
 amended: "2026-08-14 — OQ-EW-005 RESOLVED"
 ---
@@ -20,6 +20,15 @@ No se fija "médico puede/no puede solicitar" universalmente.
 
 ## Tupla de autorización
 `subject + permission + tenant + resource + business context + enabling source`
+
+La asignación mínima del Expediente Workspace y el mapeo Capability -> Permission están
+aprobados en `docs/decisions/expediente-workspace/AUTHORIZATION-DECISION.md`.
+
+Para SM 1-14, `DIRECCION` o `COORDINACION_MEDICA` emite/autoriza; `ARCHIVISTA` o
+`ARCHIVO_JEFE` ejecuta la apertura. La emisión no concede `LOAN_OPEN` al emisor.
+La fuente llega previamente validada al CapabilityService.
+
+`ORDEN_SUPERIOR` no habilita `ABRIR_PRESTAMO` en este slice (fail-closed).
 
 Ver también: SEC-017 (Volume 07) para la implementación técnica de RBAC + contexto.
 

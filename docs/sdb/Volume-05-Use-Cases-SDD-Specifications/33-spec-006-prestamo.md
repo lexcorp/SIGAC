@@ -21,9 +21,10 @@ FR-LOAN-005 Renovar préstamo (según política y fuente habilitante).
 FR-LOAN-006 Cerrar préstamo.
 FR-LOAN-007 Validar autorización según `FuenteHabilitanteSalida`:
   - `CONSULTA_PROGRAMADA`: no requiere autorización individual adicional por expediente.
-  - `VALE_ARCHIVO_SM_1_14`: verificar actor facultado (Director/Subdirector/Coord. Médica)
-    y registrar referencia del formato.
-  - `ORDEN_SUPERIOR`: verificar fuente; detalles fuera de este slice.
+  - `VALE_ARCHIVO_SM_1_14`: fuente previamente validada, emitida/autorizada por
+    `DIRECCION` o `COORDINACION_MEDICA`; ejecución por `ARCHIVISTA` o
+    `ARCHIVO_JEFE` con `LOAN_OPEN`; registrar referencia del formato.
+  - `ORDEN_SUPERIOR`: fail-closed; no habilita OpenLoan en este slice.
 
 ```gherkin
 Scenario: Préstamo por consulta programada
@@ -35,7 +36,8 @@ Scenario: Préstamo por consulta programada
 
 Scenario: Préstamo extraordinario por SM 1-14
   Given el tipo de salida es VALE_ARCHIVO_SM_1_14
-  And el actor es Director/Subdirector/Coordinación Médica
+  And la fuente fue emitida/autorizada por DIRECCION o COORDINACION_MEDICA
+  And el ejecutante es ARCHIVISTA o ARCHIVO_JEFE con LOAN_OPEN
   When se abre el préstamo
   Then queda Activo con plazo máximo de 24 horas
   And se registra la referencia del formato SM 1-14

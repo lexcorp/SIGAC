@@ -37,6 +37,8 @@ Probar invariantes, value objects, state transitions y policies.
 
 ### Autorización por fuente habilitante (OQ-EW-005 RESOLVED)
 - `CONSULTA_PROGRAMADA` + Archivista → préstamo permitido.
-- `VALE_ARCHIVO_SM_1_14` + Archivista sin rol Director/Subdirector/Coord. → rechazado.
-- `VALE_ARCHIVO_SM_1_14` + Director → préstamo permitido, plazo 24 h.
+- `VALE_ARCHIVO_SM_1_14` no validada + Archivista → rechazado.
+- `VALE_ARCHIVO_SM_1_14` validada + Archivista/Jefatura con `LOAN_OPEN` → permitido.
+- `DIRECCION`/`COORDINACION_MEDICA` emisor sin `LOAN_OPEN` → no ejecuta OpenLoan.
+- `ORDEN_SUPERIOR` → no habilita OpenLoan en este slice.
 - Ausencia de fuente habilitante → `OpenLoan` rechazado.

@@ -32,5 +32,8 @@ Escenarios base:
 
 ### Autorización por fuente habilitante (OQ-EW-005 RESOLVED)
 - Archivista abre préstamo en flujo `CONSULTA_PROGRAMADA` → permitido.
-- Archivista intenta abrir préstamo `VALE_ARCHIVO_SM_1_14` sin ser Director/Coord. → rechazado con mensaje claro.
-- Director/Coord. emite SM 1-14 y préstamo se abre con plazo 24 h.
+- Archivista intenta abrir préstamo con `VALE_ARCHIVO_SM_1_14` no validada → rechazado.
+- Dirección/Coordinación emite SM 1-14; Archivo/Jefatura con `LOAN_OPEN` ejecuta y
+  el préstamo se abre con plazo 24 h.
+- El emisor no obtiene `LOAN_OPEN` por emitir el vale.
+- `ORDEN_SUPERIOR` no ofrece `ABRIR_PRESTAMO` en este slice.
