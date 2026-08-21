@@ -1,0 +1,132 @@
+{
+  "synthetic": true,
+  "contractStatus": "discovery-only",
+  "scenarios": [
+    {
+      "id": "valid",
+      "tenant": "TENANT_FIXTURE_A",
+      "agendaDate": "2030-01-14",
+      "records": [
+        {"row": 16, "appointmentNumber": "FIX-001", "folio": "FOLIO-FIX-001", "date": "2030-01-14", "time": "08:00-08:20", "patientName": "DERECHOHABIENTE SINTETICO UNO", "expediente": "TEST000101/01", "beneficiaryType": "FIXTURE", "firstVisit": true, "subsequent": false, "doctorEmployeeNumber": "EMP-FIX-001", "doctorOriginal": "MEDICO PRUEBA UNO", "serviceCode": "SV01", "serviceOriginal": "SERVICIO ALFA"}
+      ],
+      "configuration": [{"employeeCode": "EMP-FIX-001", "doctor": "MEDICO PRUEBA UNO", "service": "SERVICIO ALFA", "shift": "MATUTINO"}],
+      "expectedReconciliation": [{"folio": "FOLIO-FIX-001", "outcome": "ADD"}]
+    },
+    {
+      "id": "duplicate-import",
+      "tenant": "TENANT_FIXTURE_A",
+      "agendaDate": "2030-01-14",
+      "imports": [{"fileRef": "fixture-a"}, {"fileRef": "fixture-a-copy"}],
+      "sameContent": true,
+      "expectedReconciliation": [{"folio": "FOLIO-FIX-001", "outcome": "UNCHANGED"}],
+      "expectedNotice": "AGENDA_ALREADY_IMPORTED_WITHOUT_CHANGES_CONCEPT"
+    },
+    {
+      "id": "reconciled",
+      "tenant": "TENANT_FIXTURE_A",
+      "agendaDate": "2030-01-14",
+      "revision1": [{"folio": "FOLIO-FIX-101", "time": "09:00-09:20"}, {"folio": "FOLIO-FIX-102", "time": "09:20-09:40"}],
+      "revision2": [{"folio": "FOLIO-FIX-101", "time": "10:00-10:20"}, {"folio": "FOLIO-FIX-103", "time": "10:20-10:40"}],
+      "expectedReconciliation": [
+        {"folio": "FOLIO-FIX-101", "outcome": "UPDATE"},
+        {"folio": "FOLIO-FIX-102", "outcome": "RETIRADA_DE_AGENDA"},
+        {"folio": "FOLIO-FIX-103", "outcome": "ADD"}
+      ]
+    },
+    {
+      "id": "appointment-modified",
+      "tenant": "TENANT_FIXTURE_A",
+      "agendaDate": "2030-01-14",
+      "before": {"folio": "FOLIO-FIX-201", "time": "11:00-11:20", "serviceCode": "SV01"},
+      "after": {"folio": "FOLIO-FIX-201", "time": "11:20-11:40", "serviceCode": "SV01"},
+      "expectedOutcome": "UPDATE"
+    },
+    {
+      "id": "appointment-withdrawn-from-agenda",
+      "tenant": "TENANT_FIXTURE_A",
+      "agendaDate": "2030-01-14",
+      "previousSnapshot": [{"folio": "FOLIO-FIX-301"}],
+      "newSnapshot": [],
+      "expectedOutcome": "RETIRADA_DE_AGENDA",
+      "mustRemainInCurrentPreparation": false,
+      "mustRetainHistory": true,
+      "clinicalCancellationConfirmed": false
+    },
+    {
+      "id": "withdrawn-appointment-reappears",
+      "tenant": "TENANT_FIXTURE_A",
+      "agendaDate": "2030-01-14",
+      "existing": {"folio": "FOLIO-FIX-401", "previousOutcome": "RETIRADA_DE_AGENDA"},
+      "newSnapshot": [{"folio": "FOLIO-FIX-401", "time": "12:00-12:20"}],
+      "expectedOutcome": "RESTORE",
+      "mustReuseSameIdentity": true
+    },
+    {
+      "id": "mixed-reconciliation",
+      "tenant": "TENANT_FIXTURE_A",
+      "agendaDate": "2030-01-14",
+      "previousSnapshot": [
+        {"folio": "FOLIO-FIX-501", "time": "13:00-13:20"},
+        {"folio": "FOLIO-FIX-502", "time": "13:20-13:40"},
+        {"folio": "FOLIO-FIX-503", "time": "13:40-14:00"}
+      ],
+      "newSnapshot": [
+        {"folio": "FOLIO-FIX-501", "time": "13:00-13:20"},
+        {"folio": "FOLIO-FIX-502", "time": "14:00-14:20"},
+        {"folio": "FOLIO-FIX-504", "time": "14:20-14:40"}
+      ],
+      "expectedReconciliation": [
+        {"folio": "FOLIO-FIX-501", "outcome": "UNCHANGED"},
+        {"folio": "FOLIO-FIX-502", "outcome": "UPDATE"},
+        {"folio": "FOLIO-FIX-503", "outcome": "RETIRADA_DE_AGENDA"},
+        {"folio": "FOLIO-FIX-504", "outcome": "ADD"}
+      ]
+    },
+    {
+      "id": "invalid-layout",
+      "tenant": "TENANT_FIXTURE_A",
+      "headers": ["NO_CITA", "HORA", "COLUMNA_DESCONOCIDA"],
+      "missingRequiredHeader": "EXPEDIENTE"
+    },
+    {
+      "id": "multiple-spaces-doctor",
+      "tenant": "TENANT_FIXTURE_A",
+      "doctorOriginal": "MEDICO  PRUEBA DOS",
+      "configurationName": "MEDICO PRUEBA DOS",
+      "expectedCharacteristic": "original-and-normalized-values-retained"
+    },
+    {
+      "id": "doctor-not-found",
+      "tenant": "TENANT_FIXTURE_A",
+      "doctorOriginal": "MEDICO SINTETICO AUSENTE",
+      "candidates": []
+    },
+    {
+      "id": "doctor-without-shift",
+      "tenant": "TENANT_FIXTURE_A",
+      "doctorOriginal": "MEDICO PRUEBA TRES",
+      "resolvedEmployeeCode": "EMP-FIX-003",
+      "assignments": []
+    },
+    {
+      "id": "multiple-doctor-candidates",
+      "tenant": "TENANT_FIXTURE_A",
+      "doctorOriginal": "MEDICO PRUEBA CUATRO",
+      "candidates": ["EMP-FIX-004-A", "EMP-FIX-004-B"]
+    },
+    {
+      "id": "weekend-shift",
+      "tenant": "TENANT_FIXTURE_A",
+      "agendaDate": "2030-01-19",
+      "doctorOriginal": "MEDICO PRUEBA CINCO",
+      "configuration": {"employeeCode": "EMP-FIX-005", "service": "SERVICIO BETA", "shift": "FIN DE SEMANA"}
+    },
+    {
+      "id": "empty-minimal",
+      "tenant": "TENANT_FIXTURE_A",
+      "agendaDate": "2030-01-14",
+      "headers": ["No. CITA", "FECHA DE LA CITA", "HORA DE LA CITA", "EXPEDIENTE", "TIPO", "MEDICO", "SERVICIO"],
+      "records": []
+    }
+  ]
+}

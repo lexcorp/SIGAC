@@ -1,0 +1,36 @@
+# Mapa de fuentes
+
+La precedencia es la definida en `knowledge/README.md`. Los documentos derivados nunca sustituyen a la Guía.
+
+| Fuente | Clasificación y autoridad | Aporte al proceso | Límites, contradicciones o gaps |
+|---|---|---|---|
+| `knowledge/01-normativa/guias/Guia de organización y manejo del expediente clinico.pdf` | `[SOURCE]` autoritativa en esta KB | Cita programada (pp. 20–24); organización/conservación y SM10-1 (pp. 29–33); préstamo, SM1-14, 24 horas, renovación, devolución e integridad (pp. 30–31); anexos SM10-1 y SM1-14 (pp. 53–56) | No detalla el mecanismo informático SIMEF→SM10-1 ni un flujo completo de “Orden Superior”. |
+| `knowledge/01-normativa/normas/NOM-004-SSA3-2012.pdf` | `[SOURCE]` normativa sanitaria | Contexto de integración, uso, manejo, archivo, conservación y confidencialidad del expediente clínico | No define el workflow operativo local estudiado. |
+| `knowledge/01-normativa/normas/Ley-General-de-Archivos.pdf` | `[SOURCE]` normativa | Contexto archivístico y conservación documental | No especifica Agenda, SM10-1, préstamo local ni movimientos de consultorio. |
+| `knowledge/02-procedimientos/citas-programadas/PROCESOS_ARCHIVO_CLINICO_CITAS_PROGRAMADAS.docx` | `[AS-IS]` derivado | Descarga diaria desde SIMEF, proceso manual/macro, preparación un día antes, agrupación, carritos, entrega y recolección | Mezcla citas de la Guía, observación local y notas `[TO-BE]` (automatización/agente/pantalla). Estas propuestas no son reglas. |
+| `knowledge/02-procedimientos/solicitud-prestamo/PROCESOS_ARCHIVO_CLINICO_SOLICITUD_DE_EXPEDIENTE.docx` | `[AS-IS]` derivado | Recepción presencial, revisión de vale, asignación de búsqueda, entrega, seguimiento y observaciones sobre Orden Superior | El propio documento declara que el procedimiento de solicitud/préstamo no está definido; su secuencia operativa necesita validación. |
+| `knowledge/03-formatos-oficiales/SM10-1/FORMATO_SM10-1_HOJA DE LABORES DEL MEDICO.xls` | `[SOURCE]` formato oficial con instancia real | Estructura por médico/servicio/horario y renglones de consulta; evidencia del artefacto que acompaña paquetes | Contiene campos asistenciales no necesarios para archivo y datos reales; no deben copiarse al modelo sin propósito aprobado. |
+| `knowledge/04-simef-evidencia-operativa/agenda-archivo-clinico/AGENDA DE ARCHIVO CLINICO.xls` | `[AS-IS]` evidencia operativa SIMEF | Estructura real de agenda: fecha/unidad, bloques médico-servicio y citas | Es una captura temporal, no un contrato estable; contiene datos personales y de atención. |
+| `knowledge/05-notas-operativas/entrevistas/Analisis_Archivo_Clinico (2).docx` | `[AS-IS]` observación/testimonio | Roles reales, volúmenes aproximados, búsqueda, listas físicas, excepciones, duplicidad, retrasos y trazabilidad deseada | Respuestas parciales y algunas inconsistentes; sólo sustentan preguntas o hipótesis hasta corroboración. |
+| `knowledge/05-notas-operativas/consideraciones/CONSIDERACIONES.txt` | `[TO-BE]` / `[ASSUMPTION]` | Ideas de madurez, barcode/RFID, estados y trazabilidad | No es evidencia normativa ni autorización para implementar. Incluye la premisa de número único, incompatible con el modelo aprobado del Workspace; queda descartada para discovery. |
+| `knowledge/05-notas-operativas/NOTAS_DEPENDIENTES.txt` | `[OPEN QUESTION]` | Búsquedas deseadas | No define alcance, autorización ni minimización. |
+| `/home/admin/Documentos/Formato General Archivo Clinico 2.1.xlsm` (SHA-256 `b6089b5d…1ff07`) | `[AS-IS]` evidencia operativa y `[TECHNICAL CONSTRAINT]` | Implementación real Agenda→catálogos→clasificación→MATUTINO/VESPERTINO; 19 hojas, tablas y VBA | Contiene datos personales reales, configuración superpuesta y legado. El comportamiento técnico no es automáticamente regla de negocio. No se copia al repositorio. |
+| `/home/admin/Documentos/revision de excel con macro.docx` (SHA-256 `dec2f1f1…06a9`) | `[AS-IS]` análisis secundario | Narrativa de ingeniería inversa, trazabilidad, métricas y RN candidatas | No es fuente autoritativa; sus instrucciones/propuestas no gobiernan esta discovery. Hallazgos cuantitativos se contrastaron directamente con el libro. |
+| `/home/admin/Documentos/FORMATO SOLICITUD DE EXPEDIENTES ARCHIVO CLINICO FORMATO SM 1-14 VALE AL ARCHIVO.docx` (SHA-256 `60ff1aca…d3e`) | `[SOURCE]` instancia de formato SM1-14 | Estructura observable del vale y evidencia de uso para múltiples expedientes | Es una instancia requisitada con datos reales, no una plantilla normativa limpia; no se reproducen valores personales y no prueba por sí sola todas las reglas. No se copia al repositorio. |
+| `/home/admin/Documentos/AgenConMed_027204ESTA455748.xls` (SHA-256 `6441843b…12c62`) | `[AS-IS]` evidencia operativa SIMEF del 21/08/2026 | Snapshot diario con 273 citas y 22 bloques médico/servicio | HTML con extensión `.xls`; contiene datos personales. No contiene Turno, Consultorio ni Destino explícitos. No se copia al repositorio. |
+| `/home/admin/Documentos/preguntas_spec2.docx` (SHA-256 `b6388343…ab446`) | Respuestas de negocio `[BUSINESS RULE]` cuando son inequívocas | Folio, médico, equivalencia Servicio/Especialidad, reimportación y lista mínima | El nombre aportado fue `preguntas_spec2(1).docx`, pero el archivo disponible es `preguntas_spec2.docx`. Afirmaciones sobre campos se contrastan con la Agenda directa. |
+
+## Hallazgos de procedencia
+
+- `[SOURCE]` La Guía exige preparación previa, correspondencia con SM10-1, paquetes por consultorio, entrega y recepción/verificación posterior.
+- `[SOURCE]` La Guía limita el préstamo ordinario a 24 horas, prevé excepciones descritas de forma general y exige un nuevo formato para extenderlo.
+- `[AS-IS]` El DOCX de citas explica el puente operativo SIMEF→archivo exportado→macro/manual→SM10-1; no aparece en la Guía con ese nivel técnico.
+- `[SOURCE]` Se aportó una instancia independiente del SM1-14 fuera de `knowledge/`. Permite observar encabezados y estructura, pero debe obtenerse una plantilla oficial en blanco/instructivo para cerrar obligatoriedad, cardinalidad y firmas.
+
+## PREVIOUS-WORK-GAP
+
+| Archivo/sección | Contradicción | Fuente afectada | Tratamiento |
+|---|---|---|---|
+| `revision de excel con macro.docx`, “Estructura real del libro” | Describe `HOJA FRONTAL`, `HOJA FRONTAL MANUAL`, `FORMATO HOJA FRONTAL` y varias hojas históricas como ocultas; el `workbook.xml` del archivo con hash citado las marca visibles. | Ingeniería inversa secundaria frente al `.xlsm` directo. | Prevalece el archivo. La visibilidad no se eleva a regla de negocio. |
+| `artifact-analysis.md`, análisis previo de SM1-14 | Indicaba que no existía artefacto independiente disponible. | Nueva instancia externa aportada. | Corregido: existe una instancia, aunque sigue faltando plantilla/instructivo oficial. |
+| `preguntas_spec2.docx`, respuestas sobre Turno y consultorio | Afirma que Turno está en la Agenda y que consultorio se obtiene de médico/servicio, incluso “sí lo trae”; la Agenda directa no contiene campos o etiquetas explícitas para ninguno. | Cuestionario frente a `AgenConMed_027204ESTA455748.xls`. | `NEW-EVIDENCE-GAP`: pueden ser datos derivados/configurables, pero no datos presentes. Quedan fuera del slice inicial. |

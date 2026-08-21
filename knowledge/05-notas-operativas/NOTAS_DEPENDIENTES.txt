@@ -1,0 +1,8 @@
+Notas:
+
+El sistema debe permitir buscar por:
+
+numero de expediente
+nombre del derechohabiente o paciente
+curp
+o por una combinacion de expediente y tipo de derechohabiente
