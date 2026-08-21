@@ -1,11 +1,11 @@
 ---
 spec: agenda-preparation
-version: "0.1.2"
+version: "0.1.3"
 status: "Approved for Implementation"
 date: "2026-08-20"
 requires:
-  - "requirements.md v0.1.2"
-  - "design.md v0.1.2"
+  - "requirements.md v0.1.3"
+  - "design.md v0.1.3"
 ---
 
 # Agenda Preparation — Tasks
@@ -84,7 +84,7 @@ También aplica `DOMAIN-VALUE-OBJECTS-DECISION.md`.
 **Tests:** fecha canónica/gregoriana; trim exterior e igualdad exacta de FOLIO y número
 de empleado; ceros iniciales; identidad de Servicio por código con nombre descriptivo;
 posición entera positiva base 1; rechazo de inválidos; ausencia de parsing/HTML y de
-originalValues en los VOs.
+originalValues en los VOs; y código `DomainError` exacto de VO-AP-009 para cada rechazo.
 
 ### T-02 — Aggregate `ImportacionAgenda`
 

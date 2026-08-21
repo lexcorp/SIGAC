@@ -1,6 +1,6 @@
 ---
 spec: agenda-preparation
-version: "0.1.2"
+version: "0.1.3"
 status: "Approved for Implementation"
 date: "2026-08-20"
 source_of_truth:
@@ -267,6 +267,10 @@ Agenda ausente produce `AGENDA_NOT_FOUND`, nunca `null`.
 
 Los VOs conservan el valor canónico Domain. Original e interpretación se separan en el
 futuro `RegistroImportadoAgenda`; parsing específico de SIMEF pertenece al Adapter.
+
+El rechazo usa `DomainError` con exactamente: `AGENDA_FECHA_INVALID`,
+`FOLIO_CITA_INVALID`, `NUMERO_EMPLEADO_INVALID`,
+`SERVICIO_ESPECIALIDAD_INVALID` o `POSICION_REGISTRO_ORIGEN_INVALID`, según el VO.
 
 ## 6. Autorización conceptual
 

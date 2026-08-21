@@ -4,7 +4,7 @@
 
 **Fecha:** 2026-08-20
 
-**Scope:** cierre del bloqueo documental de T-01 en `agenda-preparation v0.1.2`
+**Scope:** contratos completos de T-01 en `agenda-preparation v0.1.3`
 
 ## VO-AP-001 — AgendaFecha
 
@@ -83,6 +83,30 @@ no conocen HTML, `.xls`, encoding, encabezados ni coordenadas físicas.
 Esta decisión no modifica ImportOutcome, RecordProcessingResult, ImportIncident,
 AuditResult, permissions ni audit actions. Tampoco introduce Aggregate, Entity, evento,
 persistence, API o parser.
+
+## VO-AP-009 — Convención DomainError
+
+Los cinco Value Objects validados reutilizan exclusivamente el `DomainError(code,
+message)` existente. El código es contractual; el message es descriptivo/interno, no es
+contrato HTTP y no incluye datos sensibles ni valores raw completos.
+
+| Value Object | DomainError.code | Semántica |
+|---|---|---|
+| AgendaFecha | `AGENDA_FECHA_INVALID` | El valor incumple cualquier regla canónica de AgendaFecha. |
+| FolioCita | `FOLIO_CITA_INVALID` | Ausente, vacío tras trim u otra violación del contrato de FolioCita. |
+| NumeroEmpleado | `NUMERO_EMPLEADO_INVALID` | Ausente, vacío tras trim u otra violación del contrato de NumeroEmpleado. |
+| ServicioEspecialidad | `SERVICIO_ESPECIALIDAD_INVALID` | Código/nombre ausente, vacío o violación del contrato compuesto. |
+| PosicionRegistroOrigen | `POSICION_REGISTRO_ORIGEN_INVALID` | No es entero positivo base 1 o es otro valor expresamente rechazado. |
+
+No se agregan códigos adicionales ni `INVALID_ARGUMENT`. Estos códigos pertenecen a
+Domain: no son ApplicationError, AuditResult, ImportOutcome, RecordProcessingResult o
+ImportIncident, y no reciben mapping HTTP en esta decisión.
+
+## VO-AP-010 — Scope de implementación
+
+T-01 puede usar los códigos anteriores únicamente para validar los VOs aprobados. Esta
+extensión no altera el scope de T-01 ni autoriza Aggregate, Entity, parser, persistence,
+API o frontend.
 
 ## Readiness
 

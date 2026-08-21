@@ -138,3 +138,6 @@ preview previo de validación, filtros/búsqueda y retry técnico/Idempotency-Ke
 
 El gap de contratos de Value Objects de T-01 queda RESOLVED por VO-AP-001..008 en
 agenda-preparation v0.1.2. No abre nuevas preguntas bloqueantes y no inicia T-01.
+
+La ausencia de códigos DomainError queda RESOLVED en v0.1.3 por VO-AP-009/010. T-01
+queda documentalmente READY, sin iniciar T-01 ni T-02.

@@ -1,6 +1,6 @@
 ---
 spec: agenda-preparation
-version: "0.1.2"
+version: "0.1.3"
 status: "Approved for Implementation"
 date: "2026-08-20"
 ---
@@ -78,6 +78,7 @@ La precedencia de fuentes es la de `knowledge/README.md`. Un procedimiento deriv
 | BR-AP-027 | Agenda del día resume exclusivamente el estado vigente con conteos definidos. | Contrato UX aprobado v0.1.1 |
 | BR-AP-028 | Los VOs T-01 usan formas canónicas mínimas sin inferir patrones del artefacto. | SRC-AP-025 |
 | BR-AP-029 | Original e interpretación pertenecen a RegistroImportadoAgenda; parsing queda en Adapter. | SRC-AP-025 |
+| BR-AP-030 | Cada VO T-01 rechaza inválidos con su único DomainError.code aprobado. | SRC-AP-025, VO-AP-009 |
 
 ## 4. Matriz end-to-end
 
@@ -100,6 +101,7 @@ La precedencia de fuentes es la de `knowledge/README.md`. Un procedimiento deriv
 | TR-AP-015 | SRC-AP-024 | BR-AP-023..025 | REQ-AP-009..014; INV-AP-003..005 | design §4..6/9/11 | T-01..08, T-13..19 | TEST-AP-RESULT-001..008; TEST-AP-METRIC-001..004; TEST-AP-DUP-001..003 |
 | TR-AP-016 | Contratos UX v0.1.1 | BR-AP-026/027 | REQ-AP-019/020; AC-AP-013/014 | design §8/9 | T-07/08, T-10, T-13..19 | TEST-AP-HISTORY-001..005; TEST-AP-DAY-001..005 |
 | TR-AP-017 | SRC-AP-025 | BR-AP-028/029 | REQ-AP-004..008; INV-AP-001/002/006/008 | design §3.4/3.6/10 | T-01 | TEST-AP-VO-001..015 |
+| TR-AP-018 | SRC-AP-025 | BR-AP-030 | requirements §5; design §3.6 | T-01 | TEST-AP-VO-ERROR-001..005 |
 
 ## 5. Acceptance criteria → tests
 

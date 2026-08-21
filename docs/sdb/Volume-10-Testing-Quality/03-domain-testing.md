@@ -74,3 +74,5 @@ Probar invariantes, value objects, state transitions y policies.
 - PosicionRegistroOrigen acepta enteros positivos base 1 y rechaza 0, negativos,
   decimales, NaN e infinito.
 - Ningún VO ejecuta parsing SIMEF ni almacena simultáneamente original/normalized.
+- Cada rechazo verifica el DomainError.code exacto de VO-AP-009; no se esperan errores
+  nativos, códigos genéricos ni messages como contrato.

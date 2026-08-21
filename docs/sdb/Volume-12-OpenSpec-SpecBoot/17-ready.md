@@ -101,3 +101,7 @@ v0.1.2 aprueba VO-AP-001..008 mediante
 `docs/decisions/agenda-preparation/DOMAIN-VALUE-OBJECTS-DECISION.md`. El bloqueo
 documental de T-01 queda resuelto; T-01 puede implementarse sin inventar formatos,
 normalización, igualdad o provenance. `implementation_ready` continúa true.
+
+v0.1.3 aprueba VO-AP-009/010: los cinco DomainError codes quedan cerrados sin mapping
+HTTP ni cambios a ApplicationError/AuditResult/resultados. No queda gap material conocido
+para implementar T-01; la implementación no inicia en esta decisión.

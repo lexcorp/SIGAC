@@ -1,10 +1,10 @@
 ---
 spec: agenda-preparation
-version: "0.1.2"
+version: "0.1.3"
 status: "Approved for Implementation"
 date: "2026-08-20"
 requires:
-  - "requirements.md v0.1.2"
+  - "requirements.md v0.1.3"
 bounded_context: "Agenda / Appointment Preparation"
 open_questions_blocking: []
 ---
@@ -112,6 +112,9 @@ No se crean VOs de Turno, Consultorio o Destino.
 Los VOs no duplican original/normalized. `RegistroImportadoAgenda` será propietario de
 `originalValues` e `interpretedValues`. El parser traduce representaciones SIMEF; Domain
 no conoce formato externo. Véase `DOMAIN-VALUE-OBJECTS-DECISION.md`.
+
+Errores de construcción usan el `DomainError` canónico y exclusivamente los cinco codes
+de VO-AP-009. Los messages no forman parte del contrato HTTP.
 
 ## 4. Lifecycle conceptual
 
