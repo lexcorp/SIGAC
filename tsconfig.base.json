@@ -17,6 +17,9 @@
       "@sigac/archive-operations": [
         "./packages/modules/archive-operations/src/index.ts"
       ],
+      "@sigac/agenda-preparation": [
+        "./packages/modules/agenda-preparation/src/index.ts"
+      ],
       "@sigac/requests": [
         "./packages/modules/requests/src/index.ts"
       ],
