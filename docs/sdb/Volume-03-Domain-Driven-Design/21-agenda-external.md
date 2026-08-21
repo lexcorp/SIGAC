@@ -14,3 +14,14 @@ Una importación no se asume definitiva.
 RESULT-AP-001..014 reemplaza nombres exploratorios para el slice: ImportacionAgenda,
 Agenda, Cita, RecordProcessingResult e ImportIncident. Fingerprint es metadata, no
 identidad. Cada fila termina en uno de los siete resultados aprobados.
+
+## Value Objects T-01 — VO-AP-001..008
+
+- AgendaFecha es fecha civil gregoriana `YYYY-MM-DD`, sin tiempo/zona/UTC.
+- FolioCita y NumeroEmpleado son strings requeridos con trim sólo exterior e igualdad
+  exacta; no se convierten a número ni reciben regex inferida. NumeroEmpleado conserva
+  ceros iniciales.
+- ServicioEspecialidad exige código/nombre; identidad por código y nombre descriptivo.
+- PosicionRegistroOrigen es ordinal lógico entero positivo base 1, no fila física.
+- Los VOs contienen valor canónico; originalValues/interpretedValues pertenecen al futuro
+  RegistroImportadoAgenda. El Adapter, no Domain, interpreta representaciones SIMEF.

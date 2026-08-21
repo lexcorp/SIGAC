@@ -1,6 +1,6 @@
 ---
 spec: agenda-preparation
-version: "0.1.1"
+version: "0.1.2"
 status: "Approved for Implementation"
 date: "2026-08-20"
 ---
@@ -43,6 +43,7 @@ La precedencia de fuentes es la de `knowledge/README.md`. Un procedimiento deriv
 | SRC-AP-022 | `docs/decisions/agenda-preparation/RAW-DATA-RETENTION-DECISION.md` | Decisión APPROVED | Categorías raw, minimización, protección, acceso, retención y disposición |
 | SRC-AP-023 | `docs/decisions/agenda-preparation/IMPORT-API-DECISION.md` | Decisión APPROVED | Input, upload, sync/UoW, idempotencia, HTTP, queries y cursor |
 | SRC-AP-024 | `docs/decisions/agenda-preparation/IMPORT-RESULT-TAXONOMY-DECISION.md` | Decisión APPROVED | Outcomes, resultados, incidencias, métricas, eventos y read models |
+| SRC-AP-025 | `docs/decisions/agenda-preparation/DOMAIN-VALUE-OBJECTS-DECISION.md` | Decisión APPROVED | Invariantes, igualdad, provenance y parser boundary de VOs T-01 |
 
 ## 3. Business-rule registry
 
@@ -75,6 +76,8 @@ La precedencia de fuentes es la de `knowledge/README.md`. Un procedimiento deriv
 | BR-AP-025 | Retirada es efecto sobre una Cita previa, no resultado de fila ni cancelación clínica. | SRC-AP-024 |
 | BR-AP-026 | Historial de importaciones es tenant-scoped, cursor-based y minimizado. | Contrato UX aprobado v0.1.1 |
 | BR-AP-027 | Agenda del día resume exclusivamente el estado vigente con conteos definidos. | Contrato UX aprobado v0.1.1 |
+| BR-AP-028 | Los VOs T-01 usan formas canónicas mínimas sin inferir patrones del artefacto. | SRC-AP-025 |
+| BR-AP-029 | Original e interpretación pertenecen a RegistroImportadoAgenda; parsing queda en Adapter. | SRC-AP-025 |
 
 ## 4. Matriz end-to-end
 
@@ -96,6 +99,7 @@ La precedencia de fuentes es la de `knowledge/README.md`. Un procedimiento deriv
 | TR-AP-014 | SRC-AP-023 | BR-AP-021/022 | requirements import contract | design §8/10/11 | T-00, T-05/06/08, T-10..14, T-16..19 | TEST-AP-API-001..014; TEST-AP-IDEMP-001..004; TEST-AP-UOW-001..003 |
 | TR-AP-015 | SRC-AP-024 | BR-AP-023..025 | REQ-AP-009..014; INV-AP-003..005 | design §4..6/9/11 | T-01..08, T-13..19 | TEST-AP-RESULT-001..008; TEST-AP-METRIC-001..004; TEST-AP-DUP-001..003 |
 | TR-AP-016 | Contratos UX v0.1.1 | BR-AP-026/027 | REQ-AP-019/020; AC-AP-013/014 | design §8/9 | T-07/08, T-10, T-13..19 | TEST-AP-HISTORY-001..005; TEST-AP-DAY-001..005 |
+| TR-AP-017 | SRC-AP-025 | BR-AP-028/029 | REQ-AP-004..008; INV-AP-001/002/006/008 | design §3.4/3.6/10 | T-01 | TEST-AP-VO-001..015 |
 
 ## 5. Acceptance criteria → tests
 

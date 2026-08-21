@@ -135,3 +135,6 @@ OPEN no bloqueantes para el slice inicial.
 UX-GAP-004 y UX-GAP-005 quedan RESOLVED en agenda-preparation v0.1.1 mediante
 `ListAgendaImports` y `AgendaDayReadModel`. Persisten tres UX gaps no bloqueantes:
 preview previo de validación, filtros/búsqueda y retry técnico/Idempotency-Key.
+
+El gap de contratos de Value Objects de T-01 queda RESOLVED por VO-AP-001..008 en
+agenda-preparation v0.1.2. No abre nuevas preguntas bloqueantes y no inicia T-01.

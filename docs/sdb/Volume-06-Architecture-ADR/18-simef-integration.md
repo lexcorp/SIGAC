@@ -37,6 +37,10 @@ If authorized, connector/API integration reuses the same normalized contract.
 ## Rule
 SIMEF column names and statuses never become domain primitives directly.
 
+VO-AP-001..008 refuerza la frontera: el Adapter interpreta fecha/formato externo y
+entrega valores canónicos; los Value Objects Domain no conocen HTML, `.xls`, encoding o
+posición física. Parsing y normalización son responsabilidades distintas.
+
 ## Read boundaries v0.1.1
 
 Application posee queries tenant-scoped para historial cursor-based de importaciones y

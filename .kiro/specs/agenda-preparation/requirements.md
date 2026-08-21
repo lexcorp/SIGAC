@@ -1,6 +1,6 @@
 ---
 spec: agenda-preparation
-version: "0.1.1"
+version: "0.1.2"
 status: "Approved for Implementation"
 date: "2026-08-20"
 source_of_truth:
@@ -252,6 +252,21 @@ Agenda ausente produce `AGENDA_NOT_FOUND`, nunca `null`.
 | INV-AP-010 | Datos excluidos por minimización no aparecen en persistencia/read models del slice. |
 | INV-AP-011 | Reconciliación nunca cruza tenants. |
 | INV-AP-012 | Turno, Consultorio y Destino no se derivan ni se incorporan en esta spec. |
+
+### Contratos de Value Objects para T-01
+
+- `AgendaFecha`: fecha civil gregoriana válida en forma canónica `YYYY-MM-DD`, sin
+  instante/timezone/UTC.
+- `FolioCita`: string requerido con trim sólo exterior; identidad exacta, sin regex,
+  case folding o conversión numérica.
+- `NumeroEmpleado`: string requerido con trim sólo exterior; conserva ceros iniciales,
+  sin patrón/longitud inventados ni conversión numérica.
+- `ServicioEspecialidad`: `codigo` y `nombre` requeridos; trim sólo exterior; identidad
+  por código exacto y nombre descriptivo.
+- `PosicionRegistroOrigen`: ordinal lógico entero positivo base 1, no coordenada física.
+
+Los VOs conservan el valor canónico Domain. Original e interpretación se separan en el
+futuro `RegistroImportadoAgenda`; parsing específico de SIMEF pertenece al Adapter.
 
 ## 6. Autorización conceptual
 

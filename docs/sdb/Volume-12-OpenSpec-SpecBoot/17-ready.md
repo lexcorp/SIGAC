@@ -96,3 +96,8 @@ v0.1.1 resuelve UX-GAP-004/005 mediante `ListAgendaImports`, historial cursor-ba
 `AgendaDayReadModel`. Permanecen tres UX gaps no bloqueantes: preview previo de
 validación, filtros/búsqueda y retry técnico/Idempotency-Key. `implementation_ready`
 continúa true.
+
+v0.1.2 aprueba VO-AP-001..008 mediante
+`docs/decisions/agenda-preparation/DOMAIN-VALUE-OBJECTS-DECISION.md`. El bloqueo
+documental de T-01 queda resuelto; T-01 puede implementarse sin inventar formatos,
+normalización, igualdad o provenance. `implementation_ready` continúa true.

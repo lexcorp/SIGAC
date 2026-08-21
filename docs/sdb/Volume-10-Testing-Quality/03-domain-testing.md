@@ -63,3 +63,14 @@ Probar invariantes, value objects, state transitions y policies.
 - Layout rechazado no crea resultados de fila ni Domain Events.
 - Primera vez/subsecuente sólo acepta una marca inequívoca; ambas o ninguna generan
   incidencia de fila, nunca un tercer estado.
+
+## Agenda Preparation — Value Objects T-01
+
+- AgendaFecha acepta sólo fecha civil gregoriana canónica y prueba igualdad sin UTC.
+- FolioCita/NumeroEmpleado prueban trim exterior, vacío inválido, case/contenido interno
+  preservados, igualdad exacta y ausencia de conversión numérica.
+- NumeroEmpleado conserva ceros iniciales.
+- ServicioEspecialidad exige código/nombre y compara identidad sólo por código.
+- PosicionRegistroOrigen acepta enteros positivos base 1 y rechaza 0, negativos,
+  decimales, NaN e infinito.
+- Ningún VO ejecuta parsing SIMEF ni almacena simultáneamente original/normalized.

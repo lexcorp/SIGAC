@@ -1,11 +1,11 @@
 ---
 spec: agenda-preparation
-version: "0.1.1"
+version: "0.1.2"
 status: "Approved for Implementation"
 date: "2026-08-20"
 requires:
-  - "requirements.md v0.1.1"
-  - "design.md v0.1.1"
+  - "requirements.md v0.1.2"
+  - "design.md v0.1.2"
 ---
 
 # Agenda Preparation — Tasks
@@ -77,10 +77,14 @@ RESULT-AP-001..014, y que el SDB esté sincronizado antes de implementar Domain.
 
 **Fuentes:** REQ-AP-003..008, REQ-AP-011, INV-AP-002/006/008,
 `IMPORT-RESULT-TAXONOMY-DECISION.md`.
+También aplica `DOMAIN-VALUE-OBJECTS-DECISION.md`.
 
 **Objetivo:** implementar únicamente los Value Objects y tipos de resultado aprobados: fecha, FOLIO, número de empleado, Servicio/Especialidad, posición de origen y resultado de registro.
 
-**Tests:** validación, igualdad, normalización no destructiva y rechazo de valores inválidos; ninguna lógica HTML.
+**Tests:** fecha canónica/gregoriana; trim exterior e igualdad exacta de FOLIO y número
+de empleado; ceros iniciales; identidad de Servicio por código con nombre descriptivo;
+posición entera positiva base 1; rechazo de inválidos; ausencia de parsing/HTML y de
+originalValues en los VOs.
 
 ### T-02 — Aggregate `ImportacionAgenda`
 

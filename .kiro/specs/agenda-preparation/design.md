@@ -1,10 +1,10 @@
 ---
 spec: agenda-preparation
-version: "0.1.1"
+version: "0.1.2"
 status: "Approved for Implementation"
 date: "2026-08-20"
 requires:
-  - "requirements.md v0.1.1"
+  - "requirements.md v0.1.2"
 bounded_context: "Agenda / Appointment Preparation"
 open_questions_blocking: []
 ---
@@ -96,18 +96,22 @@ Pertenece a `ImportacionAgenda`. Contiene posición de origen, valores originale
 
 Entidad hija o Value Object identificado dentro de `ImportacionAgenda`; la decisión exacta puede tomarse al implementar Domain. Representa cero/múltiples candidatos, referencia requerida no resuelta, duplicado o fallo de contenido. No equivale a `Incidencia` de Archive Operations.
 
-### 3.6 Value Objects candidatos
+### 3.6 Value Objects aprobados
 
-- `AgendaFecha`.
-- `FolioCita`.
-- `NumeroEmpleado`.
-- `ServicioEspecialidad` (`codigo`, `nombreOriginal`).
+- `AgendaFecha`: fecha civil gregoriana `YYYY-MM-DD`, sin tiempo/zona.
+- `FolioCita`: string requerido, trim exterior e igualdad exacta.
+- `NumeroEmpleado`: string requerido, trim exterior e igualdad exacta; preserva ceros.
+- `ServicioEspecialidad` (`codigo`, `nombre`): ambos requeridos; identidad por código.
 - `MedicoReferencia` (`numeroEmpleado`, `nombreOriginal`, resolución).
-- `PosicionRegistroOrigen`.
+- `PosicionRegistroOrigen`: ordinal lógico entero positivo base 1.
 - `FingerprintLayout`.
 - `ResultadoRegistroAgenda`.
 
 No se crean VOs de Turno, Consultorio o Destino.
+
+Los VOs no duplican original/normalized. `RegistroImportadoAgenda` será propietario de
+`originalValues` e `interpretedValues`. El parser traduce representaciones SIMEF; Domain
+no conoce formato externo. Véase `DOMAIN-VALUE-OBJECTS-DECISION.md`.
 
 ## 4. Lifecycle conceptual
 
