@@ -1,11 +1,11 @@
 ---
 spec: agenda-preparation
-version: "0.1.5"
+version: "0.1.6"
 status: "Approved for Implementation"
 date: "2026-08-21"
 requires:
-  - "requirements.md v0.1.5"
-  - "design.md v0.1.5"
+  - "requirements.md v0.1.6"
+  - "design.md v0.1.6"
 ---
 
 # Agenda Preparation — Tasks
@@ -105,11 +105,16 @@ el Aggregate y se cubre en Application/parser, no en los unit tests de T-02.
 
 **Dependencias:** T-01.
 
-**Fuentes:** REQ-AP-004/005/009/010/012, INV-AP-001..005.
+**Fuentes:** REQ-AP-004/005/009/010/012, INV-AP-001..005,
+`AGENDA-CITA-DOMAIN-DECISION.md` (AGD-AP-001..009).
 
 **Objetivo:** implementar Agenda tenant+fecha y reconciliación por FOLIO: ADD, UPDATE, UNCHANGED, RETIRADA_DE_AGENDA y RESTORE.
 
-**Tests:** tabla completa de reconciliación; historia preservada; retirada no es cancelación; reaparición conserva identidad; no hay Turno/Consultorio.
+**Tests:** tabla completa de reconciliación; historia preservada; retirada no es
+cancelación; reaparición conserva identidad; creación vacía/con Citas iniciales; fecha
+incompatible y FOLIO duplicado con rechazo atómico; comparación funcional exacta;
+lifecycle cerrado; HoraCita/MedicoReferencia/ExpedienteReferencia; ausencia de
+Turno/Consultorio/campos excluidos/timestamps; T-03 no emite Domain Events.
 
 ### T-04 — Verification suite de Domain
 

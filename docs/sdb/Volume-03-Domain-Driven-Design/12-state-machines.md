@@ -13,6 +13,17 @@ amended: "2026-08-14 — DEC-EW-STATE-001: EstadoOperativo corregido"
 nulos durante construcción y se fijan una vez en `finalize(outcome)`. No hay reapertura.
 El layout incompatible se rechaza antes de construir el Aggregate y no es un estado.
 
+## Cita de Agenda Preparation (AGD-AP-001..009)
+
+```text
+ACTIVA --ausente de snapshot--> RETIRADA_DE_AGENDA
+RETIRADA_DE_AGENDA --mismo FOLIO reaparece--> ACTIVA
+```
+
+`ACTIVA` participa en preparación vigente. `RETIRADA_DE_AGENDA` conserva Entity, FOLIO y
+último contenido funcional; no es cancelación clínica. No existen otros estados ni
+timestamps de lifecycle en T-03.
+
 ## EstadoOperativo del Expediente (DEC-EW-STATE-001 ACCEPTED)
 
 ```mermaid

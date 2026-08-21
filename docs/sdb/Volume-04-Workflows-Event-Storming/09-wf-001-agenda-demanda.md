@@ -36,3 +36,8 @@ Jornada preparada para iniciar búsqueda.
 Agenda Preparation inicial termina en lista, no Jornada/paquetes. Reconciliación produce
 ADDED/UPDATED/UNCHANGED/RESTORED por fila y RETIRADA_DE_AGENDA para Cita previa ausente.
 Incidencias locales no abortan otras filas. Turno/Consultorio/cancelación quedan fuera.
+
+Dentro del snapshot ya reconciliable, Agenda valida atómicamente FOLIO único y fecha
+compatible antes de mutar. Un snapshot vacío retira todas las Citas activas; una retirada
+permanece almacenada y una reaparición reactiva la misma identidad. T-03 no emite Domain
+Events de reconciliación.

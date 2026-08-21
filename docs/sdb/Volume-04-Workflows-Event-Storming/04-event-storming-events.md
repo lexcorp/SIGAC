@@ -12,9 +12,9 @@ methodology:
 # ES-004 — Domain Events
 
 AgendaImported
-AgendaReconciled
-CitaWithdrawnFromAgenda
-CitaRestored
+AgendaReconciled (candidate DEFERRED para T-03)
+CitaWithdrawnFromAgenda (candidate DEFERRED para T-03)
+CitaRestored (candidate DEFERRED para T-03)
 DemandDetected
 RequestCreated
 RequestAssigned
@@ -37,5 +37,6 @@ IncidentResolved
 ExpedienteDeclaredLost
 RequestCancelled
 
-Los eventos Agenda son mínimos; no se crea evento por ADD, UPDATE, métrica o incidencia.
-Retirada no equivale a cancelación clínica.
+AGD-AP-007 determina que T-03 no emite estos candidatos hasta aprobar payload y
+temporalidad. No se crea evento por ADD, UPDATE, métrica o incidencia. Retirada no
+equivale a cancelación clínica.

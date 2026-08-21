@@ -84,3 +84,11 @@ finalización, registros múltiples, incidencias 0..N, duplicados por identidad,
 derivadas/ecuationes, retiradas separadas, outcome final único, inmutabilidad posterior y
 ausencia de raw/fingerprint/filename. Layout fail-closed se prueba en Application/parser,
 antes de construir el Aggregate, no en los unit tests puros de T-02.
+
+## Agenda Preparation — Aggregate T-03
+
+AGD-AP-001..009 exige pruebas de creación vacía/con Citas iniciales; FOLIO único y fecha
+compatible; HoraCita estricta; MedicoReferencia/ExpedienteReferencia; comparación de los
+campos funcionales exactos; ADD/UPDATE/UNCHANGED/RESTORE/WITHDRAW; snapshot vacío;
+rechazo atómico de duplicados/fecha incompatible; conservación de identidad/contenido al
+retirar/restaurar; ausencia de campos excluidos/timestamps y ausencia de Domain Events.

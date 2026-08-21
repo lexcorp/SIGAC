@@ -19,7 +19,8 @@ POL-ES-005 LoanOpened → calcular fecha límite según política aplicable.
 POL-ES-006 Fecha límite superada → LoanExpired.
 POL-ES-007 ReturnReceived → cerrar custodia externa y pasar a verificación/rearchivo según flujo.
 POL-ES-008 IncidentOpened → asignar responsable/estado.
-POL-ES-009 AgendaReconciled con alta tardía → crear nueva demanda y alertar preparación.
+POL-ES-009 (futura) AgendaReconciled con alta tardía → crear nueva demanda y alertar
+preparación. AGD-AP-007 difiere el evento y AP-OQ-005 mantiene fuera la integración.
 
 RESULT-AP-001..014: cada fila obtiene un RecordProcessingResult. Incidencias bloquean
 sólo su fila; layout incompatible rechaza globalmente. FOLIO duplicado marca todas sus

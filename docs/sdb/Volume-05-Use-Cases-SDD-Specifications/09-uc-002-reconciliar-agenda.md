@@ -32,7 +32,8 @@ Detectar diferencias entre versiones de agenda.
 3. Detectar citas añadidas después de preparación.
 4. Crear demanda nueva cuando corresponda.
 5. No eliminar silenciosamente trabajo ya ejecutado.
-6. Registrar AgendaReconciled.
+6. Devolver el resultado de reconciliación. `AgendaReconciled` queda diferido por
+   AGD-AP-007 y no se emite en T-03.
 
 ## Acceptance
 Given una jornada con 12 citas preparadas

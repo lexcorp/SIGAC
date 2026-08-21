@@ -118,3 +118,10 @@ invariantes globales canónicas de la spec; `INV-IMP-AP-001..006` identifica las
 invariantes verificables de ImportacionAgenda/T-02 y traza hacia `IMP-AP-001..014` sin
 renombrar esas decisiones. La referencia de T-03 a `INV-AP-001..005` vuelve a ser
 inequívoca; `implementation_ready` continúa true.
+
+v0.1.6 aprueba AGD-AP-001..009 mediante
+`docs/decisions/agenda-preparation/AGENDA-CITA-DOMAIN-DECISION.md`: identidad/boundary de
+Agenda, shape/lifecycle de Cita, HoraCita, MedicoReferencia, ExpedienteReferencia,
+comparación, reconciliación atómica, historia lógica, temporalidad y errores quedan
+cerrados. Los Domain Events candidatos se difieren explícitamente; T-03 queda ready y no
+inicia en esta actualización. `implementation_ready` continúa true.

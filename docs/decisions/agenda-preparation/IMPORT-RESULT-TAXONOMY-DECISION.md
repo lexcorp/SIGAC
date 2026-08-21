@@ -200,6 +200,11 @@ Se aprueban como candidatos contractuales Domain, sin metadata técnica:
 No se crea evento por cada métrica, fila, ADD, UPDATE o incidencia. Domain Events no son
 AuditEntry ni response HTTP.
 
+**Refinamiento posterior:** AGD-AP-007 conserva estos nombres como candidatos, pero
+difiere explícitamente `AgendaReconciled`, `CitaWithdrawnFromAgenda` y `CitaRestored` en
+T-03. No se implementan ni emiten hasta aprobar payload y temporalidad. RESULT-AP-011 no
+constituye por sí solo autorización de implementación.
+
 ## RESULT-AP-012 — ApplicationError
 
 Códigos propios necesarios:

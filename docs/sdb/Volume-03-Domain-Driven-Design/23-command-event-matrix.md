@@ -11,8 +11,7 @@ StartSearch→SearchStarted
 MarkLocated→ExpedienteLocated
 MarkNotLocated→ExpedienteNotLocated
 ImportAgenda→AgendaImported
-ReconcileAgenda→AgendaReconciled
-ReconcileAgenda→CitaWithdrawnFromAgenda|CitaRestored cuando corresponda
+ReconcileAgenda→sin Domain Event en T-03; AgendaReconciled/CitaWithdrawnFromAgenda/CitaRestored DEFERRED por AGD-AP-007
 TransferCustody→CustodyTransferred
 OpenLoan→LoanOpened
 RenewLoan→LoanRenewed

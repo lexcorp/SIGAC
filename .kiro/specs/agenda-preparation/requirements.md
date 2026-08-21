@@ -1,6 +1,6 @@
 ---
 spec: agenda-preparation
-version: "0.1.5"
+version: "0.1.6"
 status: "Approved for Implementation"
 date: "2026-08-21"
 source_of_truth:
@@ -283,6 +283,25 @@ ni campos excluidos. El contrato completo y errores cerrados son IMP-AP-001..014
 
 El rechazo de layout sucede antes de crear el Aggregate y su cobertura corresponde a
 Application/parser, no a T-02 Domain.
+
+### Contratos Domain de `Agenda` y `Cita` para T-03
+
+La identidad lógica de Agenda es `TenantContext + AgendaFecha`, pero el Aggregate contiene
+únicamente la fecha: tenant delimita Repository/UnitOfWork y no entra en Domain. No existe
+`AgendaId`. `Agenda.create({fecha, citasIniciales?})` permite una Agenda vacía y valida de
+forma atómica FOLIO único y fecha compatible.
+
+`Cita` se identifica por `FolioCita`, nace `ACTIVA` y contiene sólo: fecha, `HoraCita`,
+`ExpedienteReferencia | null`, nombre, tipo de derechohabiente, `FIRST_TIME|SUBSEQUENT`,
+`MedicoReferencia`, `ServicioEspecialidad` y lifecycle. `HoraCita` es `HH:mm` estricto;
+el médico se identifica por `NumeroEmpleado`; la referencia de Expediente es opaca.
+
+`Agenda.reconcile({incoming})` valida el snapshot completo antes de mutar y devuelve
+colecciones separadas `added`, `updated`, `unchanged`, `restored` y `withdrawn`. Snapshot
+vacío retira todas las Citas activas; duplicados o fecha incompatible rechazan toda la
+operación. Retirada conserva Entity/contenido; reaparición reactiva la misma identidad.
+No existen timestamps de Cita ni Domain Events de reconciliación en T-03. El contrato
+completo y errores cerrados son AGD-AP-001..009.
 
 ## 6. Autorización conceptual
 

@@ -16,9 +16,9 @@ ExpedientePrepared
 RequestCancelled
 PreparationBatchCreated
 AgendaImported
-AgendaReconciled
-CitaWithdrawnFromAgenda
-CitaRestored
+AgendaReconciled (deferred para Agenda Preparation T-03)
+CitaWithdrawnFromAgenda (deferred para Agenda Preparation T-03)
+CitaRestored (deferred para Agenda Preparation T-03)
 LateAppointmentDetected
 ExpedienteDispatched
 CustodyAccepted
@@ -37,9 +37,10 @@ ExpedienteDeclaredLost
 
 AuditEvent no es sinónimo de DomainEvent.
 
-Agenda Preparation no emite evento por cada fila/métrica/incidencia. AgendaImported y
-AgendaReconciled llevan conteos sin C3; retirada/restauración preservan FOLIO y no
-significan cancelación clínica.
+Agenda Preparation no emite evento por cada fila/métrica/incidencia. AGD-AP-007 difiere
+explícitamente `AgendaReconciled`, `CitaWithdrawnFromAgenda` y `CitaRestored`: T-03 no los
+implementa ni emite hasta aprobar payload y temporalidad. Retirada/restauración preservan
+FOLIO y no significan cancelación clínica.
 
 ## Notas (2026-08-14)
 

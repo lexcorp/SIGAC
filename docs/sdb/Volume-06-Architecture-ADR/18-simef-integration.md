@@ -50,3 +50,10 @@ posición física. Parsing y normalización son responsabilidades distintas.
 Application posee queries tenant-scoped para historial cursor-based de importaciones y
 `AgendaDayReadModel`. HTTP, encoding del cursor y persistencia no escapan a esos
 contratos. Controllers no componen el dashboard accediendo a repositories directamente.
+
+## Agenda Domain boundary T-03
+
+AGD-AP-001..009 mantiene tenant fuera del Aggregate: Application resuelve TenantContext y
+Repository/UoW seleccionan su ámbito; Agenda conserva sólo AgendaFecha y Citas. Domain no
+importa Archive Operations: `ExpedienteReferencia` es opaca/nullable. Reconciliación no
+recibe parser rows, metadata, raw ni tipos de infraestructura.

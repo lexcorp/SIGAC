@@ -43,6 +43,11 @@ INV-AP-010 Datos excluidos por minimización no aparecen en persistencia/read mo
 INV-AP-011 Reconciliación nunca cruza tenants.
 INV-AP-012 Turno, Consultorio y Destino no se derivan ni se incorporan en esta spec.
 
+AGD-AP-001..009 concreta estas invariantes sin cambiar su namespace: Agenda representa
+AgendaFecha y vive en un tenant boundary externo a Domain; creación/reconciliación
+validan atómicamente FOLIO único y fecha compatible; retirada conserva la Entity y
+reaparición reactiva la misma identidad.
+
 INV-IMP-AP-001 ImportacionAgenda recibe IDs e importedAt desde Application/UoW; Domain no genera identidad ni tiempo.
 INV-IMP-AP-002 RegistroImportadoAgenda recibe exactamente un RecordProcessingResult; una segunda asignación se rechaza.
 INV-IMP-AP-003 IDs de registro/incidencia no se agregan dos veces y toda incidencia referencia un registro existente con la misma posición lógica.

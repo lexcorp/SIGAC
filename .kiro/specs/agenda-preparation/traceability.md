@@ -1,6 +1,6 @@
 ---
 spec: agenda-preparation
-version: "0.1.5"
+version: "0.1.6"
 status: "Approved for Implementation"
 date: "2026-08-21"
 ---
@@ -45,6 +45,7 @@ La precedencia de fuentes es la de `knowledge/README.md`. Un procedimiento deriv
 | SRC-AP-024 | `docs/decisions/agenda-preparation/IMPORT-RESULT-TAXONOMY-DECISION.md` | Decisión APPROVED | Outcomes, resultados, incidencias, métricas, eventos y read models |
 | SRC-AP-025 | `docs/decisions/agenda-preparation/DOMAIN-VALUE-OBJECTS-DECISION.md` | Decisión APPROVED | Invariantes, igualdad, provenance y parser boundary de VOs T-01 |
 | SRC-AP-026 | `docs/decisions/agenda-preparation/IMPORTACION-AGENDA-DOMAIN-DECISION.md` | Decisión APPROVED | Contratos completos de Aggregate, registros, incidencias, métricas y lifecycle T-02 |
+| SRC-AP-027 | `docs/decisions/agenda-preparation/AGENDA-CITA-DOMAIN-DECISION.md` | Decisión APPROVED | Contratos completos de Agenda, Cita, reconciliación, errores y eventos diferidos T-03 |
 
 ## 3. Business-rule registry
 
@@ -81,6 +82,9 @@ La precedencia de fuentes es la de `knowledge/README.md`. Un procedimiento deriv
 | BR-AP-029 | Original e interpretación pertenecen a RegistroImportadoAgenda; parsing queda en Adapter. | SRC-AP-025 |
 | BR-AP-030 | Cada VO T-01 rechaza inválidos con su único DomainError.code aprobado. | SRC-AP-025, VO-AP-009 |
 | BR-AP-031 | ImportacionAgenda se construye con IDs/instante externos, finaliza una vez y deriva métricas sin metadata del artefacto. | SRC-AP-026 |
+| BR-AP-032 | Agenda contiene fecha/Citas pero tenant delimita Repository/UoW; no existe AgendaId ni tenant en Domain. | SRC-AP-027 |
+| BR-AP-033 | Reconciliación valida atómicamente fecha/FOLIO y distingue added/updated/unchanged/restored/withdrawn. | SRC-AP-027 |
+| BR-AP-034 | Cita usa lifecycle ACTIVA/RETIRADA_DE_AGENDA, conserva identidad/historia lógica y no guarda timestamps. | SRC-AP-027 |
 
 ## 4. Matriz end-to-end
 
@@ -105,6 +109,7 @@ La precedencia de fuentes es la de `knowledge/README.md`. Un procedimiento deriv
 | TR-AP-017 | SRC-AP-025 | BR-AP-028/029 | REQ-AP-004..008; INV-AP-001/002/006/008 | design §3.4/3.6/10 | T-01 | TEST-AP-VO-001..015 |
 | TR-AP-018 | SRC-AP-025 | BR-AP-030 | requirements §5; design §3.6 | T-01 | TEST-AP-VO-ERROR-001..005 |
 | TR-AP-019 | SRC-AP-026 | BR-AP-009/023/031 | REQ-AP-001/008/011/014/018; INV-AP-003; INV-IMP-AP-001..006 | design §3.1/3.4/4 | T-02 | TEST-AP-AGG-001..012 |
+| TR-AP-020 | SRC-AP-027 | BR-AP-002/003/007/008/032..034 | REQ-AP-004/005/009/010/012; INV-AP-001..005 | design §3.2/3.3/4..6 | T-03 | TEST-AP-RECON-001..010; TEST-AP-DOM-001..008 |
 
 Namespaces: `INV-AP-001..012` son invariantes globales canónicas del slice;
 `INV-IMP-AP-001..006` son invariantes verificables de `ImportacionAgenda` derivadas de

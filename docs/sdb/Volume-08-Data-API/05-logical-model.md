@@ -26,5 +26,7 @@ Entidades principales:
 - Servicio
 - Consultorio
 - AgendaImport
+- Agenda (identidad lógica tenant database + AgendaFecha; sin AgendaId Domain)
+- Cita (FOLIO dentro de Agenda; lifecycle ACTIVA/RETIRADA_DE_AGENDA)
 - AuditRecord
 - OutboxEvent

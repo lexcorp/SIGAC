@@ -1,10 +1,10 @@
 ---
 spec: agenda-preparation
-version: "0.1.5"
+version: "0.1.6"
 status: "Approved for Implementation"
 date: "2026-08-21"
 requires:
-  - "requirements.md v0.1.5"
+  - "requirements.md v0.1.6"
 bounded_context: "Agenda / Appointment Preparation"
 open_questions_blocking: []
 ---
@@ -77,18 +77,21 @@ Representa la Agenda vigente identificada por tenant + fecha. Es responsable de 
 
 La coordinación atómica entre `ImportacionAgenda` y `Agenda` pertenece a Application/UnitOfWork tenant-scoped; no se diseña SQL en esta versión.
 
+No contiene AgendaId ni tenant: `Agenda.create({fecha, citasIniciales?})` recibe la fecha y
+puede nacer vacía; TenantContext delimita Repository/UnitOfWork. La creación valida
+atómicamente FOLIO único y fecha compatible. `rehydrate` se difiere a persistencia.
+
 ### 3.3 Entity `Cita`
 
-Identidad: FOLIO dentro del tenant. Atributos funcionales:
+Identidad: FOLIO dentro de la Agenda tenant-scoped. Shape Domain exacta:
 
-- nombre original del derechohabiente;
-- referencia de Expediente original y resolución opcional;
-- tipo de derechohabiente;
-- indicador primera vez/subsecuente;
-- fecha y hora;
-- `MedicoReferencia`;
-- `ServicioEspecialidad`;
-- vigencia en la preparación y evidencia de reconciliación.
+- `folio`, `agendaFecha`, `hora`;
+- `expedienteReference: ExpedienteReferencia | null`;
+- `nombrePaciente`, `tipoDerechohabiente`;
+- `tipoConsulta: FIRST_TIME | SUBSEQUENT`;
+- `medico: MedicoReferencia`;
+- `servicioEspecialidad: ServicioEspecialidad`;
+- `lifecycle: ACTIVA | RETIRADA_DE_AGENDA`.
 
 `RETIRADA_DE_AGENDA` expresa ausencia de la preparación vigente, no estado clínico.
 
@@ -106,7 +109,9 @@ Entidad hija o Value Object identificado dentro de `ImportacionAgenda`; la decis
 - `FolioCita`: string requerido, trim exterior e igualdad exacta.
 - `NumeroEmpleado`: string requerido, trim exterior e igualdad exacta; preserva ceros.
 - `ServicioEspecialidad` (`codigo`, `nombre`): ambos requeridos; identidad por código.
-- `MedicoReferencia` (`numeroEmpleado`, `nombreOriginal`, resolución).
+- `HoraCita`: string canónico estricto `HH:mm`, 24 horas, sin segundos/zona/Date.
+- `MedicoReferencia` (`numeroEmpleado`, `nombre`): identidad por número; nombre descriptivo.
+- `ExpedienteReferencia`: string opaco, nullable en Cita y sin dependencia cross-context.
 - `PosicionRegistroOrigen`: ordinal lógico entero positivo base 1.
 - `FingerprintLayout`.
 - `ResultadoRegistroAgenda`.
@@ -117,8 +122,8 @@ Los VOs no duplican original/normalized. `RegistroImportadoAgenda` será propiet
 `originalValues` e `interpretedValues`. El parser traduce representaciones SIMEF; Domain
 no conoce formato externo. Véase `DOMAIN-VALUE-OBJECTS-DECISION.md`.
 
-Errores de construcción usan el `DomainError` canónico y exclusivamente los cinco codes
-de VO-AP-009. Los messages no forman parte del contrato HTTP.
+Los VOs T-01 usan exclusivamente los cinco codes de VO-AP-009. Los contratos T-03 usan
+los ocho códigos cerrados de AGD-AP-008. Los messages no forman parte del contrato HTTP.
 
 ## 4. Lifecycle conceptual
 
@@ -145,6 +150,10 @@ FOLIO retirado reaparece -----> vigente (misma identidad)
 
 No existe transición automática a `CANCELADA`.
 
+Los estados canónicos son exactamente `ACTIVA` y `RETIRADA_DE_AGENDA`. Retirar conserva
+la Entity, FOLIO y último contenido funcional; restaurar actualiza/reactiva la misma
+identidad. No se guardan timestamps en Cita ni se introduce Event Sourcing/history table.
+
 ## 5. Commands y Domain Events
 
 | Tipo | Nombre conceptual | Nota |
@@ -153,12 +162,13 @@ No existe transición automática a `CANCELADA`.
 | Command | RegistrarResultadoImportado | Asigna exactamente un resultado a la fila. |
 | Command | ReconciliarAgenda | Aplica comparación por FOLIO sobre Agenda. |
 | Event | `AgendaImported` | Primera Agenda confirmada; sin contenido personal. |
-| Event | `AgendaReconciled` | Reconciliación confirmada; conteos agregados. |
-| Event | `CitaWithdrawnFromAgenda` | Semántica operacional, no clínica. |
-| Event | `CitaRestored` | Misma identidad FOLIO. |
+| Event | `AgendaReconciled` | DEFERRED para T-03; payload/temporalidad requieren decisión posterior. |
+| Event | `CitaWithdrawnFromAgenda` | DEFERRED para T-03. |
+| Event | `CitaRestored` | DEFERRED para T-03. |
 
-No se emite evento por fila, métrica, incidencia, ADD o UPDATE. El rechazo estructural
-no produce evento Domain. No se introduce broker ni Event Sourcing.
+T-03 no emite Domain Events. No se emite evento por fila, métrica, incidencia, ADD o
+UPDATE; el rechazo estructural tampoco produce evento. Una futura decisión temporal debe
+respetar DOM-EVENT-001. No se introduce broker ni Event Sourcing.
 
 ## 6. Reconciliation model
 
@@ -172,6 +182,30 @@ previousByFolio + incomingByFolio
 ```
 
 Duplicados incompatibles dentro del snapshot no se eligen arbitrariamente. Los campos comparables/mutables son los aprobados en REQ-AP-012, excepto FOLIO; fecha debe ser coherente con la Agenda tenant+fecha.
+
+Firma cerrada:
+
+```ts
+Agenda.reconcile({ incoming: readonly CitaSnapshot[] }): AgendaReconciliationResult;
+
+interface AgendaReconciliationResult {
+  readonly added: readonly FolioCita[];
+  readonly updated: readonly FolioCita[];
+  readonly unchanged: readonly FolioCita[];
+  readonly restored: readonly FolioCita[];
+  readonly withdrawn: readonly FolioCita[];
+}
+```
+
+Antes de mutar se validan todos los snapshots, FOLIO único y fecha compatible. Cualquier
+fallo rechaza la operación completa. Snapshot vacío retira todas las Citas activas. Se
+comparan hora, referencia de Expediente, nombre, tipo de derechohabiente/consulta,
+número+nombre de médico y código+nombre de Servicio. Lifecycle/raw/source/metadata no se
+comparan; restore se clasifica separadamente de update.
+
+El Aggregate no define sorting de presentación. Los futuros read models podrán ordenar
+por hora o nombre sin depender del orden interno de Agenda; T-03 no implementa sorting ni
+impresión.
 
 ## 7. Ports conceptuales
 
@@ -399,7 +433,9 @@ No se definen tablas, columnas, índices, JSONB ni migrations en esta draft. T-0
 ## 16. SDB propagation required
 
 AUTH-AP-001..003, RAW-AP-001..012, API-AP-001..014 y RESULT-AP-001..014 fueron
-propagados. `AP-OQ-005/006` permanecen abiertos y no bloquean el alcance inicial.
+propagados. AGD-AP-001..009 formaliza Agenda/Cita y se propagó a los volúmenes Domain,
+workflow, architecture, data, testing y readiness afectados. `AP-OQ-005/006` permanecen
+abiertos y no bloquean el alcance inicial.
 
 ## 17. Readiness
 

@@ -7,7 +7,7 @@ status: Draft
 # DDD-022 — Domain Event Flow
 ```mermaid
 flowchart TD
- A[AgendaImported / AgendaReconciled] --> B[RequestCreated]
+ A[AgendaImported / AgendaReconciled — integración futura] --> B[RequestCreated]
  B --> C[RequestAssigned]
  C --> D[SearchStarted]
  D --> E{Localizado?}
@@ -21,3 +21,6 @@ flowchart TD
  L --> M[ExpedienteRearchived]
  G --> N[IncidentOpened cuando aplica]
 ```
+
+AGD-AP-007 difiere `AgendaReconciled` para T-03. Este diagrama conserva únicamente una
+integración conceptual futura y no autoriza emisión ni creación de Solicitud en el slice.
