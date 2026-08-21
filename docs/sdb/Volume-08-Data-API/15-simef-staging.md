@@ -46,3 +46,8 @@ Modelo histórico candidato superseded parcialmente por RAW-AP-001..012; no es D
 Staging dura sólo lo necesario, con máximo configurable y nunca indefinidamente. La
 evidencia durable usa valores allow-listed, interpretación/resolución, fingerprint/layout
 y conteos. El schema físico permanece pendiente.
+
+En el modelo conceptual IMP-AP-001..014, fingerprint/layout técnico permanece en
+`ImportArtifactMetadata` fuera de Domain. `ImportacionAgenda` conserva sólo id, fecha de
+Agenda, importedAt, outcome, registros/incidencias minimizados y métricas derivadas.
+Esta precisión no decide DDL, nullability física ni migrations.

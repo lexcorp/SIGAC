@@ -76,3 +76,11 @@ Probar invariantes, value objects, state transitions y policies.
 - Ningún VO ejecuta parsing SIMEF ni almacena simultáneamente original/normalized.
 - Cada rechazo verifica el DomainError.code exacto de VO-AP-009; no se esperan errores
   nativos, códigos genéricos ni messages como contrato.
+
+## Agenda Preparation — Aggregate T-02
+
+IMP-AP-001..014 exige pruebas de creación/IDs, resultado único y rechazo de segunda
+finalización, registros múltiples, incidencias 0..N, duplicados por identidad, métricas
+derivadas/ecuationes, retiradas separadas, outcome final único, inmutabilidad posterior y
+ausencia de raw/fingerprint/filename. Layout fail-closed se prueba en Application/parser,
+antes de construir el Aggregate, no en los unit tests puros de T-02.

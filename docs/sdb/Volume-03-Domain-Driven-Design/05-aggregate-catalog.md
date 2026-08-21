@@ -11,5 +11,11 @@ Aggregate Roots candidatos:
 3. Prestamo
 4. JornadaPreparacion
 5. Incidencia
+6. ImportacionAgenda (Agenda Preparation; accountability de ingestión)
+7. Agenda (Agenda Preparation; estado lógico tenant+fecha)
 
 No roots por defecto: Movimiento, Ubicación, Custodia, PacienteReferencia, Servicio, Consultorio.
+
+`ImportacionAgenda` sigue IMP-AP-001..014: IDs/instante provistos externamente,
+`BUILDING → FINALIZED`, registros con resultado único, incidencias 0..N y métricas
+derivadas. No contiene fingerprint, filename, raw ni `ImportArtifactMetadata`.

@@ -1,11 +1,11 @@
 ---
 spec: agenda-preparation
-version: "0.1.3"
+version: "0.1.4"
 status: "Approved for Implementation"
-date: "2026-08-20"
+date: "2026-08-21"
 requires:
-  - "requirements.md v0.1.3"
-  - "design.md v0.1.3"
+  - "requirements.md v0.1.4"
+  - "design.md v0.1.4"
 ---
 
 # Agenda Preparation — Tasks
@@ -94,7 +94,11 @@ originalValues en los VOs; y código `DomainError` exacto de VO-AP-009 para cada
 
 **Objetivo:** implementar el Aggregate root de ingestión, sus registros/resultados/incidencias y conteos. No implementar parser ni persistencia.
 
-**Tests:** exactamente un outcome por fila, ecuación de métricas, rechazo estructural fail-closed, idempotencia interna y ausencia de campos excluidos.
+**Tests:** creación e IDs; exactamente un resultado por fila y segunda finalización
+rechazada; múltiples registros e incidencias 0..N; métricas derivadas y ecuaciones;
+`withdrawnFromAgenda` separado; outcome final único; idempotencia interna; ausencia de
+raw/fingerprint/filename y campos excluidos. El layout fail-closed ocurre antes de crear
+el Aggregate y se cubre en Application/parser, no en los unit tests de T-02.
 
 ### T-03 — Aggregate `Agenda` y reconciliación de `Cita`
 

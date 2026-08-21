@@ -24,6 +24,10 @@ eliminan al concluir/abortar. Domain conserva únicamente valores originales all
 + interpretación + resolución. `ImportArtifactMetadata` pertenece al ingestion/Application
 boundary; su fingerprint no identifica Agenda ni ImportacionAgenda.
 
+IMP-AP-003 cierra el ownership: `ImportArtifactMetadata`, fingerprint, filename temporal,
+staging y detalles de ingestion no pertenecen al Aggregate Domain. Application/UoW
+proporciona `ImportacionAgendaId` e `importedAt`; Domain no genera tiempo ni IDs.
+
 API-AP-001..014 adopta streaming síncrono para la escala inicial. El Adapter implementa
 `AgendaArtifactStream`; Application no conoce multipart/filesystem. Una UoW tenant-scoped
 confirma importación/reconciliación/resultados/métricas/audit. Worker queda diferido.

@@ -7,6 +7,12 @@ amended: "2026-08-14 — DEC-EW-STATE-001: EstadoOperativo corregido"
 ---
 # DDD-012 — State Machines
 
+## ImportacionAgenda (IMP-AP-001..014)
+
+`BUILDING → FINALIZED` es la única transición interna de T-02. Outcome y métricas son
+nulos durante construcción y se fijan una vez en `finalize(outcome)`. No hay reapertura.
+El layout incompatible se rechaza antes de construir el Aggregate y no es un estado.
+
 ## EstadoOperativo del Expediente (DEC-EW-STATE-001 ACCEPTED)
 
 ```mermaid

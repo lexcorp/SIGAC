@@ -24,3 +24,7 @@ POL-ES-009 AgendaReconciled con alta tardía → crear nueva demanda y alertar p
 RESULT-AP-001..014: cada fila obtiene un RecordProcessingResult. Incidencias bloquean
 sólo su fila; layout incompatible rechaza globalmente. FOLIO duplicado marca todas sus
 filas y no elige ganadora.
+
+IMP-AP-001..014 precisa que cada registro se crea pendiente y se finaliza exactamente
+una vez. La importación sólo finaliza cuando todos tienen resultado; métricas se derivan
+una vez y no reciben aportaciones repetidas. `withdrawnFromAgenda` no crea fila sintética.

@@ -30,6 +30,12 @@ INV-LOAN-003 Salida con `VALE_ARCHIVO_SM_1_14` tiene plazo máximo de 24 horas;
 INV-REQ-001 Solicitud tiene origen/finalidad.
 INV-REQ-002 No pasa a Preparada sin localización o excepción formal.
 INV-PREP-001 Reimportación equivalente no duplica ítems.
+INV-AP-001 ImportacionAgenda recibe IDs e importedAt desde Application/UoW; Domain no genera identidad ni tiempo.
+INV-AP-002 RegistroImportadoAgenda recibe exactamente un RecordProcessingResult; una segunda asignación se rechaza.
+INV-AP-003 IDs de registro/incidencia no se agregan dos veces y toda incidencia referencia un registro existente con la misma posición lógica.
+INV-AP-004 ImportacionAgenda finalizada no admite nuevas mutaciones ni otra finalización.
+INV-AP-005 Métricas se derivan; cumplen RESULT-AP-009 y withdrawnFromAgenda no cuenta como registro recibido.
+INV-AP-006 ImportArtifactMetadata, fingerprint, filename y raw quedan fuera de Domain.
 INV-INC-001 Resolución conserva actor, fecha y causa.
 INV-INC-002 NO_LOCALIZADO no implica automáticamente EXTRAVIADO; la declaración de
   EXTRAVIADO requiere proceso formal con política/autorización.

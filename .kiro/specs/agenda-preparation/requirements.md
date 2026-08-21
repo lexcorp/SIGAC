@@ -1,8 +1,8 @@
 ---
 spec: agenda-preparation
-version: "0.1.3"
+version: "0.1.4"
 status: "Approved for Implementation"
-date: "2026-08-20"
+date: "2026-08-21"
 source_of_truth:
   - "knowledge/README.md — precedence and traceability"
   - "knowledge/01-normativa/guias/Guia de organización y manejo del expediente clinico.pdf"
@@ -271,6 +271,18 @@ futuro `RegistroImportadoAgenda`; parsing específico de SIMEF pertenece al Adap
 El rechazo usa `DomainError` con exactamente: `AGENDA_FECHA_INVALID`,
 `FOLIO_CITA_INVALID`, `NUMERO_EMPLEADO_INVALID`,
 `SERVICIO_ESPECIALIDAD_INVALID` o `POSICION_REGISTRO_ORIGEN_INVALID`, según el VO.
+
+### Contratos Domain de `ImportacionAgenda` para T-02
+
+`ImportacionAgenda` usa IDs opacos provistos externamente, recibe `importedAt` desde
+Application/UoW y atraviesa únicamente `BUILDING → FINALIZED`. Registros se crean sin
+resultado y se finalizan exactamente una vez; una fila admite 0..N incidencias con ID
+propio. Métricas se derivan de registros más `withdrawnFromAgenda`, nunca se reciben del
+exterior. El Aggregate no contiene `ImportArtifactMetadata`, fingerprint, filename, raw
+ni campos excluidos. El contrato completo y errores cerrados son IMP-AP-001..014.
+
+El rechazo de layout sucede antes de crear el Aggregate y su cobertura corresponde a
+Application/parser, no a T-02 Domain.
 
 ## 6. Autorización conceptual
 

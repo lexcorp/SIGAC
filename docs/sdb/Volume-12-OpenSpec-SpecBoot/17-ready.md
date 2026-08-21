@@ -105,3 +105,10 @@ normalización, igualdad o provenance. `implementation_ready` continúa true.
 v0.1.3 aprueba VO-AP-009/010: los cinco DomainError codes quedan cerrados sin mapping
 HTTP ni cambios a ApplicationError/AuditResult/resultados. No queda gap material conocido
 para implementar T-01; la implementación no inicia en esta decisión.
+
+v0.1.4 aprueba IMP-AP-001..014 mediante
+`docs/decisions/agenda-preparation/IMPORTACION-AGENDA-DOMAIN-DECISION.md`: IDs externos,
+ownership temporal, lifecycle, registros/incidencias, evidencia allow-listed, métricas
+derivadas, errores e idempotencia interna quedan cerrados. `ImportArtifactMetadata` queda
+fuera de Domain y layout fail-closed se difiere a Application/parser. T-02 queda ready;
+`implementation_ready` continúa true.

@@ -1,10 +1,10 @@
 ---
 spec: agenda-preparation
-version: "0.1.3"
+version: "0.1.4"
 status: "Approved for Implementation"
-date: "2026-08-20"
+date: "2026-08-21"
 requires:
-  - "requirements.md v0.1.3"
+  - "requirements.md v0.1.4"
 bounded_context: "Agenda / Appointment Preparation"
 open_questions_blocking: []
 ---
@@ -51,15 +51,19 @@ SIMEF es upstream. Agenda Preparation traduce el formato externo. Archive Operat
 Recomendado como Aggregate root de la ingestión. Representa una ejecución concreta y garantiza:
 
 - tenant e identidad técnica de importación;
-- metadata técnica sanitizada del artefacto; no conserva referencia descargable al binario;
 - fecha declarada/interpretada;
-- fingerprint técnico;
 - registros recibidos y su posición de origen;
 - resultado explícito por registro;
 - conteos consistentes;
 - incidencias derivadas de estructura, contenido o resolución.
 
-No es la Agenda lógica ni usa checksum como identidad de negocio.
+No es la Agenda lógica. `ImportArtifactMetadata`, fingerprint, filename, staging y raw
+pertenecen a Application/ingestion/Infrastructure y quedan fuera del Aggregate conforme
+IMP-AP-003 y RAW-AP-012.
+
+Su contrato exacto es IMP-AP-001..014: `create({id, agendaFecha, importedAt})`, fase
+`BUILDING` con outcome/métricas nulos, registros sin resultado inicial, incidencias 0..N,
+métricas derivadas y `finalize(outcome)` único hacia `FINALIZED`. Rehydration se difiere.
 
 ### 3.2 Aggregate root `Agenda`
 
@@ -121,13 +125,13 @@ de VO-AP-009. Los messages no forman parte del contrato HTTP.
 ### ImportacionAgenda
 
 ```text
-recibida -> layout validado -> interpretada -> reconciliada -> finalizada
-                    \-> rechazada estructuralmente
+BUILDING -> FINALIZED
 ```
 
-Este flujo describe fases de procesamiento, no un enum Domain. El resultado confirmado
-es `IMPORTED | ALREADY_IMPORTED | RECONCILED`. Reprocesamiento y reapertura detallados
-permanecen fuera del alcance inicial.
+No es un enum persistente. El resultado confirmado es
+`IMPORTED | ALREADY_IMPORTED | RECONCILED`; se proporciona a `finalize` y no se deriva.
+Layout rejection sucede antes de crear el Aggregate. No hay reapertura ni mutaciones tras
+finalizar.
 
 ### Cita en Agenda vigente
 
