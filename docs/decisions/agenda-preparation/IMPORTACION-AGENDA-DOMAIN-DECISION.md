@@ -283,3 +283,20 @@ Su test pertenece a Application/parser, no a los unit tests puros de T-02.
 T-02 implementará únicamente estos contratos Domain. No implementará rehydration,
 parser, persistence, events, Application, API o UI. El bloqueo documental queda resuelto
 y no se introducen cambios a las taxonomías RESULT-AP-001..014.
+
+## Trazabilidad de invariantes verificables
+
+Los contratos `IMP-AP-001..014` permanecen como decisiones Domain. Sus invariantes
+verificables usan un namespace distinto para no colisionar con las invariantes globales
+`INV-AP-001..012` de la spec:
+
+| Invariante | Contrato principal | Semántica |
+|---|---|---|
+| `INV-IMP-AP-001` | IMP-AP-001/002 | IDs e importedAt son externos a Domain |
+| `INV-IMP-AP-002` | IMP-AP-007/009 | Resultado único por registro |
+| `INV-IMP-AP-003` | IMP-AP-008/009/011 | Deduplicación interna de registros e incidencias |
+| `INV-IMP-AP-004` | IMP-AP-004/009 | Finalización única e inmutable |
+| `INV-IMP-AP-005` | IMP-AP-010 | Métricas derivadas y ecuaciones canónicas |
+| `INV-IMP-AP-006` | IMP-AP-003 | Metadata técnica fuera de Domain |
+
+`INV-IMP-AP-*` no renombra ni sustituye `IMP-AP-*`.

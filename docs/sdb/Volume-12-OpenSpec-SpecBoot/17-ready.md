@@ -112,3 +112,9 @@ ownership temporal, lifecycle, registros/incidencias, evidencia allow-listed, m�
 derivadas, errores e idempotencia interna quedan cerrados. `ImportArtifactMetadata` queda
 fuera de Domain y layout fail-closed se difiere a Application/parser. T-02 queda ready;
 `implementation_ready` continúa true.
+
+v0.1.5 corrige exclusivamente namespaces de invariantes: `INV-AP-001..012` conserva las
+invariantes globales canónicas de la spec; `INV-IMP-AP-001..006` identifica las
+invariantes verificables de ImportacionAgenda/T-02 y traza hacia `IMP-AP-001..014` sin
+renombrar esas decisiones. La referencia de T-03 a `INV-AP-001..005` vuelve a ser
+inequívoca; `implementation_ready` continúa true.

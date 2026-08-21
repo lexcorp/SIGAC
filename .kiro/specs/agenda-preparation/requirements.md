@@ -1,6 +1,6 @@
 ---
 spec: agenda-preparation
-version: "0.1.4"
+version: "0.1.5"
 status: "Approved for Implementation"
 date: "2026-08-21"
 source_of_truth:

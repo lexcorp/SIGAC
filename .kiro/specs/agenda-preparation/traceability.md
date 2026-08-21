@@ -1,6 +1,6 @@
 ---
 spec: agenda-preparation
-version: "0.1.4"
+version: "0.1.5"
 status: "Approved for Implementation"
 date: "2026-08-21"
 ---
@@ -104,7 +104,11 @@ La precedencia de fuentes es la de `knowledge/README.md`. Un procedimiento deriv
 | TR-AP-016 | Contratos UX v0.1.1 | BR-AP-026/027 | REQ-AP-019/020; AC-AP-013/014 | design §8/9 | T-07/08, T-10, T-13..19 | TEST-AP-HISTORY-001..005; TEST-AP-DAY-001..005 |
 | TR-AP-017 | SRC-AP-025 | BR-AP-028/029 | REQ-AP-004..008; INV-AP-001/002/006/008 | design §3.4/3.6/10 | T-01 | TEST-AP-VO-001..015 |
 | TR-AP-018 | SRC-AP-025 | BR-AP-030 | requirements §5; design §3.6 | T-01 | TEST-AP-VO-ERROR-001..005 |
-| TR-AP-019 | SRC-AP-026 | BR-AP-009/023/031 | REQ-AP-001/008/011/014/018; INV-AP-003 | design §3.1/3.4/4 | T-02 | TEST-AP-AGG-001..012 |
+| TR-AP-019 | SRC-AP-026 | BR-AP-009/023/031 | REQ-AP-001/008/011/014/018; INV-AP-003; INV-IMP-AP-001..006 | design §3.1/3.4/4 | T-02 | TEST-AP-AGG-001..012 |
+
+Namespaces: `INV-AP-001..012` son invariantes globales canónicas del slice;
+`INV-IMP-AP-001..006` son invariantes verificables de `ImportacionAgenda` derivadas de
+las decisiones `IMP-AP-001..014`. Ningún namespace sustituye a otro.
 
 ## 5. Acceptance criteria → tests
 

@@ -1,10 +1,10 @@
 ---
 spec: agenda-preparation
-version: "0.1.4"
+version: "0.1.5"
 status: "Approved for Implementation"
 date: "2026-08-21"
 requires:
-  - "requirements.md v0.1.4"
+  - "requirements.md v0.1.5"
 bounded_context: "Agenda / Appointment Preparation"
 open_questions_blocking: []
 ---

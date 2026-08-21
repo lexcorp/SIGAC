@@ -1,11 +1,11 @@
 ---
 spec: agenda-preparation
-version: "0.1.4"
+version: "0.1.5"
 status: "Approved for Implementation"
 date: "2026-08-21"
 requires:
-  - "requirements.md v0.1.4"
-  - "design.md v0.1.4"
+  - "requirements.md v0.1.5"
+  - "design.md v0.1.5"
 ---
 
 # Agenda Preparation — Tasks
@@ -90,7 +90,8 @@ originalValues en los VOs; y código `DomainError` exacto de VO-AP-009 para cada
 
 **Dependencias:** T-01.
 
-**Fuentes:** REQ-AP-001..003, REQ-AP-008, REQ-AP-011/014/018.
+**Fuentes:** REQ-AP-001..003, REQ-AP-008, REQ-AP-011/014/018,
+INV-IMP-AP-001..006.
 
 **Objetivo:** implementar el Aggregate root de ingestión, sus registros/resultados/incidencias y conteos. No implementar parser ni persistencia.
 
