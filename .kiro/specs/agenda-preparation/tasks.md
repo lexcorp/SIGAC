@@ -1,11 +1,11 @@
 ---
 spec: agenda-preparation
-version: "0.1.0"
+version: "0.1.1"
 status: "Approved for Implementation"
 date: "2026-08-20"
 requires:
-  - "requirements.md v0.1.0"
-  - "design.md v0.1.0"
+  - "requirements.md v0.1.1"
+  - "design.md v0.1.1"
 ---
 
 # Agenda Preparation — Tasks
@@ -136,9 +136,12 @@ RESULT-AP-001..014, y que el SDB esté sincronizado antes de implementar Domain.
 
 **Fuentes:** REQ-AP-012/013/015/017, design.md §8/9.
 
-**Objetivo:** implementar resumen, resultados por registro, lista vigente de preparación e incidencias pendientes, sin aggregates externos completos.
+**Objetivo:** implementar resumen del día, historial cursor-based de importaciones,
+resultados por registro, lista vigente de preparación e incidencias, sin aggregates
+externos completos.
 
-**Tests:** campos exactos, empty states, retirada excluida, minimización y aislamiento tenant.
+**Tests:** campos exactos, historial empty/filtro/orden/cursor, conteos vigentes del día,
+retirada excluida, minimización y aislamiento tenant.
 
 ### T-08 — Verification suite de Application
 
@@ -194,7 +197,7 @@ ejecutar macros ni incorporar hojas históricas fuera de Agenda.
 
 **Fuentes:** contrato HTTP, permissions y audit aprobados en T-00.
 
-**Objetivo:** implementar API-AP-001..014: multipart streaming, ImportAttemptId,
+**Objetivo:** implementar API-AP-001..014 y los contratos v0.1.1: multipart streaming, ImportAttemptId,
 Idempotency-Key, límites/timeouts, ejecución síncrona, responses/queries y RFC7807.
 Controllers no acceden a Repositories, parser, filesystem, database o TenantRouter.
 
@@ -204,8 +207,9 @@ Controllers no acceden a Repositories, parser, filesystem, database o TenantRout
 
 **Dependencias:** T-13.
 
-**Objetivo:** publicar endpoints, multipart, headers, responses, paginación y errors de
-API-AP-001..014, sin raw ni outcomes de fila no aprobados.
+**Objetivo:** publicar endpoints, incluido historial GET `/agenda-imports` y
+`AgendaDayReadModel`, multipart, headers, responses, paginación y errors de
+API-AP-001..014/v0.1.1, sin raw ni outcomes no aprobados.
 
 **Gate:** OpenAPI validation y contract tests.
 

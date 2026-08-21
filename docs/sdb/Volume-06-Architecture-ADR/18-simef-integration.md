@@ -36,3 +36,9 @@ If authorized, connector/API integration reuses the same normalized contract.
 
 ## Rule
 SIMEF column names and statuses never become domain primitives directly.
+
+## Read boundaries v0.1.1
+
+Application posee queries tenant-scoped para historial cursor-based de importaciones y
+`AgendaDayReadModel`. HTTP, encoding del cursor y persistencia no escapan a esos
+contratos. Controllers no componen el dashboard accediendo a repositories directamente.

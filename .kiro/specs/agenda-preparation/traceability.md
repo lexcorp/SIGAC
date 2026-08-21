@@ -1,6 +1,6 @@
 ---
 spec: agenda-preparation
-version: "0.1.0"
+version: "0.1.1"
 status: "Approved for Implementation"
 date: "2026-08-20"
 ---
@@ -73,6 +73,8 @@ La precedencia de fuentes es la de `knowledge/README.md`. Un procedimiento deriv
 | BR-AP-023 | ImportOutcome, RecordProcessingResult, ImportIncident y ApplicationError son niveles separados y cerrados. | SRC-AP-024 |
 | BR-AP-024 | Todo FOLIO duplicado marca todas sus ocurrencias; no hay ganador ni reconciliación. | SRC-AP-024 |
 | BR-AP-025 | Retirada es efecto sobre una Cita previa, no resultado de fila ni cancelación clínica. | SRC-AP-024 |
+| BR-AP-026 | Historial de importaciones es tenant-scoped, cursor-based y minimizado. | Contrato UX aprobado v0.1.1 |
+| BR-AP-027 | Agenda del día resume exclusivamente el estado vigente con conteos definidos. | Contrato UX aprobado v0.1.1 |
 
 ## 4. Matriz end-to-end
 
@@ -93,6 +95,7 @@ La precedencia de fuentes es la de `knowledge/README.md`. Un procedimiento deriv
 | TR-AP-013 | SRC-AP-022 | BR-AP-019/020 | REQ-AP-008/015/017/018 | design §12/14 | T-00, T-02, T-06, T-09..12, T-16..19 | TEST-AP-RAW-001..008; TEST-AP-PRIV-001..004 |
 | TR-AP-014 | SRC-AP-023 | BR-AP-021/022 | requirements import contract | design §8/10/11 | T-00, T-05/06/08, T-10..14, T-16..19 | TEST-AP-API-001..014; TEST-AP-IDEMP-001..004; TEST-AP-UOW-001..003 |
 | TR-AP-015 | SRC-AP-024 | BR-AP-023..025 | REQ-AP-009..014; INV-AP-003..005 | design §4..6/9/11 | T-01..08, T-13..19 | TEST-AP-RESULT-001..008; TEST-AP-METRIC-001..004; TEST-AP-DUP-001..003 |
+| TR-AP-016 | Contratos UX v0.1.1 | BR-AP-026/027 | REQ-AP-019/020; AC-AP-013/014 | design §8/9 | T-07/08, T-10, T-13..19 | TEST-AP-HISTORY-001..005; TEST-AP-DAY-001..005 |
 
 ## 5. Acceptance criteria → tests
 
@@ -140,9 +143,9 @@ La precedencia de fuentes es la de `knowledge/README.md`. Un procedimiento deriv
 
 ## 8. Coverage/readiness
 
-- Requirements con cadena de trazabilidad: `18/18`.
+- Requirements con cadena de trazabilidad: `20/20`.
 - Invariantes con test futuro: `12/12` mediante TR-AP-001..011.
-- Acceptance criteria con test futuro: `12/12`.
+- Acceptance criteria con test futuro: `14/14`.
 - Gaps bloqueantes identificados: `0`.
 - Gaps no bloqueantes identificados: `2` (`AP-OQ-005..006`).
 - `requirements_ready: true`

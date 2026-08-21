@@ -66,7 +66,7 @@ v0.3.23 fija Audit `occurredAt DESC, auditId DESC`, cursor conceptual
 `occurredAt + auditId`, y GET `/api/v1/session` como fuente server-derived de
 permissions para frontend. Los dos bloqueos restantes de T-21A quedan cerrados.
 
-## Agenda Preparation v0.1.0
+## Agenda Preparation v0.1.1
 
 `AP-OQ-001` está RESOLVED mediante
 `docs/decisions/agenda-preparation/AUTHORIZATION-AUDIT-DECISION.md`: permissions,
@@ -91,3 +91,8 @@ queries, cursor y errors quedan definidos. `AP-OQ-004` continúa OPEN y
 `docs/decisions/agenda-preparation/IMPORT-RESULT-TAXONOMY-DECISION.md`. Con AP-OQ-001..004
 resueltos y AP-OQ-005/006 fuera del slice inicial, Agenda Preparation queda
 `Approved for Implementation`; `implementation_ready: true`.
+
+v0.1.1 resuelve UX-GAP-004/005 mediante `ListAgendaImports`, historial cursor-based y
+`AgendaDayReadModel`. Permanecen tres UX gaps no bloqueantes: preview previo de
+validación, filtros/búsqueda y retry técnico/Idempotency-Key. `implementation_ready`
+continúa true.

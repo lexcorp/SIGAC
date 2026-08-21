@@ -65,3 +65,12 @@ idéntico y reconciliado responden 201; layout rechazado responde 422 sin Import
 RESULT-AP-001..014 fija ImportOutcome `IMPORTED|ALREADY_IMPORTED|RECONCILED` y resultados
 `ADDED|UPDATED|UNCHANGED|RESTORED|PENDING_REVIEW|REJECTED|DUPLICATE_FOLIO`.
 Incidencias locales permiten confirmar 201; estructura incompatible rechaza globalmente.
+
+## Queries operacionales v0.1.1
+
+`ListAgendaImports` recibe fecha opcional, paginación cursor-based y RequestContext;
+requiere `AGENDA_VIEW`. Devuelve items minimizados ordenados por
+`importedAt DESC, importacionId DESC`; colección vacía es válida.
+
+`GetAgendaDay` requiere `AGENDA_VIEW` y devuelve el resumen vigente de tenant+fecha.
+Agenda ausente produce `AGENDA_NOT_FOUND`, no `null`.

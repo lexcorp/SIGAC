@@ -35,3 +35,8 @@ Agenda Preparation deberá probar multipart de un archivo, key requerida, Reques
 server-side, permission antes de lectura, límite streaming, inspección content/layout,
 201/Location/summary, replay idempotente, 400/401/403/409/413/415/422/500/504 y Problem
 Details sin datos SIMEF. OpenAPI no se modifica durante AP-OQ-003.
+
+Agenda Preparation v0.1.1 añade contract tests futuros para GET `/agenda-imports` con
+fecha opcional, limit requerido, cursor opaco, empty 200 y campos mínimos; y GET
+`/agendas/{date}` con `AgendaDayReadModel` exacto y `AGENDA_NOT_FOUND`/404. OpenAPI se
+actualiza únicamente en su task futura.

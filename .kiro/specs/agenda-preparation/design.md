@@ -1,10 +1,10 @@
 ---
 spec: agenda-preparation
-version: "0.1.0"
+version: "0.1.1"
 status: "Approved for Implementation"
 date: "2026-08-20"
 requires:
-  - "requirements.md v0.1.0"
+  - "requirements.md v0.1.1"
 bounded_context: "Agenda / Appointment Preparation"
 open_questions_blocking: []
 ---
@@ -193,6 +193,18 @@ interface ExpedienteReferenceQueryPort {
 interface AgendaPreparationUnitOfWork {
   execute<T>(tenant: TenantContext, work: (tx: AgendaPreparationTransaction) => Promise<T>): Promise<T>;
 }
+
+interface AgendaImportHistoryQueryPort {
+  findAll(
+    agendaDate: string | undefined,
+    pagination: { readonly cursor?: string; readonly limit: number },
+    tenant: TenantContext,
+  ): Promise<AgendaImportHistoryPage>;
+}
+
+interface AgendaDayQueryPort {
+  findByDate(fecha: AgendaFecha, tenant: TenantContext): Promise<AgendaDayReadModel | null>;
+}
 ```
 
 El fallback por nombre nunca elige entre N>1. `ExpedienteReferenceQueryPort` admite 0..N porque ExpedienteNumero no es único.
@@ -205,6 +217,7 @@ El fallback por nombre nunca elige entre N>1. `ExpedienteReferenceQueryPort` adm
 | `GetAgendaImportResult` | importacionId + context | resumen + resultados sanitizados |
 | `GetAgendaPreparationList` | fecha + context | lista inicial vigente |
 | `GetAgendaImportIncidents` | importacionId + context | incidencias pendientes |
+| `ListAgendaImports` | agendaDate opcional + pagination + context | `AgendaImportHistoryPage` |
 
 El contrato HTTP y la modalidad síncrona se definen en API-AP-001..014.
 
@@ -243,6 +256,55 @@ Los campos exactos de REQ-AP-012. No contiene Turno, Consultorio, Destino, Custo
 - categoría aprobada;
 - estado de resolución conceptual;
 - candidatos no sensibles cuando estén autorizados.
+
+### AgendaImportHistoryPage
+
+Cursor-based, orden `importedAt DESC, importacionId DESC`; cursor conceptual
+`importedAt + importacionId`, opaco para Application/API/UI. `items` contiene sólo
+importacionId, agendaDate, importedAt, outcome y métricas; `nextCursor` nullable. Sin
+total, hasMore, raw, filename, fingerprint, actorRef o datos personales.
+
+```ts
+interface ListAgendaImportsInput {
+  readonly agendaDate?: string;
+  readonly pagination: { readonly cursor?: string; readonly limit: number };
+  readonly context: RequestContext;
+}
+
+interface AgendaImportHistoryItem {
+  readonly importacionId: string;
+  readonly agendaDate: string;
+  readonly importedAt: Date;
+  readonly outcome: 'IMPORTED' | 'ALREADY_IMPORTED' | 'RECONCILED';
+  readonly metrics: AgendaImportMetrics;
+}
+
+interface AgendaImportHistoryPage {
+  readonly items: readonly AgendaImportHistoryItem[];
+  readonly nextCursor: string | null;
+}
+```
+
+### AgendaDayReadModel
+
+Contiene exactamente agendaDate, latestImportacionId, latestImportedAt, latestOutcome,
+activeAppointments, physicians, services e incidentCount. Los conteos se calculan sobre
+el estado vigente: Citas retiradas quedan fuera; médico se distingue por número de
+empleado y Servicio/Especialidad por el concepto operacional del bounded context. No se
+modela `openIncidents` porque no existe lifecycle de resolución inicial.
+
+```ts
+interface AgendaDayReadModel {
+  readonly agendaDate: string;
+  readonly latestImportacionId: string;
+  readonly latestImportedAt: Date;
+  readonly latestOutcome: 'IMPORTED' | 'ALREADY_IMPORTED' | 'RECONCILED';
+  readonly activeAppointments: number;
+  readonly physicians: number;
+  readonly services: number;
+  readonly incidentCount: number;
+}
+```
 
 ## 10. Layout validation boundary
 

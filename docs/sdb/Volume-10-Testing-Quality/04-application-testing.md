@@ -111,3 +111,8 @@ a auth, retries por key y queries cursor-based. No fija outcomes de fila AP-OQ-0
 RESULT-AP-001..014 supersede esa reserva: probar ImportOutcome separado, exactamente un
 resultado por fila, incidencias locales sin exception, exclusión de preparación,
 métricas aritméticas y rollback exclusivo de fallos globales.
+
+Agenda Preparation v0.1.1 añade pruebas de `ListAgendaImports`: permission antes del
+query, tenant propagation, fecha opcional, empty, orden/cursor determinista y campos
+minimizados. `GetAgendaDay` cubre not-found, exclusión de retiradas y conteos distintos
+de médico por employeeNumber y Servicio/Especialidad, además de incidentCount vigente.

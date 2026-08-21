@@ -10,14 +10,13 @@ api_contract: "REST/OpenAPI /api/v1"
 ---
 # APP-010 — Agenda / SIMEF Import
 
-Wizard:
-1 Upload
-2 Validate
-3 Review
-4 Reconcile
-5 Complete
+Wizard UI, no lifecycle Domain:
+1 Seleccionar
+2 Validar
+3 Procesar
+4 Resultado
 
-Display source file hash/metadata only to authorized technical/admin roles where useful.
+No se muestra hash, metadata técnica, raw o filename después de la selección.
 
 ## API-AP-001..014
 
@@ -31,3 +30,11 @@ no diseña ni implementa componentes.
 La futura UX presenta ImportOutcome separado de resultados/incidencias de fila. No
 inventa PARTIAL/FAILED, no trata incidencia como 4xx y no mezcla retirada con fila
 recibida. Esta propagación sólo define estados conceptuales.
+
+## Agenda del día e historial — v0.1.1
+
+Preparación de Agenda es el concepto visible; upload es mecanismo. El dashboard consume
+`AgendaDayReadModel` y no deriva conteos en cliente. Importaciones consume
+`ListAgendaImports`, filtro opcional por fecha, cursor opaco y “Cargar más”, sin
+total/page numbers. Empty history es válido. No muestra raw, filename, fingerprint,
+actorRef o datos personales.

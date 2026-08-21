@@ -1,6 +1,6 @@
 ---
 spec: agenda-preparation
-version: "0.1.0"
+version: "0.1.1"
 status: "Approved for Implementation"
 date: "2026-08-20"
 source_of_truth:
@@ -220,6 +220,22 @@ Agenda, ImportacionAgenda, Cita, registros, incidencias, resolución de médicos
 
 Tests usarán fixtures desidentificados y versionados. Los archivos reales podrán servir como baseline externo controlado por hashes y métricas agregadas, pero nunca se copiarán datos personales reales a fixtures, logs o snapshots de test.
 
+### REQ-AP-019 — Consultar historial de importaciones
+
+Con `AGENDA_VIEW`, el sistema debe listar importaciones tenant-scoped mediante cursor,
+ordenadas por `importedAt DESC, importacionId DESC`, con filtro opcional por fecha de
+Agenda. Cada item contiene exclusivamente importacionId, agendaDate, importedAt,
+ImportOutcome y AgendaImportMetrics. Una colección vacía es válida y no es not-found.
+
+### REQ-AP-020 — Resumir Agenda del día
+
+Con `AGENDA_VIEW`, la consulta tenant-scoped de una Agenda existente debe devolver
+agendaDate, latestImportacionId, latestImportedAt, latestOutcome, activeAppointments,
+physicians, services e incidentCount. ActiveAppointments excluye Citas retiradas;
+physicians cuenta números de empleado distintos; services cuenta conceptos
+Servicio/Especialidad distintos; incidentCount representa incidencias del estado vigente.
+Agenda ausente produce `AGENDA_NOT_FOUND`, nunca `null`.
+
 ## 5. Invariantes
 
 | ID | Invariante |
@@ -281,6 +297,8 @@ Tests usarán fixtures desidentificados y versionados. Los archivos reales podr�
 | AC-AP-010 | Lista contiene exactamente los campos permitidos y excluye los minimizados. |
 | AC-AP-011 | Tenant A no observa ni modifica Agenda/importaciones de Tenant B. |
 | AC-AP-012 | No aparecen Turno, Consultorio, Destino, SM1-14 ni cita abierta. |
+| AC-AP-013 | Historial respeta fecha opcional, orden/cursor determinista, empty 200 y campos mínimos. |
+| AC-AP-014 | Agenda del día calcula los cuatro conteos según REQ-AP-020 y devuelve 404 cuando no existe. |
 
 ## 9. Open questions y readiness
 

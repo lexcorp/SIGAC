@@ -131,3 +131,7 @@ decisión. `AP-OQ-004` permanece OPEN.
 `AP-OQ-004` queda RESOLVED por RESULT-AP-001..014. AP-OQ-001..004 están cerrados.
 AP-OQ-005 (integración posterior) y AP-OQ-006 (reapertura/reproceso no expuesto) siguen
 OPEN no bloqueantes para el slice inicial.
+
+UX-GAP-004 y UX-GAP-005 quedan RESOLVED en agenda-preparation v0.1.1 mediante
+`ListAgendaImports` y `AgendaDayReadModel`. Persisten tres UX gaps no bloqueantes:
+preview previo de validación, filtros/búsqueda y retry técnico/Idempotency-Key.
