@@ -32,3 +32,7 @@ Para Expediente Audit el contrato específico también es `{items,nextCursor}`, 
 `hasMore` ni `total`. El orden determinista es `occurredAt DESC, auditId DESC`; el
 cursor opaco representa `occurredAt + auditId`. Application, API y frontend sólo lo
 reciben y reenvían.
+
+Agenda results/incidents/preparation-items usa `{items,nextCursor}`, sin total/hasMore.
+`limit` positivo requerido, máximo configurable. Cursor opaco: posición+registroId ASC,
+posición+incidenciaId ASC y hora+FOLIO ASC, respectivamente.

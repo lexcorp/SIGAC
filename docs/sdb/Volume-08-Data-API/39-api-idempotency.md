@@ -20,3 +20,8 @@ Use `Idempotency-Key` for:
 Server stores key + request fingerprint + response for bounded window.
 
 Same key + different payload → 409.
+
+Agenda import requiere `Idempotency-Key`, scoped por actor+tenant+operación durante una
+ventana configurable. Misma key/artefacto devuelve 201/Location/body originales sin
+reprocesar; misma key/artefacto distinto usa `IDEMPOTENCY_KEY_REUSED`/409. Key nueva con
+archivo idéntico crea ImportacionAgenda `ALREADY_IMPORTED` sin duplicar Agenda/Cita.

@@ -93,3 +93,21 @@ Verificar orden `occurredAt DESC, auditId DESC`, desempate estable y cursor conc
 Los tests de `ListUbicaciones` cubren autorización `LOCATION_VIEW` antes del query,
 403 sin permission, propagación exclusiva de `context.tenant`, catálogo vacío `[]` y
 output exacto id/codigo/descripcion. No esperan un audit identifier para esta lectura.
+
+Para Agenda Preparation cubrir:
+- permissions por operación sin autorización directa por roles;
+- fail-closed antes de Repository, parser o lectura del upload;
+- import denegado con `ImportAttemptId` distinto de tracing/fingerprint/identidades;
+- import confirmado con audit success y layout rechazado sin AuditEntry;
+- lecturas success/denied/not-found y empty success para recurso existente;
+- tenant propagation y ausencia cross-tenant no divulgativa;
+- AuditEntry sin archivo, raw, filas ni datos personales;
+- ausencia de `capabilities[]` y `AGENDA_INCIDENT_RESOLVE`.
+
+API-AP-001..014 añade input sin HTTP, stream no abierto antes de authorization, UoW
+completa/rollback, outcomes IMPORTED/ALREADY_IMPORTED/RECONCILED, fingerprint posterior
+a auth, retries por key y queries cursor-based. No fija outcomes de fila AP-OQ-004.
+
+RESULT-AP-001..014 supersede esa reserva: probar ImportOutcome separado, exactamente un
+resultado por fila, incidencias locales sin exception, exclusión de preparación,
+métricas aritméticas y rollback exclusivo de fallos globales.

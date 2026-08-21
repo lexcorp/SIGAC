@@ -40,6 +40,9 @@ EXPEDIENT_AUDIT_VIEW
 LOCATION_VIEW
 REPORT_VIEW
 ADMIN_CONFIGURE
+AGENDA_IMPORT
+AGENDA_VIEW
+AGENDA_INCIDENT_VIEW
 
 ## Separación y asignación del Expediente Workspace
 
@@ -53,3 +56,10 @@ Expediente y el tab Auditoría. Tampoco es capability. OQ-EW-003 queda RESOLVED.
 `LOCATION_VIEW` autoriza exclusivamente la consulta/listado del catálogo operativo de
 ubicaciones mediante `ListUbicaciones`/GET `/api/v1/ubicaciones`. No es capability y no
 se sustituye por `EXPEDIENT_VIEW` ni `ADMIN_CONFIGURE`.
+
+## Agenda Preparation
+
+`AGENDA_IMPORT` autoriza importar/reimportar y reconciliar automáticamente.
+`AGENDA_VIEW` autoriza consultar importación/resultados, Agenda vigente y lista inicial.
+`AGENDA_INCIDENT_VIEW` autoriza consultar incidencias. Ninguna es capability ni se
+infiere desde roles. No se crea `AGENDA_INCIDENT_RESOLVE` en el slice inicial.

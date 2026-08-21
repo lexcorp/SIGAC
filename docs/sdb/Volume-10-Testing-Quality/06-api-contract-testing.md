@@ -30,3 +30,8 @@ GET `/ubicaciones` exige 401/403 canónicos, responde `{items}` sin paginación 
 
 GET `/session` responde 401 sin autenticación y, con RequestContext válido, únicamente
 actorId/permissions. El contrato excluye roles, tenantIds, claims y capabilities.
+
+Agenda Preparation deberá probar multipart de un archivo, key requerida, RequestContext
+server-side, permission antes de lectura, límite streaming, inspección content/layout,
+201/Location/summary, replay idempotente, 400/401/403/409/413/415/422/500/504 y Problem
+Details sin datos SIMEF. OpenAPI no se modifica durante AP-OQ-003.

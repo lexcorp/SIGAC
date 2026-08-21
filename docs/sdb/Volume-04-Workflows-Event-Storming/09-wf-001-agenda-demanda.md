@@ -32,3 +32,7 @@ Disponibilidad de una nueva lista/agenda para una fecha futura.
 
 ## Resultado
 Jornada preparada para iniciar búsqueda.
+
+Agenda Preparation inicial termina en lista, no Jornada/paquetes. Reconciliación produce
+ADDED/UPDATED/UNCHANGED/RESTORED por fila y RETIRADA_DE_AGENDA para Cita previa ausente.
+Incidencias locales no abortan otras filas. Turno/Consultorio/cancelación quedan fuera.

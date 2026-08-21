@@ -110,3 +110,24 @@ SEARCH-EW-001..010 aprueba `SearchExpedientesByNumero`, summary 0..N, permission
 endpoint `{items}`, validación y UX. T-12A implementa Application, API y OpenAPI antes
 de T-13/T-15. El STOP documental de T-13 queda resuelto sin inventar acceso directo del
 controller al Repository.
+
+## Agenda Preparation
+
+`AP-OQ-001` queda RESOLVED por AUTH-AP-001..003: permissions y matriz mínimas, ausencia
+de capabilities, `ImportAttemptId` y contratos de audit quedan aprobados. No existe
+mapping Role → Permission nuevo. En ese cierre AP-OQ-002..004 permanecían OPEN;
+RAW-AP-001..012 resuelve posteriormente AP-OQ-002.
+
+`AP-OQ-002` queda RESOLVED por RAW-AP-001..012. Archivo/fila raw se elimina tras el
+outcome terminal; permanece evidencia minimizada tenant-local con retención operacional
+configurable. No se fija plazo, schema, job, API ni algoritmo. En ese cierre AP-OQ-003/004
+seguían OPEN; API-AP-001..014 resuelve posteriormente AP-OQ-003.
+
+`AP-OQ-003` queda RESOLVED por API-AP-001..014. El contrato inicial es síncrono,
+multipart `.xls`, Idempotency-Key obligatorio, UoW atómica, 201 para importaciones
+aceptadas y queries cursor-based. No se introduce worker ni se modifica OpenAPI en esta
+decisión. `AP-OQ-004` permanece OPEN.
+
+`AP-OQ-004` queda RESOLVED por RESULT-AP-001..014. AP-OQ-001..004 están cerrados.
+AP-OQ-005 (integración posterior) y AP-OQ-006 (reapertura/reproceso no expuesto) siguen
+OPEN no bloqueantes para el slice inicial.

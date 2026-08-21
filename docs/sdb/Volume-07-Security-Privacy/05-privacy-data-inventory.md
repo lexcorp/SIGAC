@@ -28,3 +28,7 @@ Inventario candidato:
 | Incidencia | Operación | C3 |
 | Diagnóstico | No requerido MVP | NO RECABAR |
 | Nota clínica | No requerido MVP | NO RECABAR |
+
+En Agenda Preparation, contacto, vigencia, sexo, edad, CURP y datos asistenciales
+adicionales pueden existir transitoriamente al parsear, pero son `NO PERSISTIR`.
+Archivo y fila raw son C3 de staging transitorio.

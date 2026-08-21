@@ -20,3 +20,7 @@ architecture:
 - backups: backup retention policy.
 
 Exact periods require institutional validation.
+
+RAW-AP-006 separa archivo/raw técnico, metadata/registro minimizado y Agenda/Cita
+histórica. Sin plazo institucional configurado no se permite retención indefinida
+silenciosa. La eliminación activa no altera la expiración separada de backups.

@@ -12,6 +12,17 @@ methodology:
 ---
 # UC-002 — Reconciliar Agenda
 
+La reconciliación automática pertenece a importar/reimportar y exige `AGENDA_IMPORT`;
+no introduce permission ni capability separada. No existe command manual de resolución
+de incidencias en el slice inicial.
+
+La reconciliación forma parte de la UoW síncrona de ImportAgenda y no confirma estado
+parcial. Una key nueva con artefacto idéntico crea ImportacionAgenda trazable
+`ALREADY_IMPORTED` sin mutar Agenda/Cita.
+
+Cita previa ausente produce RETIRADA_DE_AGENDA como lifecycle/reconciliation effect y
+métrica, no resultado de fila. Reaparición produce RESTORED sobre la misma Cita.
+
 ## Objetivo
 Detectar diferencias entre versiones de agenda.
 

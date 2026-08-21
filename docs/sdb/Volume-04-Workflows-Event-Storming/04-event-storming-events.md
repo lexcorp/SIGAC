@@ -13,6 +13,8 @@ methodology:
 
 AgendaImported
 AgendaReconciled
+CitaWithdrawnFromAgenda
+CitaRestored
 DemandDetected
 RequestCreated
 RequestAssigned
@@ -34,3 +36,6 @@ IncidentEscalated
 IncidentResolved
 ExpedienteDeclaredLost
 RequestCancelled
+
+Los eventos Agenda son mínimos; no se crea evento por ADD, UPDATE, métrica o incidencia.
+Retirada no equivale a cancelación clínica.

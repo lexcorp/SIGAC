@@ -1,7 +1,7 @@
 ---
 spec: agenda-preparation
-version: "0.1.0-draft"
-status: "Draft — requirements ready; implementation decisions pending"
+version: "0.1.0"
+status: "Approved for Implementation"
 date: "2026-08-20"
 source_of_truth:
   - "knowledge/README.md — precedence and traceability"
@@ -60,8 +60,8 @@ La spec pertenece al bounded context candidato **Agenda / Appointment Preparatio
 
 | Actor | Responsabilidad en el slice | Estado de autorización |
 |---|---|---|
-| Personal de Archivo Clínico | Entrega/importa el snapshot y consulta resultados/lista | Permission exacta pendiente de aprobación (`AP-OQ-001`) |
-| Jefatura de Archivo | Supervisa importación e incidencias | Permission exacta pendiente de aprobación (`AP-OQ-001`) |
+| Personal de Archivo Clínico | Entrega/importa y consulta cuando recibe la permission correspondiente | No implica mapping Role → Permission |
+| Jefatura de Archivo | Supervisa importación e incidencias cuando recibe la permission correspondiente | No implica mapping Role → Permission |
 | SIMEF | Sistema externo que produce el archivo diario | Fuente, no actor autenticado de SIGAC en este slice |
 | Administrador técnico | Soporte de layout/configuración futura | No obtiene acceso funcional por implicación |
 
@@ -117,7 +117,9 @@ Para cada campo dentro del alcance debe poder trazarse:
 
 `valor original → valor interpretado/normalizado → entidad o referencia resuelta`.
 
-La normalización no puede sobrescribir ni destruir el valor original. La retención del archivo binario completo permanece en `AP-OQ-002`.
+La normalización no puede sobrescribir ni destruir el valor original allow-listed. El
+archivo completo y las filas raw sólo existen en staging transitorio protegido y se
+eliminan al concluir o abortar; la evidencia durable mínima se rige por RAW-AP-001..012.
 
 ### REQ-AP-009 — Reconciliar por FOLIO
 
@@ -139,19 +141,21 @@ Si una nueva importación no contiene diferencias, el sistema debe reconocer que
 
 ### REQ-AP-011 — Resultado explícito por registro
 
-Ningún registro recibido puede desaparecer silenciosamente. La taxonomía funcional mínima es:
+Ningún registro recibido puede desaparecer silenciosamente. Cada fila recibida obtiene
+exactamente un `RecordProcessingResult` del catálogo cerrado:
 
 | Resultado | Semántica |
 |---|---|
-| `PROCESADO` | Registro nuevo o restaurado incorporado correctamente |
-| `SIN_CAMBIOS` | FOLIO ya vigente e idéntico |
-| `ACTUALIZADO` | FOLIO existente reconciliado con cambios permitidos |
-| `RETIRADO_DE_AGENDA` | Efecto de reconciliación sobre una Cita previa ausente del snapshot actual |
-| `PENDIENTE_RESOLUCION` | No puede resolverse inequívocamente médico, Expediente u otra referencia requerida |
-| `DUPLICADO` | FOLIO repetido de forma incompatible dentro del input |
-| `ERROR_ESTRUCTURAL` | Artefacto/registro no puede interpretarse con el layout aprobado |
+| `ADDED` | FOLIO nuevo incorporado a la Agenda vigente |
+| `UPDATED` | FOLIO existente reconciliado con cambios permitidos |
+| `UNCHANGED` | FOLIO existente e idéntico |
+| `RESTORED` | FOLIO previamente retirado que reaparece con la misma identidad |
+| `PENDING_REVIEW` | La fila requiere resolución explícita y no participa aún en preparación |
+| `REJECTED` | Layout válido, pero el contenido de la fila impide procesarla |
+| `DUPLICATE_FOLIO` | Toda ocurrencia de un FOLIO repetido; no se elige ganador |
 
-Los nombres son lenguaje contractual de esta draft y deberán validarse antes de implementar (`AP-OQ-004`).
+`RETIRADA_DE_AGENDA` es un efecto sobre una Cita previa ausente, no resultado de una
+fila recibida. Un rechazo estructural global ocurre antes de crear resultados de fila.
 
 ### REQ-AP-012 — Producir lista inicial de preparación
 
@@ -182,11 +186,21 @@ No se incluyen Turno, Consultorio, Destino, paquetes ni datos clínicos.
 
 ### REQ-AP-014 — Métricas consistentes
 
-Cada importación debe informar: registros recibidos, procesados, sin cambios, actualizados, retirados, incidencias y errores.
+Cada importación debe informar: `receivedRecords`, `processed`, `added`, `updated`,
+`unchanged`, `restored`, `pendingReview`, `rejected`, `duplicateFolio`,
+`withdrawnFromAgenda`, `incidents` y `errors`.
 
 Los resultados de filas del snapshot deben cumplir:
 
-`recibidos = procesados + sinCambios + actualizados + pendientesResolucion + duplicados + erroresEstructurales`.
+`receivedRecords = processed + pendingReview + rejected + duplicateFolio`.
+
+`processed = added + updated + unchanged + restored`.
+
+Por tanto:
+
+`receivedRecords = added + updated + unchanged + restored + pendingReview + rejected + duplicateFolio`.
+
+`errors = rejected + duplicateFolio`; `incidents` cuenta objetos de incidencia.
 
 `retirados` es un efecto sobre Citas del snapshot anterior, no una fila recibida, y se informa separadamente para evitar doble conteo.
 
@@ -226,17 +240,29 @@ Tests usarán fixtures desidentificados y versionados. Los archivos reales podr�
 ## 6. Autorización conceptual
 
 - RequestContext y TenantContext se resuelven server-side antes de Application.
-- Importar, consultar resultados y resolver incidencias requieren autorización explícita.
+- `AGENDA_IMPORT` autoriza importar/reimportar y reconciliar automáticamente.
+- `AGENDA_VIEW` autoriza consultar importación/resultados, Agenda vigente y lista inicial.
+- `AGENDA_INCIDENT_VIEW` autoriza consultar incidencias de importación.
+- No existe `AGENDA_INCIDENT_RESOLVE` ni resolución manual en el alcance inicial.
+- Agenda Preparation no introduce `capabilities[]`.
 - No se reutiliza silenciosamente una permission existente ni se deriva autorización desde rol.
-- Los identifiers de permission y la matriz actor→permission se aprobarán antes de T-01 (`AP-OQ-001`).
 - No se aceptan tenant, actor ni tracing desde contenido del archivo o body arbitrario.
+- La frontera genera `ImportAttemptId` después de resolver RequestContext y antes de
+  autorizar o leer; no forma parte de RequestContext ni identifica Agenda/ImportacionAgenda.
+- Permission ausente produce `PERMISSION_DENIED`; cross-tenant es no divulgativo y no
+  crea códigos `CROSS_TENANT_*`.
 
 ## 7. Privacidad y trazabilidad
 
 - Los valores personales mínimos sólo se exponen a personal autorizado del tenant.
 - Logs, métricas y errores no incluyen nombre, Expediente, FOLIO ni contenido raw.
 - La evidencia raw y el modelo normalizado son responsabilidades distintas.
-- La política de retención/cifrado/acceso del archivo binario completo requiere decisión (`AP-OQ-002`).
+- Archivo/raw es C3 transitorio, tenant-namespaced, protegido con cifrado institucional
+  y sin acceso humano de vista/descarga en este slice.
+- La persistencia conserva sólo originales allow-listed, interpretación/resolución,
+  fingerprint/layout metadata y conteos necesarios.
+- Retención técnica y operacional usan plazos institucionales configurables separados;
+  no existe default indefinido ni plazo legal numérico inventado.
 - Cada resultado debe ser trazable a importación y posición lógica/fila de origen sin exponerla públicamente.
 
 ## 8. Acceptance criteria globales
@@ -260,19 +286,32 @@ Tests usarán fixtures desidentificados y versionados. Los archivos reales podr�
 
 ### Bloqueantes antes de implementación
 
-- `AP-OQ-001`: permissions canónicas y matriz mínima para importar/consultar/resolver incidencias.
-- `AP-OQ-002`: retención, cifrado, acceso y eliminación de archivo binario/raw completo.
-- `AP-OQ-003`: contrato de entrada/exposición API, límites de archivo y semántica síncrona/asíncrona.
-- `AP-OQ-004`: aprobación final de la taxonomía técnica de resultados de REQ-AP-011.
+- `AP-OQ-001`: **RESOLVED** por AUTH-AP-001..003 y
+  `docs/decisions/agenda-preparation/AUTHORIZATION-AUDIT-DECISION.md`.
+- `AP-OQ-002`: **RESOLVED** por RAW-AP-001..012 y
+  `docs/decisions/agenda-preparation/RAW-DATA-RETENTION-DECISION.md`.
+- `AP-OQ-003`: **RESOLVED** por API-AP-001..014 y
+  `docs/decisions/agenda-preparation/IMPORT-API-DECISION.md`.
+- `AP-OQ-004`: **RESOLVED** por RESULT-AP-001..014 y
+  `docs/decisions/agenda-preparation/IMPORT-RESULT-TAXONOMY-DECISION.md`.
 
 ### No bloqueantes para requirements
 
 - `AP-OQ-005`: una entrada de Agenda origina en el futuro Solicitud, proyección o RequerimientoExpediente.
 - `AP-OQ-006`: ciclo de vida detallado de ImportacionAgenda después de procesarse.
 
-## 10. SDB propagation required
+### Contrato de importación aprobado
 
-Antes de implementación deben propagarse las decisiones aprobadas a:
+- POST `/api/v1/agenda-imports`, multipart con un `file` `.xls` e Idempotency-Key.
+- RequestContext/ImportAttemptId son server-side; fechaAgenda se interpreta del contenido.
+- Ejecución síncrona, streaming con límite/timeout configurables y UoW ALL OR NOTHING.
+- Import inicial, idéntico o reconciliado: 201 + Location + summary, sin raw.
+- Layout incompatible: `AGENDA_LAYOUT_REJECTED`/422, sin ImportacionAgenda.
+- Queries y cursor opaco conforme API-AP-011/012.
+
+## 10. SDB propagation
+
+Las decisiones aprobadas fueron propagadas a:
 
 - Volume 02 — proceso, actores, reglas y minimización.
 - Volume 03 — bounded context, aggregates, entities y lenguaje.
@@ -291,4 +330,4 @@ Antes de implementación deben propagarse las decisiones aprobadas a:
 - `requirements_ready: true`
 - `design_ready: true`
 - `tasks_ready: true`
-- `implementation_ready: false`
+- `implementation_ready: true`

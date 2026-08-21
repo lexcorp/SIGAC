@@ -45,6 +45,17 @@ methodology:
 La matriz no asigna `LOCATION_VIEW` por rol. Application consume la permission efectiva
 desde `ActorContext.permissions`; frontend no deriva autorización desde roles.
 
+## Agenda Preparation
+
+| Permission | Acción autorizada | Capability |
+|---|---|---|
+| `AGENDA_IMPORT` | Importar/reimportar Agenda y reconciliar automáticamente | No |
+| `AGENDA_VIEW` | Consultar importación/resultados, Agenda vigente y lista inicial | No |
+| `AGENDA_INCIDENT_VIEW` | Consultar incidencias de importación | No |
+
+No se asignan estas permissions a roles. `AGENDA_INCIDENT_RESOLVE` y `capabilities[]`
+quedan fuera del slice inicial.
+
 ## Notas (2026-08-14)
 
 - La autorización de `OpenLoan` depende de `FuenteHabilitanteSalida`, no de un

@@ -104,3 +104,14 @@ occurredAt, source, requestId y correlationId; no expone change_summary,
 security_context ni metadata física. Requiere `EXPEDIENT_AUDIT_VIEW`.
 El orden canónico es `occurredAt DESC, auditId DESC`; el cursor conceptual contiene
 ambos valores y su encoding permanece opaco fuera del adapter.
+
+## Agenda Preparation — AUTH-AP-001..003
+
+`AuditWriter.append(AuditEntry, RequestContext)` se reutiliza sin cambios. Import
+denegado usa `AGENDA_IMPORT/AGENDA_IMPORT_ATTEMPT/ImportAttemptId/denied`; import
+aceptado usa `AGENDA_IMPORT/AGENDA_IMPORT/ImportacionAgenda.id/success`. Las lecturas
+usan `AGENDA_VIEW`, `AGENDA_PREPARATION_VIEW` o `AGENDA_INCIDENT_VIEW`, resources
+`AGENDA_IMPORT|AGENDA` y `success|denied|not-found` según corresponda.
+
+Layout rechazado no genera AuditEntry. Audit no guarda archivo, raw, filas, nombre,
+Expediente/paciente ni otros datos personales de Agenda.

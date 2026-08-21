@@ -18,3 +18,16 @@ Wizard:
 5 Complete
 
 Display source file hash/metadata only to authorized technical/admin roles where useful.
+
+## API-AP-001..014
+
+El slice inicial ejecuta un único POST síncrono y después consulta recursos. Los pasos
+del wizard son presentación, no commands/transacciones separadas. La futura UI no muestra
+hash/fingerprint, raw o filename, no interpreta cursor y no calcula outcomes.
+
+Retry usa la misma Idempotency-Key. Turno/Consultorio permanecen fuera. Esta propagación
+no diseña ni implementa componentes.
+
+La futura UX presenta ImportOutcome separado de resultados/incidencias de fila. No
+inventa PARTIAL/FAILED, no trata incidencia como 4xx y no mezcla retirada con fila
+recibida. Esta propagación sólo define estados conceptuales.

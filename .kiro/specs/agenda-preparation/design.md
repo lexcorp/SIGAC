@@ -1,16 +1,12 @@
 ---
 spec: agenda-preparation
-version: "0.1.0-draft"
-status: "Draft — design ready; implementation decisions pending"
+version: "0.1.0"
+status: "Approved for Implementation"
 date: "2026-08-20"
 requires:
-  - "requirements.md v0.1.0-draft"
+  - "requirements.md v0.1.0"
 bounded_context: "Agenda / Appointment Preparation"
-open_questions_blocking:
-  - AP-OQ-001
-  - AP-OQ-002
-  - AP-OQ-003
-  - AP-OQ-004
+open_questions_blocking: []
 ---
 
 # Agenda Preparation — Design
@@ -55,7 +51,7 @@ SIMEF es upstream. Agenda Preparation traduce el formato externo. Archive Operat
 Recomendado como Aggregate root de la ingestión. Representa una ejecución concreta y garantiza:
 
 - tenant e identidad técnica de importación;
-- referencia segura al archivo físico, sin decidir almacenamiento binario;
+- metadata técnica sanitizada del artefacto; no conserva referencia descargable al binario;
 - fecha declarada/interpretada;
 - fingerprint técnico;
 - registros recibidos y su posición de origen;
@@ -122,7 +118,9 @@ recibida -> layout validado -> interpretada -> reconciliada -> finalizada
                     \-> rechazada estructuralmente
 ```
 
-Los nombres son conceptuales; no son enum aprobado hasta cerrar AP-OQ-004. Reprocesamiento y reapertura detallados quedan para una decisión posterior.
+Este flujo describe fases de procesamiento, no un enum Domain. El resultado confirmado
+es `IMPORTED | ALREADY_IMPORTED | RECONCILED`. Reprocesamiento y reapertura detallados
+permanecen fuera del alcance inicial.
 
 ### Cita en Agenda vigente
 
@@ -136,30 +134,30 @@ FOLIO retirado reaparece -----> vigente (misma identidad)
 
 No existe transición automática a `CANCELADA`.
 
-## 5. Commands y Domain Events candidatos
+## 5. Commands y Domain Events
 
 | Tipo | Nombre conceptual | Nota |
 |---|---|---|
 | Command | RegistrarImportacionAgenda | Crea la ejecución; no parsea HTML en Domain. |
 | Command | RegistrarResultadoImportado | Asigna exactamente un resultado a la fila. |
 | Command | ReconciliarAgenda | Aplica comparación por FOLIO sobre Agenda. |
-| Event | ImportacionAgendaRegistrada | Sin contenido personal. |
-| Event | ImportacionAgendaRechazada | Motivo estructural sanitizado. |
-| Event | AgendaReconciliada | Conteos agregados, sin payload personal. |
-| Event | CitaRetiradaDeAgenda | Semántica operacional, no clínica. |
-| Event | CitaRestauradaEnAgenda | Misma identidad FOLIO. |
+| Event | `AgendaImported` | Primera Agenda confirmada; sin contenido personal. |
+| Event | `AgendaReconciled` | Reconciliación confirmada; conteos agregados. |
+| Event | `CitaWithdrawnFromAgenda` | Semántica operacional, no clínica. |
+| Event | `CitaRestored` | Misma identidad FOLIO. |
 
-Son candidatos de diseño; payloads y catálogo definitivo se cierran antes de implementación. No se introduce broker ni Event Sourcing.
+No se emite evento por fila, métrica, incidencia, ADD o UPDATE. El rechazo estructural
+no produce evento Domain. No se introduce broker ni Event Sourcing.
 
 ## 6. Reconciliation model
 
 ```text
 previousByFolio + incomingByFolio
-  incoming only     -> ADD       -> PROCESADO
-  both, changed     -> UPDATE    -> ACTUALIZADO
-  both, identical   -> UNCHANGED -> SIN_CAMBIOS
+  incoming only     -> ADD       -> ADDED
+  both, changed     -> UPDATE    -> UPDATED
+  both, identical   -> UNCHANGED -> UNCHANGED
   previous only     -> RETIRADA_DE_AGENDA (effect, not incoming row)
-  incoming + prior withdrawn -> RESTORE -> PROCESADO
+  incoming + prior withdrawn -> RESTORE -> RESTORED
 ```
 
 Duplicados incompatibles dentro del snapshot no se eligen arbitrariamente. Los campos comparables/mutables son los aprobados en REQ-AP-012, excepto FOLIO; fecha debe ser coherente con la Agenda tenant+fecha.
@@ -203,12 +201,19 @@ El fallback por nombre nunca elige entre N>1. `ExpedienteReferenceQueryPort` adm
 
 | Use Case | Input conceptual | Output |
 |---|---|---|
-| `ImportAgenda` | archivo/referencia + `RequestContext` | `ImportacionAgendaSummary` |
+| `ImportAgenda` | ImportAttemptId + AgendaArtifactStream + Idempotency-Key + RequestContext | `ImportAgendaResponse` |
 | `GetAgendaImportResult` | importacionId + context | resumen + resultados sanitizados |
 | `GetAgendaPreparationList` | fecha + context | lista inicial vigente |
 | `GetAgendaImportIncidents` | importacionId + context | incidencias pendientes |
 
-El contrato HTTP y la modalidad sync/async no se deciden hasta AP-OQ-003.
+El contrato HTTP y la modalidad síncrona se definen en API-AP-001..014.
+
+`ImportAgenda` exige `AGENDA_IMPORT`; las consultas de importación/resultados, Agenda y
+preparación exigen `AGENDA_VIEW`; incidencias exige `AGENDA_INCIDENT_VIEW`. No existen
+capabilities contextuales ni resolución manual de incidencias en el slice inicial.
+
+Una UoW tenant-scoped confirma ImportacionAgenda + reconciliación + resultados +
+incidencias/métricas + audit. Application no conoce HTTP, Multer, filesystem ni database.
 
 ## 9. Read models
 
@@ -249,18 +254,17 @@ El Adapter interpreta el artefacto externo en tres pasos:
 
 `AgendaFileInspection` entrega filas neutrales a Application y nunca objetos DOM/Excel. El parser no implementa reconciliación ni autorización.
 
-## 11. Error/taxonomy candidates
+## 11. Taxonomía contractual
 
-| Código candidato | Capa/semántica |
+| Nivel | Catálogo cerrado / semántica |
 |---|---|
-| `AGENDA_LAYOUT_UNSUPPORTED` | Application: archivo incompatible, fail-closed |
-| `AGENDA_CONTENT_INVALID` | Application: contenido mínimo inválido |
-| `AGENDA_IMPORT_ALREADY_EXISTS` | Resultado idempotente sin diferencias, no error de negocio necesariamente |
-| `AGENDA_IMPORT_NOT_FOUND` | Application query |
-| `AGENDA_NOT_FOUND` | Application query |
-| `AGENDA_PERMISSION_DENIED` | Sólo si AP-OQ-001 aprueba código específico; no implementar aún |
+| `ImportOutcome` | `IMPORTED`, `ALREADY_IMPORTED`, `RECONCILED` |
+| `RecordProcessingResult` | `ADDED`, `UPDATED`, `UNCHANGED`, `RESTORED`, `PENDING_REVIEW`, `REJECTED`, `DUPLICATE_FOLIO` |
+| `ImportIncident` | `PHYSICIAN_NOT_RESOLVED`, `PHYSICIAN_AMBIGUOUS`, `SERVICE_NOT_RESOLVED`, `EXPEDIENT_NOT_RESOLVED`, `REQUIRED_DATA_MISSING`, `ROW_INCONSISTENT`, `DUPLICATE_FOLIO_IN_SNAPSHOT` |
+| `ApplicationError` | `AGENDA_IMPORT_NOT_FOUND`, `AGENDA_NOT_FOUND`, `IDEMPOTENCY_KEY_REUSED`; reutiliza `PERMISSION_DENIED` y códigos de frontera aprobados |
 
-La relación con `ApplicationError`, RFC7807 y statuses HTTP se decide con AP-OQ-003; no se inventa aquí.
+Los niveles no son intercambiables y ninguno amplía `AuditResult`. Los errores de fila
+son resultado/incidencia, no excepción Application.
 
 ## 12. Tenant, privacy y audit
 
@@ -268,8 +272,21 @@ La relación con `ApplicationError`, RFC7807 y statuses HTTP se decide con AP-OQ
 - Repositories, directories, UoW y parser orchestration operan dentro de un tenant ya validado.
 - No se acepta tenant desde el archivo.
 - Métricas/logs no incluyen FOLIO, nombres ni Expedientes.
-- Full raw binary storage queda sin diseñar hasta AP-OQ-002.
-- Audit actions/results requieren decisión junto con permissions; no se inventan identifiers.
+- Archivo y fila raw son Infrastructure staging C3 transitorio, tenant-namespaced y
+  protegido; se eliminan al outcome terminal y no se ofrecen para vista/descarga.
+- Persistencia conserva sólo allow-list original + interpretación/resolución y metadata
+  técnica sanitizada. No persiste filename cliente.
+- Se reutiliza `AuditWriter.append(AuditEntry, RequestContext)` sin modificar el port.
+- Actions: `AGENDA_IMPORT`, `AGENDA_VIEW`, `AGENDA_PREPARATION_VIEW` y
+  `AGENDA_INCIDENT_VIEW`; resources: `AGENDA_IMPORT_ATTEMPT`, `AGENDA_IMPORT`, `AGENDA`.
+- Import denegado usa `ImportAttemptId/denied`; import confirmado usa
+  `ImportacionAgenda.id/success`. Layout rechazado no genera AuditEntry.
+- Queries usan `success|denied|not-found`; empty sobre recurso existente es success.
+- Audit no contiene archivo, raw, filas ni datos personales de Agenda.
+
+`ImportAttemptId` se crea en la frontera después de resolver RequestContext y antes de
+autorizar/leer. No integra RequestContext ni equivale a tracing, fingerprint, filename,
+fechaAgenda o IDs persistidos.
 
 ## 13. Integration boundary con Archive Operations
 
@@ -287,19 +304,33 @@ La futura persistencia deberá soportar:
 - historia de retirada/restauración;
 - incidencias y conteos.
 
+`ImportArtifactMetadata` conserva fingerprint/layout metadata sanitizada y pertenece al
+ingestion/Application boundary, no al Domain. `RegistroImportadoAgenda` guarda sólo la
+allow-list original más interpretación/resolución. Bytes y filas raw no son durables.
+Fingerprint no identifica Agenda ni ImportacionAgenda; su algoritmo queda para un
+estándar técnico posterior.
+
 No se definen tablas, columnas, índices, JSONB ni migrations en esta draft. T-09 exige decisión física explícita y profiling del layout.
 
 ## 15. Open decisions
 
 | ID | Decisión requerida | Bloquea |
 |---|---|---|
-| AP-OQ-001 | Permissions, roles y audit identifiers/resultados | Domain/Application/API implementation |
-| AP-OQ-002 | Retención/cifrado/acceso del archivo y raw completo | Persistencia/importer |
-| AP-OQ-003 | API, límites, sync/async, upload/storage y RFC7807 | API/OpenAPI/frontend |
-| AP-OQ-004 | Taxonomía técnica final de outcomes e incidencias | Domain implementation |
+| AP-OQ-001 | RESOLVED — AUTH-AP-001..003 | Cerrado |
+| AP-OQ-002 | RESOLVED — RAW-AP-001..012 | Cerrado |
+| AP-OQ-003 | RESOLVED — API-AP-001..014 | Cerrado |
+| AP-OQ-004 | RESOLVED — RESULT-AP-001..014 | Cerrado |
 | AP-OQ-005 | Solicitud/proyección/RequerimientoExpediente | Integración posterior; no bloquea importación inicial |
 | AP-OQ-006 | Reapertura/cierre operativo de importaciones | Puede diferirse si no se expone comando de reapertura |
 
 ## 16. SDB propagation required
 
-La propagación requerida es la indicada en requirements.md §10. Debe completarse y aprobarse antes de T-01; esta ejecución no modifica SDB.
+AUTH-AP-001..003, RAW-AP-001..012, API-AP-001..014 y RESULT-AP-001..014 fueron
+propagados. `AP-OQ-005/006` permanecen abiertos y no bloquean el alcance inicial.
+
+## 17. Readiness
+
+- `requirements_ready: true`
+- `design_ready: true`
+- `tasks_ready: true`
+- `implementation_ready: true`

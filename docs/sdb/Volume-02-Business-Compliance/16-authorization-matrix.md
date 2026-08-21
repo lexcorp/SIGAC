@@ -32,6 +32,13 @@ La fuente llega previamente validada al CapabilityService.
 
 Ver también: SEC-017 (Volume 07) para la implementación técnica de RBAC + contexto.
 
+## Agenda Preparation
+
+Importar/reimportar exige `AGENDA_IMPORT`; consultar importación/resultados, Agenda
+vigente o lista inicial exige `AGENDA_VIEW`; consultar incidencias exige
+`AGENDA_INCIDENT_VIEW`. No hay capabilities ni `AGENDA_INCIDENT_RESOLVE` en el slice
+inicial. No se aprueba aquí ningún mapping Role → Permission.
+
 ## Pendiente
 Matriz completa Acción × TipoSolicitud × Rol × Servicio × Hospital a definir
 en Volume 05 una vez confirmados los tipos de solicitud restantes.

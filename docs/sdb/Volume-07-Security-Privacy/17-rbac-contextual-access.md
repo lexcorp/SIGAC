@@ -89,5 +89,13 @@ las demás condiciones de autorización. El provider determina `validada`; el se
 inspecciona evidencia. `ORDEN_SUPERIOR` no habilita la acción aunque llegue validada.
 La selección de la fuente concreta se re-verifica y registra en `OpenLoan`.
 
+## Agenda Preparation — AUTH-AP-001..003
+
+Importar/reimportar exige `AGENDA_IMPORT`; consultar importación/resultados, Agenda o
+lista inicial exige `AGENDA_VIEW`; consultar incidencias exige `AGENDA_INCIDENT_VIEW`.
+No hay capabilities ni autorización directa por rol. `ImportAttemptId` se genera tras
+resolver RequestContext y antes de autorizar/leer. Tenant nunca procede del upload y la
+ausencia cross-tenant permanece no divulgativa, sin `CROSS_TENANT_*`.
+
 ## Fuente
 BIZ-016, DDD-010, DECISION-REGISTER OQ-EW-005, NIST SP 800-207.

@@ -69,3 +69,9 @@ regla. Problem Details usa type `https://sigac/errors/http-validation`, title
 `Invalid request`, detail estable y `errors` opcional con códigos `REQUIRED`,
 `INVALID_FORMAT`, `INVALID_TYPE`, `OUT_OF_RANGE`. Nunca refleja el valor recibido ni
 mensajes default de NestJS. Se distingue de `REQUEST_INVALID_TRANSITION`/409.
+
+Agenda import añade: `AGENDA_UPLOAD_TOO_LARGE`/413,
+`AGENDA_ARTIFACT_UNSUPPORTED`/415, `AGENDA_LAYOUT_REJECTED`/422,
+`IDEMPOTENCY_KEY_REUSED`/409, `AGENDA_IMPORT_TIMEOUT`/504 y
+`AGENDA_IMPORT_FAILED`/500. Multipart/key/file malformed usa
+`HTTP_VALIDATION_ERROR`/400. No se añaden AuditResult ni outcomes de fila.

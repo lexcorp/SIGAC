@@ -1,7 +1,7 @@
 ---
 spec: agenda-preparation
-version: "0.1.0-draft"
-status: "Draft — traceability established; implementation pending"
+version: "0.1.0"
+status: "Approved for Implementation"
 date: "2026-08-20"
 ---
 
@@ -39,6 +39,10 @@ La precedencia de fuentes es la de `knowledge/README.md`. Un procedimiento deriv
 | SRC-AP-018 | `docs/domain-discovery/expediente-flow/iteration-3-evidence.md` | Discovery aprobado | Evidencia real y decisiones iteración 3 |
 | SRC-AP-019 | `docs/domain-discovery/expediente-flow/spec-002-readiness.md` | Discovery aprobado | Readiness para crear spec 002 |
 | SRC-AP-020 | `docs/domain-discovery/expediente-flow/fixtures/test-data/` | Golden Dataset desidentificado | Futuros tests parser/reconciliación |
+| SRC-AP-021 | `docs/decisions/agenda-preparation/AUTHORIZATION-AUDIT-DECISION.md` | Decisión APPROVED | Permissions, ImportAttemptId, audit y tenant fail-closed |
+| SRC-AP-022 | `docs/decisions/agenda-preparation/RAW-DATA-RETENTION-DECISION.md` | Decisión APPROVED | Categorías raw, minimización, protección, acceso, retención y disposición |
+| SRC-AP-023 | `docs/decisions/agenda-preparation/IMPORT-API-DECISION.md` | Decisión APPROVED | Input, upload, sync/UoW, idempotencia, HTTP, queries y cursor |
+| SRC-AP-024 | `docs/decisions/agenda-preparation/IMPORT-RESULT-TAXONOMY-DECISION.md` | Decisión APPROVED | Outcomes, resultados, incidencias, métricas, eventos y read models |
 
 ## 3. Business-rule registry
 
@@ -60,6 +64,15 @@ La precedencia de fuentes es la de `knowledge/README.md`. Un procedimiento deriv
 | BR-AP-014 | Preservar original + interpretación + referencia resuelta. | SRC-AP-010/012/014/019 |
 | BR-AP-015 | Todos los conceptos y resoluciones están aislados por tenant. | SRC-AP-015/019, AGENTS.md |
 | BR-AP-016 | Fixtures del repositorio son desidentificados; evidencia real sólo baseline externo controlado. | SRC-AP-001, SRC-AP-019/020 |
+| BR-AP-017 | Agenda usa permissions explícitas, no capabilities ni autorización directa por roles. | SRC-AP-021 |
+| BR-AP-018 | ImportAttemptId permite auditar denied antes de leer; layout rechazado no es AuditResult. | SRC-AP-021 |
+| BR-AP-019 | Archivo/fila raw es staging C3 transitorio; evidencia durable usa allow-list y metadata sanitizada. | SRC-AP-022 |
+| BR-AP-020 | Retención es diferenciada/configurable; raw se elimina terminalmente y no tiene acceso humano inicial. | SRC-AP-022 |
+| BR-AP-021 | Import API es multipart `.xls`, síncrona, streaming, idempotente y atómica. | SRC-AP-023 |
+| BR-AP-022 | HTTP, outcome de importación y outcome de fila son conceptos separados. | SRC-AP-023 |
+| BR-AP-023 | ImportOutcome, RecordProcessingResult, ImportIncident y ApplicationError son niveles separados y cerrados. | SRC-AP-024 |
+| BR-AP-024 | Todo FOLIO duplicado marca todas sus ocurrencias; no hay ganador ni reconciliación. | SRC-AP-024 |
+| BR-AP-025 | Retirada es efecto sobre una Cita previa, no resultado de fila ni cancelación clínica. | SRC-AP-024 |
 
 ## 4. Matriz end-to-end
 
@@ -76,6 +89,10 @@ La precedencia de fuentes es la de `knowledge/README.md`. Un procedimiento deriv
 | TR-AP-009 | SRC-AP-015/019 | BR-AP-015 | REQ-AP-001/004/006/017; INV-AP-011 | §2, §7, §12/14 | T-05/06, T-09/10, T-13, T-16/17 | TEST-AP-TENANT-001..004 |
 | TR-AP-010 | SRC-AP-019/020 | BR-AP-016 | REQ-AP-018 | §10/12 | T-04/08, T-12, T-16..19 | TEST-AP-GOLDEN-001; TEST-AP-PRIV-002 |
 | TR-AP-011 | SRC-AP-015, expediente-workspace contracts | Boundary separation | REQ-AP-016 | §2, §7, §13 | T-05/06/07 | TEST-AP-BOUNDARY-001..002 |
+| TR-AP-012 | SRC-AP-021 | BR-AP-017/018 | requirements §6/7 | design §8/12 | T-00, T-05/06, T-08, T-13/16 | TEST-AP-AUTH-001..006; TEST-AP-AUDIT-001..006 |
+| TR-AP-013 | SRC-AP-022 | BR-AP-019/020 | REQ-AP-008/015/017/018 | design §12/14 | T-00, T-02, T-06, T-09..12, T-16..19 | TEST-AP-RAW-001..008; TEST-AP-PRIV-001..004 |
+| TR-AP-014 | SRC-AP-023 | BR-AP-021/022 | requirements import contract | design §8/10/11 | T-00, T-05/06/08, T-10..14, T-16..19 | TEST-AP-API-001..014; TEST-AP-IDEMP-001..004; TEST-AP-UOW-001..003 |
+| TR-AP-015 | SRC-AP-024 | BR-AP-023..025 | REQ-AP-009..014; INV-AP-003..005 | design §4..6/9/11 | T-01..08, T-13..19 | TEST-AP-RESULT-001..008; TEST-AP-METRIC-001..004; TEST-AP-DUP-001..003 |
 
 ## 5. Acceptance criteria → tests
 
@@ -98,10 +115,10 @@ La precedencia de fuentes es la de `knowledge/README.md`. Un procedimiento deriv
 
 | OQ | Fuente del gap | Decisión requerida | Task bloqueada |
 |---|---|---|---|
-| AP-OQ-001 | requirements.md §3/6; design.md §12 | permissions, matriz mínima y audit identifiers/results | T-01+ mediante T-00 |
-| AP-OQ-002 | REQ-AP-008/015/018; design.md §12/14 | almacenamiento/retención/cifrado/acceso/eliminación de raw/binario | T-01+ mediante T-00; especialmente T-09/11/16 |
-| AP-OQ-003 | design.md §8/11 | API, upload, límites, sync/async y RFC7807 | T-01+ mediante T-00; especialmente T-13..15 |
-| AP-OQ-004 | REQ-AP-011; design.md §4/11 | catálogo técnico final de outcomes/incidencias | T-01+ mediante T-00 |
+| AP-OQ-001 | SRC-AP-021 | RESOLVED — AUTH-AP-001..003 | Cerrado |
+| AP-OQ-002 | SRC-AP-022 | RESOLVED — RAW-AP-001..012 | Cerrado |
+| AP-OQ-003 | SRC-AP-023 | RESOLVED — API-AP-001..014 | Cerrado |
+| AP-OQ-004 | SRC-AP-024 | RESOLVED — RESULT-AP-001..014 | Cerrado |
 | AP-OQ-005 | domain-boundaries.md; design.md §13 | integración posterior con Solicitud/proyección | No bloquea T-01..T-19 del alcance inicial |
 | AP-OQ-006 | design.md §4/15 | lifecycle de cierre/reapertura | No bloquea si no se expone reapertura |
 
@@ -126,9 +143,9 @@ La precedencia de fuentes es la de `knowledge/README.md`. Un procedimiento deriv
 - Requirements con cadena de trazabilidad: `18/18`.
 - Invariantes con test futuro: `12/12` mediante TR-AP-001..011.
 - Acceptance criteria con test futuro: `12/12`.
-- Gaps bloqueantes identificados: `4` (`AP-OQ-001..004`).
+- Gaps bloqueantes identificados: `0`.
 - Gaps no bloqueantes identificados: `2` (`AP-OQ-005..006`).
 - `requirements_ready: true`
 - `design_ready: true`
 - `tasks_ready: true`
-- `implementation_ready: false`
+- `implementation_ready: true`

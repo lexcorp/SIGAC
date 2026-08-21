@@ -37,3 +37,9 @@ no la deriva de roles. OQ-EW-003 queda RESOLVED.
 GET `/api/v1/session` es el boundary canónico para que frontend reciba permissions ya
 resueltas. No autoriza operaciones por sí mismo ni mezcla permissions generales con
 capabilities contextuales. La UI no inspecciona roles.
+
+## Agenda Preparation
+
+Application usa `AGENDA_IMPORT`, `AGENDA_VIEW` y `AGENDA_INCIDENT_VIEW` desde el
+RequestContext canónico, sin autorización por rol ni `capabilities[]`. La frontera genera
+`ImportAttemptId` antes de autorización/lectura, pero éste no forma parte de RequestContext.

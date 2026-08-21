@@ -28,3 +28,9 @@ Separar:
 Cada categoría tendrá owner, finalidad, plazo y mecanismo de disposición.
 
 Nunca reutilizar la regla de conservación del expediente clínico como plazo automático para todos los logs.
+
+Agenda Preparation: archivo/fila raw sólo durante procesamiento/aborto, con máximo
+técnico configurable y eliminación del almacenamiento activo al outcome terminal.
+ImportacionAgenda/registro minimizado usa retención operacional configurable para
+trazabilidad; Agenda/Cita histórica tiene política distinta. No hay plazo numérico
+aprobado ni default indefinido. Backups expiran bajo su propia política.

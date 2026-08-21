@@ -23,3 +23,7 @@ Targets to validate:
 - indexed search on expediente identifiers/name fields permitted.
 
 Scale-up first. Scale-out only when measurements demand it.
+
+Agenda Preparation inicial usa ejecución síncrona porque los artefactos observados son
+pequeños y existe límite configurable fail-fast. "Asynchronously when large" exige un
+perfil futuro definido por medición/decisión; no introduce worker automático en el slice.

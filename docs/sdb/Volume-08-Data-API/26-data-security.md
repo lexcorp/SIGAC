@@ -19,3 +19,7 @@ architecture:
 - sensitive fields not copied into logs;
 - exports permission-controlled;
 - DEMO never receives production rows.
+
+Agenda SIMEF, staging y persistencia están aislados por tenant. No hay storage raw
+compartido sin namespace ni selección desde filename/contenido. Raw no se expone a
+humanos y se descarta al outcome terminal. Logs/audit/métricas excluyen C3 y raw.

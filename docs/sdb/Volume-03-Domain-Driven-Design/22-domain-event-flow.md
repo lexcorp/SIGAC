@@ -7,7 +7,7 @@ status: Draft
 # DDD-022 — Domain Event Flow
 ```mermaid
 flowchart TD
- A[AgendaVersionImported] --> B[RequestCreated]
+ A[AgendaImported / AgendaReconciled] --> B[RequestCreated]
  B --> C[RequestAssigned]
  C --> D[SearchStarted]
  D --> E{Localizado?}

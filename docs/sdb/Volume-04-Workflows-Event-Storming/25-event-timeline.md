@@ -11,7 +11,7 @@ methodology:
 ---
 # Event Timeline — ejemplo conceptual
 
-08:00 AgendaVersionImported
+08:00 AgendaImported
 08:03 RequestCreated
 08:10 RequestAssigned
 08:12 SearchStarted

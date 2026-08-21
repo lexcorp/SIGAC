@@ -10,8 +10,9 @@ AssignRequest→RequestAssigned
 StartSearch→SearchStarted
 MarkLocated→ExpedienteLocated
 MarkNotLocated→ExpedienteNotLocated
-ImportAgenda→AgendaVersionImported
+ImportAgenda→AgendaImported
 ReconcileAgenda→AgendaReconciled
+ReconcileAgenda→CitaWithdrawnFromAgenda|CitaRestored cuando corresponda
 TransferCustody→CustodyTransferred
 OpenLoan→LoanOpened
 RenewLoan→LoanRenewed

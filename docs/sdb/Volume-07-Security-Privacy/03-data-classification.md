@@ -29,3 +29,7 @@ Identificadores de paciente, número de expediente, relaciones paciente-expedien
 Passwords, signing keys, client secrets, DB credentials, recovery keys.
 
 Regla: logs y telemetría no deben elevar innecesariamente información C3/C4.
+
+El archivo SIMEF y sus filas raw son C3. Valores que identifican paciente, Expediente o
+relación asistencial son C3. Fingerprint, layout y conteos sanitizados son metadata C2 y
+no deben permitir reconstruir contenido.

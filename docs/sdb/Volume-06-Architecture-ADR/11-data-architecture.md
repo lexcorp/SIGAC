@@ -34,6 +34,10 @@ Chosen for transactional integrity, relational modeling, indexing, JSONB where j
 - no soft-delete as a universal pattern;
 - retention handled per record type and policy.
 
+Agenda Preparation separa staging transitorio, metadata de importación, registro
+minimizado y Agenda/Cita histórica. Ninguna categoría hereda automáticamente el plazo de
+otra; bytes/raw nunca entran al Domain.
+
 El modelo físico tenant de Expediente Workspace se rige por
 `POSTGRES-PHYSICAL-MODEL-DECISION.md` DB-EW-001..014. HospitalId se deriva del
 TenantContext y no se duplica como columna.

@@ -22,3 +22,7 @@ HTTPS/TLS for browser entry. TLS for service/database links according to trust b
 - application-level field encryption only when threat model justifies it.
 
 Avoid custom cryptography.
+
+Archivo/raw SIMEF usa TLS en tránsito y staging protegido por cifrado institucional de
+plataforma/disco, namespace tenant y least privilege. Persistencia usa database
+tenant-local y backups cifrados. RAW-AP-007 no fija algoritmos ni field encryption.

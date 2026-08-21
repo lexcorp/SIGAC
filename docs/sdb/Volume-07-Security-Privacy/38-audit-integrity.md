@@ -65,3 +65,21 @@ a la UoW mutante; denied/not-found/conflict/invalid-transition se registran fuer
 requestId y correlationId. Filtra `resource_type=EXPEDIENTE` y resource_id tenant-scoped;
 no expone changeSummary, securityContext ni metadata interna. Requiere
 `EXPEDIENT_AUDIT_VIEW` y nunca mezcla sus filas con MovimientoExpediente.
+
+## Agenda Preparation
+
+| Operación | Action / resource / result |
+|---|---|
+| Import denegado | `AGENDA_IMPORT / AGENDA_IMPORT_ATTEMPT / ImportAttemptId / denied` |
+| Import aceptado | `AGENDA_IMPORT / AGENDA_IMPORT / ImportacionAgenda.id / success` |
+| Consultar importación/resultados | `AGENDA_VIEW / AGENDA_IMPORT / importacionId / success|denied|not-found` |
+| Consultar Agenda | `AGENDA_VIEW / AGENDA / fechaAgenda / success|denied|not-found` |
+| Consultar preparación | `AGENDA_PREPARATION_VIEW / AGENDA / fechaAgenda / success|denied|not-found` |
+| Consultar incidencias | `AGENDA_INCIDENT_VIEW / AGENDA_IMPORT / importacionId / success|denied|not-found` |
+
+Layout rechazado no genera AuditEntry. Outcome operacional, outcome por fila,
+AuditResult y futuro HTTP status son conceptos distintos. Audit no incluye archivo, raw,
+filas ni datos personales de Agenda.
+
+RESULT-AP-014 confirma que resultados/incidencias de fila no generan AuditEntry. Los
+cuatro niveles funcionales no amplían ni sustituyen AuditResult.

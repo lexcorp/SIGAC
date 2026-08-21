@@ -51,3 +51,15 @@ Probar invariantes, value objects, state transitions y policies.
 - `DIRECCION`/`COORDINACION_MEDICA` emisor sin `LOAN_OPEN` → no ejecuta OpenLoan.
 - `ORDEN_SUPERIOR` → no habilita OpenLoan en este slice.
 - Ausencia de fuente habilitante → `OpenLoan` rechazado.
+
+## Agenda Preparation — RESULT-AP-001..014
+
+- Cada fila recibida termina con exactamente un `RecordProcessingResult`.
+- Todas las ocurrencias de un FOLIO repetido son `DUPLICATE_FOLIO`; no existe ganador.
+- Duplicados no reconcilian Cita para ese FOLIO.
+- ADD/UPDATE/UNCHANGED/RESTORE producen ADDED/UPDATED/UNCHANGED/RESTORED.
+- `RETIRADA_DE_AGENDA` es efecto sobre el snapshot previo y no cuenta como fila recibida.
+- Las ecuaciones de métricas cerradas se verifican como invariantes.
+- Layout rechazado no crea resultados de fila ni Domain Events.
+- Primera vez/subsecuente sólo acepta una marca inequívoca; ambas o ninguna generan
+  incidencia de fila, nunca un tercer estado.

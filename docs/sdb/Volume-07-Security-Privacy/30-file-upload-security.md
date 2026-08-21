@@ -24,3 +24,11 @@ baseline:
 - validate row/column counts;
 - delete staging according to policy;
 - malware scanning if institutional tooling exists.
+
+Agenda Preparation no conserva archivo/filas raw después de rechazo, identidad,
+confirmación, reconciliación o aborto terminal. No ofrece vista, descarga o recuperación
+humana del raw. Filename cliente no se persiste; tenant procede de RequestContext.
+
+El único exterior soportado es `.xls`; extensión/MIME no prueban compatibilidad y la
+aceptación requiere HTML ISO-8859 + layout SIMEF reconocido. El límite se aplica durante
+streaming. No se aceptan `.xlsx`, `.csv` o `.xlsm`.

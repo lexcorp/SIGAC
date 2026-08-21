@@ -15,8 +15,10 @@ ExpedienteNotLocated
 ExpedientePrepared
 RequestCancelled
 PreparationBatchCreated
-AgendaVersionImported
+AgendaImported
 AgendaReconciled
+CitaWithdrawnFromAgenda
+CitaRestored
 LateAppointmentDetected
 ExpedienteDispatched
 CustodyAccepted
@@ -34,6 +36,10 @@ IncidentResolved
 ExpedienteDeclaredLost
 
 AuditEvent no es sinónimo de DomainEvent.
+
+Agenda Preparation no emite evento por cada fila/métrica/incidencia. AgendaImported y
+AgendaReconciled llevan conteos sin C3; retirada/restauración preservan FOLIO y no
+significan cancelación clínica.
 
 ## Notas (2026-08-14)
 

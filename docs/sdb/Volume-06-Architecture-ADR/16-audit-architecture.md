@@ -45,3 +45,10 @@ contexto, y timestamp al hacer append. El puerto no ofrece update/delete.
 ## Sensitive values
 Do not log clinical data, tokens, secrets or full payloads unnecessarily. `AuditEntry`
 nunca contiene datos C3.
+
+## Agenda Preparation
+
+Actions: `AGENDA_IMPORT`, `AGENDA_VIEW`, `AGENDA_PREPARATION_VIEW` y
+`AGENDA_INCIDENT_VIEW`. Resource types: `AGENDA_IMPORT_ATTEMPT`, `AGENDA_IMPORT` y
+`AGENDA`. Layout rechazado es outcome operacional y no se representa con AuditResult.
+`ImportAttemptId` no se agrega a RequestContext ni sustituye tracing.

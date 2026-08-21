@@ -11,9 +11,11 @@ architecture:
 ---
 # DAT-015 — SIMEF Import Staging
 
+Modelo histórico candidato superseded parcialmente por RAW-AP-001..012; no es DDL.
+
 `agenda_imports`
 - id
-- filename
+- metadata sanitizada; no filename proporcionado por cliente
 - file_sha256
 - imported_by_ref
 - imported_at
@@ -23,11 +25,11 @@ architecture:
 - invalid_count
 - effective_date
 
-`agenda_staging_rows`
+`agenda_staging_rows` (sólo transitorio)
 - id
 - import_id
 - row_number
-- raw jsonb
+- raw transitorio, eliminado al finalizar/abortar
 - normalized jsonb
 - validation_status
 - validation_errors jsonb
@@ -41,4 +43,6 @@ architecture:
 - removed_count
 - reconciled_at
 
-Staging se retiene por periodo técnico configurable y no indefinidamente.
+Staging dura sólo lo necesario, con máximo configurable y nunca indefinidamente. La
+evidencia durable usa valores allow-listed, interpretación/resolución, fingerprint/layout
+y conteos. El schema físico permanece pendiente.

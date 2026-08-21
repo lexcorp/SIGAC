@@ -33,3 +33,7 @@ stack traces, SQL, database names o connection strings.
 - idempotency for imports/commands selected;
 - safe error responses;
 - OpenAPI contract tests.
+
+Agenda import genera ImportAttemptId server-side, autoriza `AGENDA_IMPORT` antes de abrir
+el stream y aplica límite streaming. Problem Details no incluye filename, fingerprint,
+contenido, fecha inferida, stack/parser/DB internals ni datos SIMEF.

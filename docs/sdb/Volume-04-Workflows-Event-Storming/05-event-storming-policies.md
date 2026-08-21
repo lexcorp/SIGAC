@@ -20,3 +20,7 @@ POL-ES-006 Fecha límite superada → LoanExpired.
 POL-ES-007 ReturnReceived → cerrar custodia externa y pasar a verificación/rearchivo según flujo.
 POL-ES-008 IncidentOpened → asignar responsable/estado.
 POL-ES-009 AgendaReconciled con alta tardía → crear nueva demanda y alertar preparación.
+
+RESULT-AP-001..014: cada fila obtiene un RecordProcessingResult. Incidencias bloquean
+sólo su fila; layout incompatible rechaza globalmente. FOLIO duplicado marca todas sus
+filas y no elige ganadora.

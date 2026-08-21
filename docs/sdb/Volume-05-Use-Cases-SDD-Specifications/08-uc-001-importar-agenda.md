@@ -21,6 +21,7 @@ Jefatura de Archivo o rol autorizado.
 ## Precondiciones
 - usuario autenticado;
 - hospital/tenant resuelto;
+- permission `AGENDA_IMPORT`;
 - archivo/formato soportado.
 
 ## Flujo principal
@@ -30,16 +31,37 @@ Jefatura de Archivo o rol autorizado.
 4. Registra versión.
 5. Traduce registros a demanda.
 6. Identifica duplicados.
-7. Crea/actualiza JornadaPreparacion.
+7. Reconcilia Agenda/Citas y produce la lista inicial de preparación.
 8. Publica AgendaImported.
 
 ## Alternos
 - mismo archivo ya importado → no duplicar;
 - filas inválidas → reportar;
-- agenda parcial → marcar advertencia.
+- filas con incidencias → conservar resultado/incidencia explícitos y confirmar la
+  importación cuando la UoW completa sea válida; no existe outcome `PARTIAL`.
 
 ## Acceptance
 Given una agenda válida no importada
 When el usuario la importa
 Then se registra una única versión
 And se crean ítems de demanda sin duplicados.
+
+## Authorization y audit — AUTH-AP-001..003
+
+La frontera genera `ImportAttemptId` después de resolver RequestContext y antes de
+autorizar o leer el archivo. Falta de permission audita
+`AGENDA_IMPORT/AGENDA_IMPORT_ATTEMPT/{ImportAttemptId}/denied`. Importación
+aceptada/confirmada audita `AGENDA_IMPORT/AGENDA_IMPORT/{ImportacionAgenda.id}/success`.
+Layout rechazado es outcome operacional y no genera AuditEntry ni amplía AuditResult.
+
+## HTTP/Application contract — API-AP-001..014
+
+POST `/api/v1/agenda-imports` recibe multipart con un `file` `.xls` y
+`Idempotency-Key` requerido. Application recibe `{importAttemptId, artifact,
+idempotencyKey, context}` sin tipos HTTP. La ejecución es síncrona y una UoW confirma
+importación + reconciliación + resultados + métricas + audit success. Import inicial,
+idéntico y reconciliado responden 201; layout rechazado responde 422 sin ImportacionAgenda.
+
+RESULT-AP-001..014 fija ImportOutcome `IMPORTED|ALREADY_IMPORTED|RECONCILED` y resultados
+`ADDED|UPDATED|UNCHANGED|RESTORED|PENDING_REVIEW|REJECTED|DUPLICATE_FOLIO`.
+Incidencias locales permiten confirmar 201; estructura incompatible rechaza globalmente.

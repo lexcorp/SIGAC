@@ -1,11 +1,11 @@
 ---
 spec: agenda-preparation
-version: "0.1.0-draft"
-status: "Draft — implementation blocked by AP-OQ-001..004 and SDB propagation"
+version: "0.1.0"
+status: "Approved for Implementation"
 date: "2026-08-20"
 requires:
-  - "requirements.md v0.1.0-draft"
-  - "design.md v0.1.0-draft"
+  - "requirements.md v0.1.0"
+  - "design.md v0.1.0"
 ---
 
 # Agenda Preparation — Tasks
@@ -60,13 +60,14 @@ T-01 -----> T-02 -----+
 
 ## 4. Tasks
 
-### T-00 — Cerrar decisiones y propagar SDB
+### T-00 — Verificar decisiones y propagación SDB
 
 **Dependencias:** ninguna.
 
-**Objetivo:** resolver `AP-OQ-001..004`, registrar decisiones formales y propagar Agenda Preparation a los volúmenes SDB enumerados en requirements.md §10.
+**Objetivo:** verificar el cierre documental de `AP-OQ-001..004`, incluida la taxonomía
+RESULT-AP-001..014, y que el SDB esté sincronizado antes de implementar Domain.
 
-**Entregables:** permissions/matriz/audit; política raw; contrato API/importación; taxonomía final; SDB sincronizado; readiness actualizado.
+**Entregables:** taxonomía final; SDB sincronizado; readiness actualizado.
 
 **Gate:** revisión documental y `git diff --check`.
 
@@ -74,7 +75,8 @@ T-01 -----> T-02 -----+
 
 **Dependencias:** T-00.
 
-**Fuentes:** REQ-AP-003..008, REQ-AP-011, INV-AP-002/006/008.
+**Fuentes:** REQ-AP-003..008, REQ-AP-011, INV-AP-002/006/008,
+`IMPORT-RESULT-TAXONOMY-DECISION.md`.
 
 **Objetivo:** implementar únicamente los Value Objects y tipos de resultado aprobados: fecha, FOLIO, número de empleado, Servicio/Especialidad, posición de origen y resultado de registro.
 
@@ -152,7 +154,9 @@ T-01 -----> T-02 -----+
 
 **Fuentes:** decisión física aprobada en T-00, REQ-AP-008/014/015/017.
 
-**Objetivo:** definir schema PostgreSQL y migrations no destructivas para importación, Agenda, Cita, resultados e incidencias. No almacenar raw completo sin política aprobada.
+**Objetivo:** definir schema PostgreSQL y migrations no destructivas. Aplicar
+RAW-AP-001..012: no persistir archivo/fila raw ni filename cliente; separar metadata,
+allow-list original, normalización y estado Domain.
 
 **Tests/gates:** migration validation, idempotence y constraints; STOP ante constraint o nullability no aprobada.
 
@@ -170,7 +174,9 @@ T-01 -----> T-02 -----+
 
 **Fuentes:** artefacto real controlado, `artifact-analysis.md`, `excel-reverse-engineering.md`, fixtures desidentificados.
 
-**Objetivo:** implementar el adapter HTML ISO-8859 bajo `.xls`; entregar contrato neutral a Application. No ejecutar macros ni incorporar hojas históricas fuera de Agenda.
+**Objetivo:** implementar el adapter HTML ISO-8859 bajo `.xls`; entregar contrato neutral
+a Application. Staging es tenant-scoped/protegido y se elimina al outcome terminal. No
+ejecutar macros ni incorporar hojas históricas fuera de Agenda.
 
 **Tests:** layout válido, encoding, bloques múltiples, headers alterados/missing, contenido inválido y fail-closed.
 
@@ -188,7 +194,9 @@ T-01 -----> T-02 -----+
 
 **Fuentes:** contrato HTTP, permissions y audit aprobados en T-00.
 
-**Objetivo:** exponer sólo Use Cases canónicos mediante RequestContext server-side, validación segura y RFC7807. Controllers no acceden a Repositories ni parser directamente.
+**Objetivo:** implementar API-AP-001..014: multipart streaming, ImportAttemptId,
+Idempotency-Key, límites/timeouts, ejecución síncrona, responses/queries y RFC7807.
+Controllers no acceden a Repositories, parser, filesystem, database o TenantRouter.
 
 **Tests:** auth, authorization, validation, errores sanitizados, tenant no falsificable y contratos de upload/query.
 
@@ -196,7 +204,8 @@ T-01 -----> T-02 -----+
 
 **Dependencias:** T-13.
 
-**Objetivo:** documentar exactamente endpoints, payloads, read models y errors implementados. No exponer campos raw/minimizados ni semánticas no aprobadas.
+**Objetivo:** publicar endpoints, multipart, headers, responses, paginación y errors de
+API-AP-001..014, sin raw ni outcomes de fila no aprobados.
 
 **Gate:** OpenAPI validation y contract tests.
 
@@ -260,7 +269,7 @@ T-01 -----> T-02 -----+
 
 | Task | Estado |
 |---|---|
-| T-00 | BLOCKED — requiere decisiones humanas AP-OQ-001..004 |
+| T-00 | PASS — AP-OQ-001..004 RESOLVED y SDB propagado |
 | T-01..T-19 | NOT STARTED |
 
 No puede declararse `agenda-preparation implementation: COMPLETE` hasta que T-19 y todos sus gates estén en PASS.

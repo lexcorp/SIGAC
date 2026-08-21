@@ -65,3 +65,29 @@ LOCATION-PERMISSION-GAP queda CLOSED; T-21A/T-22 no conservan bloqueos conocidos
 v0.3.23 fija Audit `occurredAt DESC, auditId DESC`, cursor conceptual
 `occurredAt + auditId`, y GET `/api/v1/session` como fuente server-derived de
 permissions para frontend. Los dos bloqueos restantes de T-21A quedan cerrados.
+
+## Agenda Preparation v0.1.0
+
+`AP-OQ-001` está RESOLVED mediante
+`docs/decisions/agenda-preparation/AUTHORIZATION-AUDIT-DECISION.md`: permissions,
+ausencia de capabilities, `ImportAttemptId` preautorización y audit sanitizado quedan
+definidos. Layout rechazado no amplía AuditResult ni genera AuditEntry.
+En ese cierre, `AP-OQ-002..004` permanecían OPEN. RAW-AP-001..012 resuelve después
+AP-OQ-002; `implementation_ready` sigue false por AP-OQ-003/004.
+
+`AP-OQ-002` queda RESOLVED mediante
+`docs/decisions/agenda-preparation/RAW-DATA-RETENTION-DECISION.md`: raw transitorio,
+allow-list durable, retención diferenciada/configurable, protección institucional,
+disposición y ausencia de acceso humano. En ese cierre AP-OQ-003/004 seguían OPEN;
+API-AP-001..014 resuelve posteriormente AP-OQ-003.
+
+`AP-OQ-003` queda RESOLVED mediante
+`docs/decisions/agenda-preparation/IMPORT-API-DECISION.md`: input stream, multipart
+`.xls`, límites/timeouts configurables, síncrono, UoW, Idempotency-Key, 201/Location,
+queries, cursor y errors quedan definidos. `AP-OQ-004` continúa OPEN y
+`implementation_ready` permanece false.
+
+`AP-OQ-004` queda RESOLVED mediante
+`docs/decisions/agenda-preparation/IMPORT-RESULT-TAXONOMY-DECISION.md`. Con AP-OQ-001..004
+resueltos y AP-OQ-005/006 fuera del slice inicial, Agenda Preparation queda
+`Approved for Implementation`; `implementation_ready: true`.
