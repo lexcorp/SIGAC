@@ -7,6 +7,7 @@ export const AUDIT_RESULTS = [
   'conflict',
   'invalid-transition',
 ] as const;
+
 export type AuditResult = (typeof AUDIT_RESULTS)[number];
 
 export interface AuditEntry {

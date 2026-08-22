@@ -7,7 +7,7 @@ import {
   ExpedienteNumero,
   Ubicacion,
 } from '../domain/value-objects/index.js';
-import type { AuditWriter } from './AuditWriter.js';
+import type { AuditWriter } from '@sigac/audit';
 import { SearchExpedientesByNumero } from './SearchExpedientesByNumero.js';
 
 const tenant = {

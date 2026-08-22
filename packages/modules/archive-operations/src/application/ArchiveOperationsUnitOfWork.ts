@@ -1,6 +1,6 @@
 import type { RequestContext } from '@sigac/tenant';
 import type { ExpedienteRepository } from '../domain/ports/ExpedienteRepository.js';
-import type { AuditWriter } from './AuditWriter.js';
+import type { AuditWriter } from '@sigac/audit';
 import type { MovimientoExpedienteWriter } from './MovimientoExpedienteWriter.js';
 
 export interface ArchiveOperationsTransaction {

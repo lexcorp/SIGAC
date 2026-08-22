@@ -6,7 +6,7 @@ import type {
   Ubicacion,
 } from '../domain/value-objects/index.js';
 import { ApplicationError } from './ApplicationError.js';
-import type { AuditWriter } from './AuditWriter.js';
+import type { AuditWriter } from '@sigac/audit';
 
 export interface SearchExpedientesByNumeroInput {
   readonly numero: ExpedienteNumero;

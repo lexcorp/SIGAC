@@ -5,7 +5,7 @@ import type {
   ExpedienteAuditQueryPort,
   ExpedienteId,
 } from '@sigac/archive-operations';
-import type { AuditResult } from '@sigac/archive-operations';
+import type { AuditResult } from '@sigac/audit';
 import type { RequestSource, TenantContext } from '@sigac/tenant';
 import type { TenantDatabaseRouter } from '../TenantDatabaseRouter.js';
 

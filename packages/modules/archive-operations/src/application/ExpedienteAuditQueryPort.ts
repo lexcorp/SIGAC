@@ -1,5 +1,5 @@
 import type { RequestSource, TenantContext } from '@sigac/tenant';
-import type { AuditResult } from './AuditWriter.js';
+import type { AuditResult } from '@sigac/audit';
 import type { ExpedienteId } from '../domain/value-objects/ExpedienteId.js';
 
 export interface ExpedienteAuditPagination {

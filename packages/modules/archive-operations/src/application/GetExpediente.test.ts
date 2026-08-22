@@ -9,7 +9,7 @@ import {
   ExpedienteNumero,
   Ubicacion,
 } from '../domain/value-objects/index.js';
-import type { AuditWriter } from './AuditWriter.js';
+import type { AuditWriter } from '@sigac/audit';
 import { ExpedienteCapabilityService } from './ExpedienteCapabilityService.js';
 import type {
   ActiveLoanQueryPort,

@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { AuditEntry, AuditWriter } from '@sigac/archive-operations';
+import type { AuditEntry, AuditWriter } from '@sigac/audit';
 import type { RequestContext } from '@sigac/tenant';
 import type { TenantDatabaseRouter, TenantDatabaseSession } from '../TenantDatabaseRouter.js';
 

@@ -26,6 +26,9 @@
       "@sigac/tenant": [
         "./packages/platform/tenant/src/index.ts"
       ],
+      "@sigac/audit": [
+        "./packages/platform/audit/src/index.ts"
+      ],
       "@sigac/database": [
         "./packages/platform/database/src/index.ts"
       ]

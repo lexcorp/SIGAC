@@ -8,7 +8,7 @@ import type {
 import type { ExpedienteId, Ubicacion } from '../domain/value-objects/index.js';
 import type { ArchiveOperationsUnitOfWork } from './ArchiveOperationsUnitOfWork.js';
 import { ApplicationError } from './ApplicationError.js';
-import type { AuditResult, AuditWriter } from './AuditWriter.js';
+import type { AuditResult, AuditWriter } from '@sigac/audit';
 
 export interface AcceptCustodyInput {
   readonly expedienteId: ExpedienteId;

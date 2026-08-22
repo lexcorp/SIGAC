@@ -1,5 +1,5 @@
 {
-  "name": "@sigac/archive-operations",
+  "name": "@sigac/audit",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -8,17 +8,15 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@sigac/audit": "workspace:*",
-    "@sigac/domain-kernel": "workspace:*",
     "@sigac/tenant": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "latest",
+    "typescript": "7.0.2",
     "vitest": "4.1.10"
   }
 }

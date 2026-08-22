@@ -2,7 +2,7 @@ import type { RequestContext } from '@sigac/tenant';
 import type { ExpedienteRepository } from '../domain/ports/ExpedienteRepository.js';
 import type { ExpedienteId } from '../domain/value-objects/ExpedienteId.js';
 import { ApplicationError } from './ApplicationError.js';
-import type { AuditResult, AuditWriter } from './AuditWriter.js';
+import type { AuditResult, AuditWriter } from '@sigac/audit';
 import type {
   ExpedienteTimelineQueryPort,
   TimelinePage,

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Expediente } from '../domain/Expediente.js';
 import type { ExpedienteRepository } from '../domain/ports/ExpedienteRepository.js';
 import { ExpedienteId, ExpedienteNumero } from '../domain/value-objects/index.js';
-import type { AuditWriter } from './AuditWriter.js';
+import type { AuditWriter } from '@sigac/audit';
 import type {
   ExpedienteTimelineQueryPort,
   TimelinePage,

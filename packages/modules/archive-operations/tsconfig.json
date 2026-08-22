@@ -4,6 +4,9 @@
     "rootDir": "src",
     "outDir": "../../../dist/packages/modules/archive-operations",
     "paths": {
+      "@sigac/audit": [
+        "../../../dist/packages/platform/audit/index.d.ts"
+      ],
       "@sigac/domain-kernel": [
         "../../../dist/packages/domain-kernel/index.d.ts"
       ],

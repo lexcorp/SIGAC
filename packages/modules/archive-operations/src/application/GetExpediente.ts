@@ -2,7 +2,7 @@ import type { RequestContext } from '@sigac/tenant';
 import type { ExpedienteRepository } from '../domain/ports/ExpedienteRepository.js';
 import type { EstadoOperativo, ExpedienteId } from '../domain/value-objects/index.js';
 import { ApplicationError } from './ApplicationError.js';
-import type { AuditResult, AuditWriter } from './AuditWriter.js';
+import type { AuditResult, AuditWriter } from '@sigac/audit';
 import { ExpedienteCapabilityService, type ExpedienteCapability } from './ExpedienteCapabilityService.js';
 import type {
   ActiveLoanQueryPort,

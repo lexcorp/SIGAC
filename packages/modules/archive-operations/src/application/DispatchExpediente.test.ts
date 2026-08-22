@@ -7,7 +7,7 @@ import type {
   ArchiveOperationsTransaction,
   ArchiveOperationsUnitOfWork,
 } from './ArchiveOperationsUnitOfWork.js';
-import type { AuditEntry, AuditWriter } from './AuditWriter.js';
+import type { AuditEntry, AuditWriter } from '@sigac/audit';
 import { DispatchExpediente, type DispatchExpedienteInput } from './DispatchExpediente.js';
 import type {
   MovimientoExpedienteAppend,

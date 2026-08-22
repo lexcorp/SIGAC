@@ -4,7 +4,7 @@ export * from './domain/ports/ExpedienteRepository.js';
 export * from './application/GetExpediente.js';
 export * from './application/ExpedienteCapabilityService.js';
 export * from './application/ApplicationError.js';
-export * from './application/AuditWriter.js';
+export * from '@sigac/audit';
 export * from './application/ExpedienteWorkspaceQueryPorts.js';
 export * from './application/ExpedienteTimelineQueryPort.js';
 export * from './application/GetExpedienteTimeline.js';
