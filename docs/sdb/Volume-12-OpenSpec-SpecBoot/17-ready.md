@@ -125,3 +125,9 @@ Agenda, shape/lifecycle de Cita, HoraCita, MedicoReferencia, ExpedienteReferenci
 comparación, reconciliación atómica, historia lógica, temporalidad y errores quedan
 cerrados. Los Domain Events candidatos se difieren explícitamente; T-03 queda ready y no
 inicia en esta actualización. `implementation_ready` continúa true.
+
+v0.1.7 aprueba PORT-AP-001..010 y PREP-AP-001..004 mediante
+`APPLICATION-PORTS-AND-PREPARATION-READ-DECISION.md`. Cierra ownership compartido de
+Audit, persistencia separada de fingerprint y agrupación/orden/impresión de la lista.
+T-04A extrae el contrato Audit a `@sigac/audit` sin cambios semánticos antes de T-05.
+No quedan gaps documentales conocidos para T-05; `implementation_ready` continúa true.

@@ -36,3 +36,16 @@ architecture:
 
 Unique candidate:
 (jornada_id, solicitud_id)
+
+## Agenda Preparation read projection v0.1.7
+
+La lista inicial de Agenda Preparation es una proyección distinta de
+`JornadaPreparacion`; no introduce turno, consultorio, solicitud ni estado físico.
+`PreparationItem` contiene sólo FOLIO, nombre, referencia de Expediente original/resuelta,
+tipo de derechohabiente/consulta, fecha/hora, médico y Servicio/Especialidad.
+
+Agrupa Servicio (`nombre`, `codigo`) y médico (`nombre`, `numeroEmpleado`) ASC. Dentro
+del médico usa `APPOINTMENT_TIME_ASC` —default, hora/FOLIO— o `PATIENT_NAME_ASC`
+—nombrePaciente/FOLIO—. Pantalla e impresión conservan la misma secuencia. Pantalla usa
+cursor opaco ligado al order; impresión recupera la colección vigente completa sin
+cursor y requiere `AGENDA_VIEW`.

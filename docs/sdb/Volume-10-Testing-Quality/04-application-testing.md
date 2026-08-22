@@ -116,3 +116,13 @@ Agenda Preparation v0.1.1 añade pruebas de `ListAgendaImports`: permission ante
 query, tenant propagation, fecha opcional, empty, orden/cursor determinista y campos
 minimizados. `GetAgendaDay` cubre not-found, exclusión de retiradas y conteos distintos
 de médico por employeeNumber y Servicio/Especialidad, además de incidentCount vigente.
+
+Agenda Preparation v0.1.7 añade contract tests para los ports PORT-AP-001..010: ninguna
+dependencia de infraestructura, médico con tres resultados explícitos, Expediente 0..N,
+metadata equivalente 0..1 y fingerprint ausente de Domain. La UoW comprueba un único
+`importedAt`, commit atómico de Aggregates+metadata+audit success y rollback total.
+
+PreparationList cubre ambos orders, tie-breakers completos, cursor ligado al order y
+reset al cambiarlo. Pantalla e impresión deben devolver la misma secuencia; impresión
+es completa/sin cursor, conserva minimización y no exige permission distinta de
+`AGENDA_VIEW`.

@@ -1,11 +1,11 @@
 ---
 spec: agenda-preparation
-version: "0.1.6"
+version: "0.1.7"
 status: "Approved for Implementation"
 date: "2026-08-21"
 requires:
-  - "requirements.md v0.1.6"
-  - "design.md v0.1.6"
+  - "requirements.md v0.1.7"
+  - "design.md v0.1.7"
 ---
 
 # Agenda Preparation — Tasks
@@ -44,6 +44,9 @@ T-00
 T-01 -----> T-02 -----+
   |                    |
   +-------> T-03 -----+--> T-04
+                            |
+                            v
+                           T-04A
                             |
                             v
                            T-05
@@ -124,13 +127,32 @@ Turno/Consultorio/campos excluidos/timestamps; T-03 no emite Domain Events.
 
 **Gate:** typecheck y tests focalizados del módulo.
 
-### T-05 — Application ports y contratos
+### T-04A — Extraer contrato compartido Security/Audit
 
 **Dependencias:** T-04.
 
-**Fuentes:** design.md §7, REQ-AP-006/008/016/017.
+**Fuentes:** PORT-AP-008,
+`APPLICATION-PORTS-AND-PREPARATION-READ-DECISION.md` y arquitectura Audit vigente.
 
-**Objetivo:** definir Repository/query/parser/UoW ports mínimos y tenant-scoped. `ExpedienteReferenceQueryPort` mantiene cardinalidad 0..N. Ningún port importa infraestructura.
+**Objetivo:** extraer `AuditWriter`, `AuditEntry` y `AuditResult` sin cambios semánticos
+desde Archive Operations al package compartido `packages/platform/audit` (`@sigac/audit`)
+y actualizar consumidores existentes. No duplicar interfaces ni cambiar PostgresAuditWriter,
+audit_log o la taxonomía cerrada de cinco resultados.
+
+**Tests/gate:** typecheck y tests existentes de consumidores; verificación de que Agenda
+Preparation no depende de `@sigac/archive-operations` para Audit.
+
+### T-05 — Application ports y contratos
+
+**Dependencias:** T-04A.
+
+**Fuentes:** design.md §7/9, REQ-AP-006/008/016/017/021/022,
+`APPLICATION-PORTS-AND-PREPARATION-READ-DECISION.md`.
+
+**Objetivo:** definir los Repository/query/parser/metadata/UoW ports mínimos y
+tenant-scoped, incluidos PreparationList screen/print. `ExpedienteReferenceQueryPort`
+mantiene cardinalidad 0..N. Fingerprint queda fuera de Domain y ningún port importa
+infraestructura.
 
 **Tests:** compile-time/contract sólo si el repositorio ya usa ese patrón.
 
@@ -275,6 +297,7 @@ API-AP-001..014/v0.1.1, sin raw ni outcomes no aprobados.
 |---|---|---|
 | Decisions/SDB | T-00 | revisión documental, diff check |
 | Domain | T-01..T-04 | typecheck + unit/property tests |
+| Shared Audit prerequisite | T-04A | typecheck + tests de consumidores sin cambio semántico |
 | Application | T-05..T-08 | typecheck + unit/contract tests |
 | Persistence | T-09..T-10 | migrations + PostgreSQL integration focalizada |
 | Importer | T-11..T-12 | parser/golden regression + privacy scan |
@@ -288,6 +311,9 @@ API-AP-001..014/v0.1.1, sin raw ni outcomes no aprobados.
 | Task | Estado |
 |---|---|
 | T-00 | PASS — AP-OQ-001..004 RESOLVED y SDB propagado |
-| T-01..T-19 | NOT STARTED |
+| T-01..T-04 | PASS |
+| T-04A | NOT STARTED — prerequisite técnico de T-05 |
+| T-05 | NOT STARTED — documentalmente ready; depende de T-04A |
+| T-06..T-19 | NOT STARTED |
 
 No puede declararse `agenda-preparation implementation: COMPLETE` hasta que T-19 y todos sus gates estén en PASS.

@@ -83,3 +83,9 @@ filas ni datos personales de Agenda.
 
 RESULT-AP-014 confirma que resultados/incidencias de fila no generan AuditEntry. Los
 cuatro niveles funcionales no amplían ni sustituyen AuditResult.
+
+El ownership de `AuditWriter`, `AuditEntry` y `AuditResult` es Security/Audit Application
+compartido en `@sigac/audit`. Archive Operations y Agenda Preparation consumen ese
+contrato sin duplicarlo; Agenda Preparation no importa Archive Operations para auditar.
+La extracción física es un prerequisito técnico y conserva exactamente los cinco
+`AuditResult`, la shape de AuditEntry, PostgresAuditWriter y audit_log.

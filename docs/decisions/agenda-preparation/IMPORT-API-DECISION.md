@@ -231,7 +231,10 @@ Orden/cursor conceptual:
 
 - resultados: posición de origen ASC + registroId ASC;
 - incidencias: posición de origen ASC + incidenciaId ASC;
-- preparation-items: hora ASC + FOLIO ASC.
+- preparation-items: agrupación Servicio nombre/código y médico nombre/número de
+  empleado; default `APPOINTMENT_TIME_ASC` (hora + FOLIO), con
+  `PATIENT_NAME_ASC` (nombrePaciente + FOLIO) también aprobado. El cursor queda ligado
+  al order y cambiarlo reinicia la paginación. Véase PREP-AP-002/003.
 
 Cursor encoding es opaco; API/UI sólo lo reciben y reenvían. Las métricas del resumen
 aportan conteos agregados, no un total de paginación.

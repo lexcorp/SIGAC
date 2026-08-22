@@ -74,3 +74,15 @@ requiere `AGENDA_VIEW`. Devuelve items minimizados ordenados por
 
 `GetAgendaDay` requiere `AGENDA_VIEW` y devuelve el resumen vigente de tenant+fecha.
 Agenda ausente produce `AGENDA_NOT_FOUND`, no `null`.
+
+## Ports y transacción v0.1.7
+
+La inspección usa `AgendaFileInput`/`AgendaFileInterpreterPort`. Resolución de médico
+devuelve explícitamente `RESOLVED|NOT_FOUND|AMBIGUOUS`; Expediente mantiene cardinalidad
+0..N. Fingerprint se mantiene fuera de Domain y se asocia mediante
+`ImportArtifactMetadataRepository`, con búsqueda 0..1 de la asociación confirmada más
+reciente (`importedAt DESC, importacionId DESC`) y sin UNIQUE conceptual.
+
+La confirmación ejecuta, en una UoW tenant-scoped, save de ImportacionAgenda, save/
+reconcile de Agenda, asociación de metadata y audit success. Cualquier fallo revierte
+todo. Audit usa el contrato compartido Security/Audit, no Archive Operations.

@@ -25,9 +25,11 @@ El archivo sólo se nombra durante selección. Después no se presenta filename.
 ## UF-AP-003 — Revisar preparación
 
 1. Abrir Lista de preparación para la fecha.
-2. Cargar página ordenada por hora + FOLIO.
-3. Agrupar visualmente Servicio/Especialidad → Médico → citas.
-4. “Cargar más” reenvía el cursor opaco; nunca se decodifica ni se muestran páginas.
+2. Elegir `APPOINTMENT_TIME_ASC` —default— o `PATIENT_NAME_ASC`.
+3. Cargar página agrupada Servicio nombre/código → médico nombre/número de empleado.
+4. Dentro del médico ordenar hora/FOLIO o nombrePaciente/FOLIO según la selección.
+5. “Cargar más” reenvía el cursor opaco ligado al order; cambiar order lo descarta.
+6. “Imprimir” obtiene la colección vigente completa, sin cursor, con la misma secuencia.
 
 ## UF-AP-004 — Revisar incidencias
 

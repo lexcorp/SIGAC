@@ -27,12 +27,14 @@
 | ImportResultSummary | imported/already/reconciled |
 | PreparationList | empty/loaded/loading-more/error |
 | PreparationGroup | servicio → médico |
+| PreparationOrderSelector | appointment time/patient name; reset de cursor |
+| PrintAction | colección completa con grouping/order vigente |
 | IncidentList | empty/loaded/loading-more/error |
 | IncidentRow | siete categorías humanas |
 | ImportHistory | empty/loaded/error |
 | ImportDetail | summary/results/incidents autorizadas |
 
-Total: 20 candidatos (9 reutilizables, 11 específicos).
+Total: 22 candidatos (9 reutilizables, 13 específicos).
 
 Los componentes reciben datos/permissions; no calculan matching, reconciliación,
 outcomes ni autorización. No se propone nueva librería de UI o fetching.

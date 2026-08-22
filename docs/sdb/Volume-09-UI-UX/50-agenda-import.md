@@ -38,3 +38,14 @@ Preparación de Agenda es el concepto visible; upload es mecanismo. El dashboard
 `ListAgendaImports`, filtro opcional por fecha, cursor opaco y “Cargar más”, sin
 total/page numbers. Empty history es válido. No muestra raw, filename, fingerprint,
 actorRef o datos personales.
+
+## Lista e impresión — v0.1.7
+
+La lista agrupa Servicio/Especialidad por nombre/código y médico por nombre/número de
+empleado, ASC. El usuario puede seleccionar `APPOINTMENT_TIME_ASC` —default— o
+`PATIENT_NAME_ASC`; FOLIO es tie-breaker. Cambiar order descarta el cursor opaco y vuelve
+al inicio.
+
+Pantalla e impresión usan exactamente la misma secuencia. La impresión recupera la
+colección vigente completa sin cursor, usa `AGENDA_VIEW`, no introduce `AGENDA_PRINT`,
+no fija PDF y no genera SM10-1.

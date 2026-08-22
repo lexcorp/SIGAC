@@ -34,5 +34,9 @@ cursor opaco representa `occurredAt + auditId`. Application, API y frontend sól
 reciben y reenvían.
 
 Agenda results/incidents/preparation-items usa `{items,nextCursor}`, sin total/hasMore.
-`limit` positivo requerido, máximo configurable. Cursor opaco: posición+registroId ASC,
-posición+incidenciaId ASC y hora+FOLIO ASC, respectivamente.
+`limit` positivo requerido, máximo configurable. Resultados/incidencias usan cursor
+opaco posición+registroId y posición+incidenciaId ASC. Preparation-items agrupa por
+Servicio nombre/código y médico nombre/número de empleado ASC; admite
+`APPOINTMENT_TIME_ASC` —default, hora/FOLIO— y `PATIENT_NAME_ASC` —nombrePaciente/FOLIO—.
+Su cursor incluye conceptualmente todas las claves y queda ligado al order; cambiarlo
+reinicia desde el principio.

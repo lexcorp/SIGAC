@@ -1,10 +1,10 @@
 ---
 spec: agenda-preparation
-version: "0.1.6"
+version: "0.1.7"
 status: "Approved for Implementation"
 date: "2026-08-21"
 requires:
-  - "requirements.md v0.1.6"
+  - "requirements.md v0.1.7"
 bounded_context: "Agenda / Appointment Preparation"
 open_questions_blocking: []
 ---
@@ -207,9 +207,11 @@ El Aggregate no define sorting de presentación. Los futuros read models podrán
 por hora o nombre sin depender del orden interno de Agenda; T-03 no implementa sorting ni
 impresión.
 
-## 7. Ports conceptuales
+## 7. Ports Application aprobados
 
-Los nombres finales seguirán convenciones del módulo; ningún port expone HTTP, NestJS, Drizzle o PostgreSQL.
+Los contratos exactos son `PORT-AP-001..010` de
+`APPLICATION-PORTS-AND-PREPARATION-READ-DECISION.md`; ningún port expone HTTP, NestJS,
+Drizzle o PostgreSQL.
 
 ```ts
 interface AgendaFileInterpreterPort {
@@ -217,7 +219,6 @@ interface AgendaFileInterpreterPort {
 }
 
 interface ImportacionAgendaRepository {
-  findEquivalent(fingerprint: ImportFingerprint, tenant: TenantContext): Promise<ImportacionAgenda | null>;
   save(importacion: ImportacionAgenda, tenant: TenantContext): Promise<void>;
 }
 
@@ -227,8 +228,8 @@ interface AgendaRepository {
 }
 
 interface MedicoDirectoryQueryPort {
-  findByEmployeeNumber(numero: NumeroEmpleado, tenant: TenantContext): Promise<MedicoResolution | null>;
-  findControlledFallback(nombreOriginal: string, tenant: TenantContext): Promise<readonly MedicoResolution[]>;
+  findByEmployeeNumber(numero: NumeroEmpleado, tenant: TenantContext): Promise<MedicoResolution>;
+  findControlledFallback(nombreOriginal: string, tenant: TenantContext): Promise<MedicoResolution>;
 }
 
 interface ExpedienteReferenceQueryPort {
@@ -252,15 +253,21 @@ interface AgendaDayQueryPort {
 }
 ```
 
-El fallback por nombre nunca elige entre N>1. `ExpedienteReferenceQueryPort` admite 0..N porque ExpedienteNumero no es único.
+`MedicoResolution` es `RESOLVED | NOT_FOUND | AMBIGUOUS`; el fallback nunca elige entre
+N>1. `ExpedienteReferenceQueryPort` admite 0..N porque ExpedienteNumero no es único.
+Fingerprint se consulta/asocia exclusivamente mediante
+`ImportArtifactMetadataRepository`; no forma parte de Repository ni Aggregate Domain.
+`AgendaPreparationTransaction` entrega ambos Repositories, el metadata Repository, el
+`AuditWriter` compartido y un único `importedAt` server-side.
 
 ## 8. Application Use Cases candidatos
 
 | Use Case | Input conceptual | Output |
 |---|---|---|
-| `ImportAgenda` | ImportAttemptId + AgendaArtifactStream + Idempotency-Key + RequestContext | `ImportAgendaResponse` |
+| `ImportAgenda` | ImportAttemptId + AgendaFileInput + Idempotency-Key + RequestContext | `ImportAgendaResponse` |
 | `GetAgendaImportResult` | importacionId + context | resumen + resultados sanitizados |
-| `GetAgendaPreparationList` | fecha + context | lista inicial vigente |
+| `GetAgendaPreparationList` | fecha + order + pagination + context | página vigente ordenada |
+| `PrintAgendaPreparationList` | fecha + order + context | colección vigente completa con la misma secuencia |
 | `GetAgendaImportIncidents` | importacionId + context | incidencias pendientes |
 | `ListAgendaImports` | agendaDate opcional + pagination + context | `AgendaImportHistoryPage` |
 
@@ -291,9 +298,19 @@ incidencias/métricas + audit. Application no conoce HTTP, Multer, filesystem ni
 - código de incidencia sanitizado;
 - no incluye contacto, vigencia, sexo, edad o raw completo.
 
-### AgendaPreparationItem
+### PreparationItem y PreparationPage
 
-Los campos exactos de REQ-AP-012. No contiene Turno, Consultorio, Destino, Custodia, capabilities ni datos de SM10-1 adicionales.
+`PreparationItem` contiene exactamente FOLIO, nombrePaciente, expediente
+original/reference nullable, tipoDerechohabiente, tipoConsulta, agendaDate,
+appointmentTime, médico número/nombre y Servicio código/nombre. No contiene Turno,
+Consultorio, Destino, Custodia, capabilities ni datos de SM10-1 adicionales.
+
+La agrupación global es Servicio nombre/código ASC y médico nombre/número de empleado
+ASC. `PreparationOrder` admite `APPOINTMENT_TIME_ASC` —default: hora/FOLIO— y
+`PATIENT_NAME_ASC` —nombrePaciente/FOLIO—. `PreparationPage` usa `items` y
+`nextCursor`; el cursor es opaco, contiene conceptualmente todas las claves del orden y
+queda ligado al order seleccionado. Impresión obtiene la colección completa, sin cursor,
+con el mismo agrupamiento/order y permission `AGENDA_VIEW`.
 
 ### AgendaImportIncidentSummary
 
@@ -383,7 +400,8 @@ son resultado/incidencia, no excepción Application.
   protegido; se eliminan al outcome terminal y no se ofrecen para vista/descarga.
 - Persistencia conserva sólo allow-list original + interpretación/resolución y metadata
   técnica sanitizada. No persiste filename cliente.
-- Se reutiliza `AuditWriter.append(AuditEntry, RequestContext)` sin modificar el port.
+- Se reutiliza `AuditWriter.append(AuditEntry, RequestContext)` desde el contrato
+  compartido Security/Audit `@sigac/audit`; Agenda Preparation no importa Archive Operations.
 - Actions: `AGENDA_IMPORT`, `AGENDA_VIEW`, `AGENDA_PREPARATION_VIEW` y
   `AGENDA_INCIDENT_VIEW`; resources: `AGENDA_IMPORT_ATTEMPT`, `AGENDA_IMPORT`, `AGENDA`.
 - Import denegado usa `ImportAttemptId/denied`; import confirmado usa
@@ -411,8 +429,10 @@ La futura persistencia deberá soportar:
 - historia de retirada/restauración;
 - incidencias y conteos.
 
-`ImportArtifactMetadata` conserva fingerprint/layout metadata sanitizada y pertenece al
-ingestion/Application boundary, no al Domain. `RegistroImportadoAgenda` guarda sólo la
+`ImportArtifactMetadataRepository` conserva la asociación confirmada fecha/fingerprint
+sanitizada y pertenece al ingestion/Application boundary, no al Domain. Su búsqueda es
+0..1 y, ante varias asociaciones, selecciona `importedAt DESC, importacionId DESC`, sin
+UNIQUE conceptual. `RegistroImportadoAgenda` guarda sólo la
 allow-list original más interpretación/resolución. Bytes y filas raw no son durables.
 Fingerprint no identifica Agenda ni ImportacionAgenda; su algoritmo queda para un
 estándar técnico posterior.
@@ -436,6 +456,10 @@ AUTH-AP-001..003, RAW-AP-001..012, API-AP-001..014 y RESULT-AP-001..014 fueron
 propagados. AGD-AP-001..009 formaliza Agenda/Cita y se propagó a los volúmenes Domain,
 workflow, architecture, data, testing y readiness afectados. `AP-OQ-005/006` permanecen
 abiertos y no bloquean el alcance inicial.
+
+PORT-AP-001..010 y PREP-AP-001..004 cierran ownership de Audit, metadata técnica,
+UnitOfWork y orden/impresión para v0.1.7. La extracción física del contrato Audit a
+`@sigac/audit` es prerequisito técnico de T-05 y no cambia su semántica.
 
 ## 17. Readiness
 

@@ -72,8 +72,9 @@ actual; no constituyen una nueva identidad visual.
   failed and uncertain network; no percentage/cancel server/retry automático.
 - **AP-05:** all prior steps completed; outcome heading; 12 contractual metrics in
   responsive grid; permission-sensitive next links.
-- **AP-06:** date/context row; nested Service and Physician headers; compact table on
-  desktop, semantic stacked rows small; LoadMore state.
+- **AP-06:** date/context row; order selector and print action; nested Service and
+  Physician headers; compact table on desktop, semantic stacked rows small; LoadMore
+  state. Annotate cursor reset on order change and identical screen/print sequence.
 - **AP-07:** heading/import context; incident rows with human category; empty/multiple;
   no resolution actions.
 - **AP-08:** create collection and subordinate detail variants within the same section;

@@ -5,7 +5,7 @@
 | REQ-AP-001..004 | AP-01/AP-02..05 | AgendaSummary, ImportAgendaWizard | no-agenda/importing/result | elegir fecha/importar | GET Agenda; ImportAgenda |
 | REQ-AP-002/003 | AP-02..04 | FileDropzone, WizardStepper | invalid/loading/error | seleccionar `.xls` | POST único; 400/413/415/422 |
 | REQ-AP-005..011 | AP-05/AP-08 | ImportResultSummary, ImportDetail | imported/already/reconciled | revisar resultados | ImportOutcome, RecordProcessingResult |
-| REQ-AP-012 | AP-06 | PreparationList/Group | empty/loaded/more | consultar/cargar más | GET preparation-items, cursor opaco |
+| REQ-AP-012/022 | AP-06 | PreparationList/Group/OrderSelector/PrintAction | empty/loaded/more/print | ordenar/consultar/cargar/imprimir | screen cursor opaco ligado al order; print completo |
 | REQ-AP-013 | AP-01/AP-05/AP-07/AP-08 | Summary, IncidentList, ImportDetail | empty/loaded | navegar/revisar | cinco query contracts API-AP-011 |
 | REQ-AP-014 | AP-01/AP-05/AP-08 | AgendaMetrics | loaded | leer conteos | métricas RESULT-AP-009 |
 | REQ-AP-015 | todas | ProblemBanner/read models | error/loaded | consultar | allow-list RAW-AP/RESULT-AP |

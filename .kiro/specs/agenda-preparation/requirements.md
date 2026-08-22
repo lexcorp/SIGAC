@@ -1,6 +1,6 @@
 ---
 spec: agenda-preparation
-version: "0.1.6"
+version: "0.1.7"
 status: "Approved for Implementation"
 date: "2026-08-21"
 source_of_truth:
@@ -236,6 +236,25 @@ physicians cuenta números de empleado distintos; services cuenta conceptos
 Servicio/Especialidad distintos; incidentCount representa incidencias del estado vigente.
 Agenda ausente produce `AGENDA_NOT_FOUND`, nunca `null`.
 
+### REQ-AP-021 — Contratos Application y atomicidad
+
+Application debe depender únicamente de ports tenant-scoped para inspección del
+artefacto, resolución de médico y Expediente, persistencia Domain, metadata técnica y
+queries. Fingerprint permanece fuera de Domain. Una importación confirmada persiste
+ImportacionAgenda, reconcilia Agenda, asocia metadata y escribe audit success en una
+única UnitOfWork; cualquier fallo revierte todo.
+
+`AuditWriter`, `AuditEntry` y `AuditResult` son contratos compartidos de Security/Audit.
+Agenda Preparation no depende de Archive Operations para acceder a ellos.
+
+### REQ-AP-022 — Orden e impresión de la lista de preparación
+
+La lista agrupa primero por Servicio (`nombre`, `codigo`) y luego por médico (`nombre`,
+numeroEmpleado), todos ASC. Dentro del médico admite `APPOINTMENT_TIME_ASC` —default,
+hora y FOLIO ASC— y `PATIENT_NAME_ASC` —nombrePaciente y FOLIO ASC—. Pantalla e impresión
+usan la misma secuencia; cambiar el orden reinicia el cursor. La impresión contiene la
+colección vigente completa, no pagina, no genera SM10-1 y requiere sólo `AGENDA_VIEW`.
+
 ## 5. Invariantes
 
 | ID | Invariante |
@@ -349,6 +368,8 @@ completo y errores cerrados son AGD-AP-001..009.
 | AC-AP-012 | No aparecen Turno, Consultorio, Destino, SM1-14 ni cita abierta. |
 | AC-AP-013 | Historial respeta fecha opcional, orden/cursor determinista, empty 200 y campos mínimos. |
 | AC-AP-014 | Agenda del día calcula los cuatro conteos según REQ-AP-020 y devuelve 404 cuando no existe. |
+| AC-AP-015 | Fingerprint se persiste mediante metadata Application separada y nunca como estado de los Aggregates. |
+| AC-AP-016 | Pantalla e impresión aplican agrupación y orden seleccionados idénticos; el cursor queda ligado al orden. |
 
 ## 9. Open questions y readiness
 
@@ -378,6 +399,10 @@ completo y errores cerrados son AGD-AP-001..009.
 - Queries y cursor opaco conforme API-AP-011/012.
 
 ## 10. SDB propagation
+
+Los contratos Application, ownership compartido de Audit, metadata de fingerprint,
+UnitOfWork y orden/impresión de PreparationList se formalizan en
+`APPLICATION-PORTS-AND-PREPARATION-READ-DECISION.md` y se propagaron para v0.1.7.
 
 Las decisiones aprobadas fueron propagadas a:
 

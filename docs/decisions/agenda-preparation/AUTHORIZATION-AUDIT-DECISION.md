@@ -94,6 +94,9 @@ la futura semántica transaccional; esta decisión no resuelve AP-OQ-003/004.
 ## Audit privacy
 
 Se reutiliza `AuditWriter.append(AuditEntry, RequestContext)` sin cambiar su interface.
+PORT-AP-008 formaliza que `AuditWriter`, `AuditEntry` y `AuditResult` pertenecen al
+contrato Application compartido Security/Audit `@sigac/audit`; Agenda Preparation no
+depende de Archive Operations para auditar.
 Ningún `AuditEntry` contiene nombre de paciente, contenido de filas, archivo, payload
 raw, contacto, Expediente/paciente ni datos personales de Agenda, tampoco mediante
 `changeSummary`.

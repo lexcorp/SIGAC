@@ -1,6 +1,6 @@
 ---
 spec: agenda-preparation
-version: "0.1.6"
+version: "0.1.7"
 status: "Approved for Implementation"
 date: "2026-08-21"
 ---
@@ -46,6 +46,7 @@ La precedencia de fuentes es la de `knowledge/README.md`. Un procedimiento deriv
 | SRC-AP-025 | `docs/decisions/agenda-preparation/DOMAIN-VALUE-OBJECTS-DECISION.md` | Decisión APPROVED | Invariantes, igualdad, provenance y parser boundary de VOs T-01 |
 | SRC-AP-026 | `docs/decisions/agenda-preparation/IMPORTACION-AGENDA-DOMAIN-DECISION.md` | Decisión APPROVED | Contratos completos de Aggregate, registros, incidencias, métricas y lifecycle T-02 |
 | SRC-AP-027 | `docs/decisions/agenda-preparation/AGENDA-CITA-DOMAIN-DECISION.md` | Decisión APPROVED | Contratos completos de Agenda, Cita, reconciliación, errores y eventos diferidos T-03 |
+| SRC-AP-028 | `docs/decisions/agenda-preparation/APPLICATION-PORTS-AND-PREPARATION-READ-DECISION.md` | Decisión APPROVED | Ports T-05, ownership Audit, metadata técnica, UoW y orden/impresión |
 
 ## 3. Business-rule registry
 
@@ -85,6 +86,10 @@ La precedencia de fuentes es la de `knowledge/README.md`. Un procedimiento deriv
 | BR-AP-032 | Agenda contiene fecha/Citas pero tenant delimita Repository/UoW; no existe AgendaId ni tenant en Domain. | SRC-AP-027 |
 | BR-AP-033 | Reconciliación valida atómicamente fecha/FOLIO y distingue added/updated/unchanged/restored/withdrawn. | SRC-AP-027 |
 | BR-AP-034 | Cita usa lifecycle ACTIVA/RETIRADA_DE_AGENDA, conserva identidad/historia lógica y no guarda timestamps. | SRC-AP-027 |
+| BR-AP-035 | Audit es contrato Application compartido; Agenda Preparation no depende de Archive Operations. | SRC-AP-028 |
+| BR-AP-036 | Fingerprint es metadata Application separada, con equivalencia 0..1 y sin unicidad conceptual. | SRC-AP-028 |
+| BR-AP-037 | PreparationList agrupa Servicio/Médico y admite orden por hora o paciente, idéntico en pantalla e impresión. | SRC-AP-028 |
+| BR-AP-038 | La importación confirmada persiste Domain, metadata y audit success en una única UoW tenant-scoped. | SRC-AP-028 |
 
 ## 4. Matriz end-to-end
 
@@ -110,6 +115,9 @@ La precedencia de fuentes es la de `knowledge/README.md`. Un procedimiento deriv
 | TR-AP-018 | SRC-AP-025 | BR-AP-030 | requirements §5; design §3.6 | T-01 | TEST-AP-VO-ERROR-001..005 |
 | TR-AP-019 | SRC-AP-026 | BR-AP-009/023/031 | REQ-AP-001/008/011/014/018; INV-AP-003; INV-IMP-AP-001..006 | design §3.1/3.4/4 | T-02 | TEST-AP-AGG-001..012 |
 | TR-AP-020 | SRC-AP-027 | BR-AP-002/003/007/008/032..034 | REQ-AP-004/005/009/010/012; INV-AP-001..005 | design §3.2/3.3/4..6 | T-03 | TEST-AP-RECON-001..010; TEST-AP-DOM-001..008 |
+| TR-AP-021 | SRC-AP-028 | BR-AP-035/038 | REQ-AP-021 | design §7/12/14 | T-04A/T-05/06/10 | TEST-AP-PORT-001..006; TEST-AP-UOW-001..003 |
+| TR-AP-022 | SRC-AP-028 | BR-AP-036 | REQ-AP-021; AC-AP-015 | design §7/14 | T-05/06/09/10 | TEST-AP-IDEMP-001..004; TEST-AP-META-001..003 |
+| TR-AP-023 | SRC-AP-028 | BR-AP-037 | REQ-AP-022; AC-AP-016 | design §8/9 | T-05/07/13..15 | TEST-AP-PREP-001..008; TEST-AP-PRINT-001..003 |
 
 Namespaces: `INV-AP-001..012` son invariantes globales canónicas del slice;
 `INV-IMP-AP-001..006` son invariantes verificables de `ImportacionAgenda` derivadas de
@@ -131,6 +139,8 @@ las decisiones `IMP-AP-001..014`. Ningún namespace sustituye a otro.
 | AC-AP-010 | TEST-AP-QUERY-001, TEST-AP-PRIV-001 | T-07/08, T-16 |
 | AC-AP-011 | TEST-AP-TENANT-001..004 | T-10, T-16/17/18 |
 | AC-AP-012 | TEST-AP-SCOPE-001..003 | T-04, T-12, T-15 |
+| AC-AP-015 | TEST-AP-META-001..003 | T-05/06, T-09/10 |
+| AC-AP-016 | TEST-AP-PREP-001..008, TEST-AP-PRINT-001..003 | T-05/07, T-13..15 |
 
 ## 6. Open-question traceability
 

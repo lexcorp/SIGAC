@@ -135,9 +135,12 @@ Sin señal server, la transición visual Validar→Procesar no pretende ser tele
 
 - **Objetivo:** facilitar identificación y preparación física cotidiana.
 - **Actor/permission:** personal con `AGENDA_VIEW`.
-- **Datos:** PreparationItem exacto; orden hora ASC + FOLIO ASC; cursor opaco.
-- **Components:** DateSelector, PreparationList, PreparationGroup, LoadMoreButton.
-- **Actions:** expandir/contraer grupos, cargar más; sin transición Domain.
+- **Datos:** PreparationItem exacto; agrupación Servicio/Médico; order seleccionado;
+  cursor opaco ligado al order.
+- **Components:** DateSelector, PreparationOrderSelector, PreparationList,
+  PreparationGroup, LoadMoreButton, PrintAction.
+- **Actions:** elegir orden, expandir/contraer grupos, cargar más e imprimir; sin
+  transición Domain.
 - **States:** loading, empty, grouped, loading-more, end, safe error.
 - **Entrada/salida:** tab Lista; vuelve Agenda o navega tabs.
 - **Requirements:** REQ-AP-012/013/015..017; AC-AP-010..012.
@@ -147,6 +150,7 @@ Sin señal server, la transición visual Validar→Procesar no pretende ser tele
 ```text
 ┌─ Lista de preparación · 21 ago 2026 ────────────────────────────────────────┐
 │ ▼ Cardiología                                                               │
+│ Orden [Hora de cita ▾]                                      [Imprimir lista]│
 │   ▼ Dra. Laura Rivera · Empleado 00421                                      │
 │   ┌──────┬──────────────┬──────────────────┬───────────┬──────────┬────────┐ │
 │   │ Hora │ Expediente   │ Derechohabiente  │ Tipo DH   │ Cita     │ FOLIO  │ │
@@ -160,6 +164,12 @@ Sin señal server, la transición visual Validar→Procesar no pretende ser tele
 
 Recomendación: híbrido grupos expandibles + tabla. Una tabla plana pierde jerarquía;
 cards consumen demasiado espacio; sólo grupos sin tabla reducen comparación de filas.
+
+Orden global: Servicio nombre/código ASC, después médico nombre/número de empleado ASC.
+Default `APPOINTMENT_TIME_ASC` usa hora/FOLIO; `PATIENT_NAME_ASC` usa nombrePaciente/
+FOLIO. Cambiar order descarta el cursor. Impresión carga la colección completa sin
+cursor y conserva exactamente grouping/order de pantalla; usa `AGENDA_VIEW`, no genera
+SM10-1 y no fija un formato PDF.
 
 ## AP-07 — Incidencias
 

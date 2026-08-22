@@ -29,7 +29,8 @@ staging y detalles de ingestion no pertenecen al Aggregate Domain. Application/U
 proporciona `ImportacionAgendaId` e `importedAt`; Domain no genera tiempo ni IDs.
 
 API-AP-001..014 adopta streaming síncrono para la escala inicial. El Adapter implementa
-`AgendaArtifactStream`; Application no conoce multipart/filesystem. Una UoW tenant-scoped
+`AgendaFileInput` —nombre canónico que sustituye el alias conceptual
+`AgendaArtifactStream`—; Application no conoce multipart/filesystem. Una UoW tenant-scoped
 confirma importación/reconciliación/resultados/métricas/audit. Worker queda diferido.
 
 Parser entrega datos neutrales; Application asigna RecordProcessingResult/ImportIncident
@@ -57,3 +58,19 @@ AGD-AP-001..009 mantiene tenant fuera del Aggregate: Application resuelve Tenant
 Repository/UoW seleccionan su ámbito; Agenda conserva sólo AgendaFecha y Citas. Domain no
 importa Archive Operations: `ExpedienteReferencia` es opaca/nullable. Reconciliación no
 recibe parser rows, metadata, raw ni tipos de infraestructura.
+
+## Application ports v0.1.7
+
+Agenda Preparation recibe `AgendaFileInput` agnóstico y obtiene
+`AgendaFileInspection` mediante `AgendaFileInterpreterPort`. Fingerprint es metadata
+técnica Application y se consulta/asocia con `ImportArtifactMetadataRepository`; nunca
+entra a ImportacionAgenda, Agenda ni sus Domain Repositories.
+
+La UoW tenant-scoped entrega `ImportacionAgendaRepository`, `AgendaRepository`, el
+metadata Repository, un `AuditWriter` transaction-bound y un único `importedAt`. Una
+confirmación guarda ambos Aggregates, asocia metadata y escribe audit success en una
+sola transacción; cualquier fallo revierte todo.
+
+`AuditWriter`, `AuditEntry` y `AuditResult` pertenecen al contrato Application compartido
+Security/Audit `@sigac/audit`. Archive Operations y Agenda Preparation dependen de ese
+contrato; Agenda Preparation no depende de Archive Operations para auditar.
