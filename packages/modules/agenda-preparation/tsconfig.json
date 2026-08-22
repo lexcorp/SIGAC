@@ -6,6 +6,12 @@
     "paths": {
       "@sigac/domain-kernel": [
         "../../../dist/packages/domain-kernel/index.d.ts"
+      ],
+      "@sigac/tenant": [
+        "../../../dist/packages/platform/tenant/index.d.ts"
+      ],
+      "@sigac/audit": [
+        "../../../dist/packages/platform/audit/index.d.ts"
       ]
     }
   },
