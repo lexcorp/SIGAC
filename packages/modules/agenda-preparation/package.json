@@ -18,6 +18,7 @@
     "@sigac/tenant": "workspace:*"
   },
   "devDependencies": {
+    "@types/node": "latest",
     "typescript": "latest",
     "vitest": "4.1.10"
   }

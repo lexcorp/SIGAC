@@ -3,6 +3,9 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "../../../dist/packages/modules/agenda-preparation",
+    "types": [
+      "node"
+    ],
     "paths": {
       "@sigac/domain-kernel": [
         "../../../dist/packages/domain-kernel/index.d.ts"

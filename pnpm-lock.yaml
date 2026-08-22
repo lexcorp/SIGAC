@@ -177,6 +177,9 @@ importers:
         specifier: workspace:*
         version: link:../../platform/tenant
     devDependencies:
+      '@types/node':
+        specifier: latest
+        version: 26.2.0
       typescript:
         specifier: latest
         version: 7.0.2

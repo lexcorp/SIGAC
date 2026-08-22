@@ -1,5 +1,6 @@
 import type { AuditWriter } from '@sigac/audit';
 import type { TenantContext } from '@sigac/tenant';
+import type { IdempotencyKeyRepository } from './IdempotencyKeyRepository.js';
 import type {
   AgendaRepository,
   ImportArtifactMetadataRepository,
@@ -12,6 +13,7 @@ export interface AgendaPreparationTransaction {
   readonly importacionAgendaRepository: ImportacionAgendaRepository;
   readonly agendaRepository: AgendaRepository;
   readonly importArtifactMetadataRepository: ImportArtifactMetadataRepository;
+  readonly idempotencyKeyRepository: IdempotencyKeyRepository;
   readonly auditWriter: AuditWriter;
   readonly importedAt: Date;
 }
