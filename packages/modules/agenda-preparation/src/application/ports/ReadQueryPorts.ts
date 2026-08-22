@@ -1,7 +1,8 @@
 import type { TenantContext } from '@sigac/tenant';
 import type { AgendaFecha } from '../../domain/value-objects/index.js';
-import type { ImportOutcome } from '../../domain/types/ImportResult.js';
+import type { ImportOutcome, RecordProcessingResult, ImportIncident } from '../../domain/types/ImportResult.js';
 import type { ImportacionAgendaMetrics } from '../../domain/aggregates/ImportacionAgenda.js';
+import type { ImportacionAgendaId } from '../../domain/value-objects/index.js';
 
 // PORT-AP-010 — Read ports (PORT-AP-010 / design.md §7 / PREP-AP-003)
 
@@ -102,4 +103,51 @@ export interface AgendaDayQueryPort {
     fecha: AgendaFecha,
     tenant: TenantContext,
   ): Promise<AgendaDayReadModel | null>;
+}
+
+// --- ImportacionAgenda result read models (design.md §9 / REQ-AP-013) ---
+
+export interface ImportacionAgendaSummary {
+  readonly importacionId: string;
+  readonly agendaDate: string;
+  readonly importedAt: Date;
+  readonly outcome: ImportOutcome;
+  readonly metrics: ImportacionAgendaMetrics;
+  readonly hasChanges: boolean;
+}
+
+export interface RegistroImportadoResult {
+  readonly registroId: string;
+  readonly sourcePosition: number;
+  readonly folio: string | null;
+  readonly processingResult: RecordProcessingResult;
+  readonly incidentCodes: readonly ImportIncident[];
+}
+
+export interface AgendaImportResult {
+  readonly summary: ImportacionAgendaSummary;
+  readonly registros: readonly RegistroImportadoResult[];
+}
+
+export interface AgendaImportResultQueryPort {
+  findById(
+    importacionId: ImportacionAgendaId,
+    tenant: TenantContext,
+  ): Promise<AgendaImportResult | null>;
+}
+
+// --- Import incidents read models (design.md §9 / REQ-AP-013) ---
+
+export interface AgendaImportIncidentSummary {
+  readonly incidenciaId: string;
+  readonly registroId: string;
+  readonly sourcePosition: number;
+  readonly type: ImportIncident;
+}
+
+export interface AgendaImportIncidentsQueryPort {
+  findByImportacionId(
+    importacionId: ImportacionAgendaId,
+    tenant: TenantContext,
+  ): Promise<readonly AgendaImportIncidentSummary[]>;
 }
