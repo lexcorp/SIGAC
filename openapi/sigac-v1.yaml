@@ -148,6 +148,183 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/ExpedienteNotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
+  /agenda-imports:
+    post:
+      operationId: importAgenda
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Agenda import processed successfully
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AgendaImportResponse' }
+        '400': { $ref: '#/components/responses/HttpValidationError' }
+        '401': { $ref: '#/components/responses/AuthenticationRequired' }
+        '403': { $ref: '#/components/responses/AgendaPermissionDenied' }
+        '409': { $ref: '#/components/responses/IdempotencyKeyReused' }
+        '413': { $ref: '#/components/responses/AgendaUploadTooLarge' }
+        '415': { $ref: '#/components/responses/AgendaArtifactUnsupported' }
+        '422': { $ref: '#/components/responses/AgendaLayoutRejected' }
+        '500': { $ref: '#/components/responses/AgendaImportFailed' }
+        '504': { $ref: '#/components/responses/AgendaImportTimeout' }
+    get:
+      operationId: listAgendaImports
+      parameters:
+        - in: query
+          name: agendaDate
+          required: false
+          description: Filter by agenda date (YYYY-MM-DD).
+          schema: { type: string, format: date }
+        - in: query
+          name: cursor
+          required: false
+          description: Opaque cursor returned by the preceding page.
+          schema: { type: string }
+        - in: query
+          name: limit
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: Cursor-paginated agenda import history
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AgendaImportHistoryPage' }
+        '400': { $ref: '#/components/responses/HttpValidationError' }
+        '401': { $ref: '#/components/responses/AuthenticationRequired' }
+        '403': { $ref: '#/components/responses/AgendaPermissionDenied' }
+  /agenda-imports/{importacionId}:
+    get:
+      operationId: getAgendaImportDetail
+      parameters:
+        - in: path
+          name: importacionId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Full detail of an agenda importación
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AgendaImportDetail' }
+        '400': { $ref: '#/components/responses/HttpValidationError' }
+        '401': { $ref: '#/components/responses/AuthenticationRequired' }
+        '403': { $ref: '#/components/responses/AgendaPermissionDenied' }
+        '404': { $ref: '#/components/responses/AgendaImportNotFound' }
+  /agenda-imports/{importacionId}/incidents:
+    get:
+      operationId: getAgendaImportIncidents
+      parameters:
+        - in: path
+          name: importacionId
+          required: true
+          schema: { type: string, format: uuid }
+        - in: query
+          name: cursor
+          required: false
+          description: Opaque cursor returned by the preceding page.
+          schema: { type: string }
+        - in: query
+          name: limit
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: Cursor-paginated incidents for an agenda importación
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AgendaImportIncidentsPage' }
+        '400': { $ref: '#/components/responses/HttpValidationError' }
+        '401': { $ref: '#/components/responses/AuthenticationRequired' }
+        '403': { $ref: '#/components/responses/AgendaPermissionDenied' }
+  /agendas/{date}:
+    get:
+      operationId: getAgendaDaySummary
+      parameters:
+        - in: path
+          name: date
+          required: true
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Day-level agenda summary read model
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AgendaDayReadModel' }
+        '400': { $ref: '#/components/responses/HttpValidationError' }
+        '401': { $ref: '#/components/responses/AuthenticationRequired' }
+        '403': { $ref: '#/components/responses/AgendaPermissionDenied' }
+        '404': { $ref: '#/components/responses/AgendaNotFound' }
+  /agendas/{date}/preparation-items:
+    get:
+      operationId: getAgendaPreparationList
+      parameters:
+        - in: path
+          name: date
+          required: true
+          schema: { type: string, format: date }
+        - in: query
+          name: order
+          required: false
+          schema:
+            type: string
+            enum: [APPOINTMENT_TIME_ASC, PATIENT_NAME_ASC]
+        - in: query
+          name: cursor
+          required: false
+          description: Opaque cursor returned by the preceding page.
+          schema: { type: string }
+        - in: query
+          name: limit
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: Cursor-paginated agenda preparation items
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AgendaPreparationPage' }
+        '400': { $ref: '#/components/responses/HttpValidationError' }
+        '401': { $ref: '#/components/responses/AuthenticationRequired' }
+        '403': { $ref: '#/components/responses/AgendaPermissionDenied' }
+  /agendas/{date}/preparation-items/print:
+    get:
+      operationId: printAgendaPreparationList
+      parameters:
+        - in: path
+          name: date
+          required: true
+          schema: { type: string, format: date }
+        - in: query
+          name: order
+          required: false
+          schema:
+            type: string
+            enum: [APPOINTMENT_TIME_ASC, PATIENT_NAME_ASC]
+      responses:
+        '200':
+          description: Full (non-paginated) preparation list for print
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AgendaPreparationPrintResponse' }
+        '400': { $ref: '#/components/responses/HttpValidationError' }
+        '401': { $ref: '#/components/responses/AuthenticationRequired' }
+        '403': { $ref: '#/components/responses/AgendaPermissionDenied' }
 components:
   parameters:
     ExpedienteId:
@@ -158,7 +335,7 @@ components:
   schemas:
     Permission:
       type: string
-      enum: [REQUEST_CREATE, REQUEST_ASSIGN, SEARCH_START, SEARCH_MARK_LOCATED, SEARCH_MARK_NOT_LOCATED, PREPARATION_MARK_READY, CUSTODY_TRANSFER, EXPEDIENT_DISPATCH, CUSTODY_ACCEPT, LOAN_OPEN, LOAN_RENEW, RETURN_RECEIVE, REARCHIVE_CONFIRM, INCIDENT_OPEN, INCIDENT_RESOLVE, EXPEDIENT_VIEW, EXPEDIENT_AUDIT_VIEW, LOCATION_VIEW, REPORT_VIEW, ADMIN_CONFIGURE]
+      enum: [REQUEST_CREATE, REQUEST_ASSIGN, SEARCH_START, SEARCH_MARK_LOCATED, SEARCH_MARK_NOT_LOCATED, PREPARATION_MARK_READY, CUSTODY_TRANSFER, EXPEDIENT_DISPATCH, CUSTODY_ACCEPT, LOAN_OPEN, LOAN_RENEW, RETURN_RECEIVE, REARCHIVE_CONFIRM, INCIDENT_OPEN, INCIDENT_RESOLVE, EXPEDIENT_VIEW, EXPEDIENT_AUDIT_VIEW, LOCATION_VIEW, REPORT_VIEW, ADMIN_CONFIGURE, AGENDA_IMPORT, AGENDA_VIEW, AGENDA_INCIDENT_VIEW]
     SessionAuthorizationReadModel:
       type: object
       additionalProperties: false
@@ -436,11 +613,173 @@ components:
         status: { type: integer }
         code:
           type: string
-          enum: [HTTP_VALIDATION_ERROR, AUTHENTICATION_REQUIRED, PERMISSION_DENIED, INSUFFICIENT_ENABLING_SOURCE, EXPEDIENTE_NOT_FOUND, OPTIMISTIC_LOCK_CONFLICT, REQUEST_INVALID_TRANSITION]
+          enum: [HTTP_VALIDATION_ERROR, AUTHENTICATION_REQUIRED, PERMISSION_DENIED, INSUFFICIENT_ENABLING_SOURCE, EXPEDIENTE_NOT_FOUND, OPTIMISTIC_LOCK_CONFLICT, REQUEST_INVALID_TRANSITION, AGENDA_IMPORT_NOT_FOUND, AGENDA_NOT_FOUND, IDEMPOTENCY_KEY_REUSED, AGENDA_UPLOAD_TOO_LARGE, AGENDA_ARTIFACT_UNSUPPORTED, AGENDA_LAYOUT_REJECTED, AGENDA_IMPORT_FAILED, AGENDA_IMPORT_TIMEOUT]
         detail: { type: string }
         errors:
           type: array
           items: { $ref: '#/components/schemas/HttpFieldError' }
+    AgendaImportMetrics:
+      type: object
+      additionalProperties: false
+      required: [receivedRecords, processed, added, updated, unchanged, restored, pendingReview, rejected, duplicateFolio, withdrawnFromAgenda, incidents, errors]
+      properties:
+        receivedRecords: { type: integer, minimum: 0 }
+        processed: { type: integer, minimum: 0 }
+        added: { type: integer, minimum: 0 }
+        updated: { type: integer, minimum: 0 }
+        unchanged: { type: integer, minimum: 0 }
+        restored: { type: integer, minimum: 0 }
+        pendingReview: { type: integer, minimum: 0 }
+        rejected: { type: integer, minimum: 0 }
+        duplicateFolio: { type: integer, minimum: 0 }
+        withdrawnFromAgenda: { type: integer, minimum: 0 }
+        incidents: { type: integer, minimum: 0 }
+        errors: { type: integer, minimum: 0 }
+    AgendaImportSummary:
+      type: object
+      additionalProperties: false
+      required: [importacionId, agendaDate, importedAt, outcome, metrics]
+      properties:
+        importacionId: { type: string, format: uuid }
+        agendaDate: { type: string, format: date }
+        importedAt: { type: string, format: date-time }
+        outcome:
+          type: string
+          enum: [IMPORTED, ALREADY_IMPORTED, RECONCILED]
+        metrics: { $ref: '#/components/schemas/AgendaImportMetrics' }
+    AgendaImportResponse:
+      type: object
+      additionalProperties: false
+      required: [importacionId, agendaDate, importedAt, outcome, metrics]
+      properties:
+        importacionId: { type: string, format: uuid }
+        agendaDate: { type: string, format: date }
+        importedAt: { type: string, format: date-time }
+        outcome:
+          type: string
+          enum: [IMPORTED, ALREADY_IMPORTED, RECONCILED]
+        metrics: { $ref: '#/components/schemas/AgendaImportMetrics' }
+    AgendaImportHistoryPage:
+      type: object
+      additionalProperties: false
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/AgendaImportSummary' }
+        nextCursor: { type: [string, 'null'] }
+    RegistroImportadoResult:
+      type: object
+      additionalProperties: false
+      required: [registroId, sourcePosition, folio, processingResult, incidentCodes]
+      properties:
+        registroId: { type: string, format: uuid }
+        sourcePosition: { type: integer, minimum: 1 }
+        folio: { type: [string, 'null'] }
+        processingResult:
+          type: string
+          enum: [ADDED, UPDATED, UNCHANGED, RESTORED, PENDING_REVIEW, REJECTED, DUPLICATE_FOLIO]
+        incidentCodes:
+          type: array
+          items:
+            type: string
+            enum: [PHYSICIAN_NOT_RESOLVED, PHYSICIAN_AMBIGUOUS, SERVICE_NOT_RESOLVED, EXPEDIENT_NOT_RESOLVED, REQUIRED_DATA_MISSING, ROW_INCONSISTENT, DUPLICATE_FOLIO_IN_SNAPSHOT]
+    AgendaImportDetail:
+      type: object
+      additionalProperties: false
+      required: [summary, registros]
+      properties:
+        summary: { $ref: '#/components/schemas/AgendaImportSummary' }
+        registros:
+          type: array
+          items: { $ref: '#/components/schemas/RegistroImportadoResult' }
+    AgendaImportIncidentSummary:
+      type: object
+      additionalProperties: false
+      required: [incidenciaId, registroId, sourcePosition, type]
+      properties:
+        incidenciaId: { type: string, format: uuid }
+        registroId: { type: string, format: uuid }
+        sourcePosition: { type: integer, minimum: 1 }
+        type:
+          type: string
+          enum: [PHYSICIAN_NOT_RESOLVED, PHYSICIAN_AMBIGUOUS, SERVICE_NOT_RESOLVED, EXPEDIENT_NOT_RESOLVED, REQUIRED_DATA_MISSING, ROW_INCONSISTENT, DUPLICATE_FOLIO_IN_SNAPSHOT]
+    AgendaImportIncidentsPage:
+      type: object
+      additionalProperties: false
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/AgendaImportIncidentSummary' }
+        nextCursor: { type: [string, 'null'] }
+    AgendaDayReadModel:
+      type: object
+      additionalProperties: false
+      required: [agendaDate, latestImportacionId, latestImportedAt, latestOutcome, activeAppointments, physicians, services, incidentCount]
+      properties:
+        agendaDate: { type: string, format: date }
+        latestImportacionId: { type: string, format: uuid }
+        latestImportedAt: { type: string, format: date-time }
+        latestOutcome:
+          type: string
+          enum: [IMPORTED, ALREADY_IMPORTED, RECONCILED]
+        activeAppointments: { type: integer, minimum: 0 }
+        physicians: { type: integer, minimum: 0 }
+        services: { type: integer, minimum: 0 }
+        incidentCount: { type: integer, minimum: 0 }
+    AgendaMedicoRef:
+      type: object
+      additionalProperties: false
+      required: [numeroEmpleado, nombre]
+      properties:
+        numeroEmpleado: { type: string }
+        nombre: { type: string }
+    AgendaServicioRef:
+      type: object
+      additionalProperties: false
+      required: [codigo, nombre]
+      properties:
+        codigo: { type: string }
+        nombre: { type: string }
+    AgendaExpedienteRef:
+      type: object
+      additionalProperties: false
+      required: [original, reference]
+      properties:
+        original: { type: string }
+        reference: { type: [string, 'null'] }
+    AgendaPreparationItem:
+      type: object
+      additionalProperties: false
+      required: [folio, nombrePaciente, expediente, tipoDerechohabiente, tipoConsulta, agendaDate, appointmentTime, medico, servicioEspecialidad]
+      properties:
+        folio: { type: string }
+        nombrePaciente: { type: string }
+        expediente: { $ref: '#/components/schemas/AgendaExpedienteRef' }
+        tipoDerechohabiente: { type: string }
+        tipoConsulta: { type: string, enum: [FIRST_TIME, SUBSEQUENT] }
+        agendaDate: { type: string, format: date }
+        appointmentTime: { type: string, pattern: '^[0-2][0-9]:[0-5][0-9]$' }
+        medico: { $ref: '#/components/schemas/AgendaMedicoRef' }
+        servicioEspecialidad: { $ref: '#/components/schemas/AgendaServicioRef' }
+    AgendaPreparationPage:
+      type: object
+      additionalProperties: false
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/AgendaPreparationItem' }
+        nextCursor: { type: [string, 'null'] }
+    AgendaPreparationPrintResponse:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/AgendaPreparationItem' }
   responses:
     HttpValidationError:
       description: Structurally invalid or malformed request
@@ -509,3 +848,102 @@ components:
                 properties:
                   status: { const: 409 }
                   code: { enum: [OPTIMISTIC_LOCK_CONFLICT, REQUEST_INVALID_TRANSITION] }
+    AgendaPermissionDenied:
+      description: Authenticated actor lacks AGENDA_IMPORT or AGENDA_VIEW
+      content:
+        application/problem+json:
+          schema:
+            allOf:
+              - { $ref: '#/components/schemas/ProblemDetails' }
+              - type: object
+                properties:
+                  status: { const: 403 }
+                  code: { const: PERMISSION_DENIED }
+    AgendaImportNotFound:
+      description: Agenda importación not found in active tenant
+      content:
+        application/problem+json:
+          schema:
+            allOf:
+              - { $ref: '#/components/schemas/ProblemDetails' }
+              - type: object
+                properties:
+                  status: { const: 404 }
+                  code: { const: AGENDA_IMPORT_NOT_FOUND }
+    AgendaNotFound:
+      description: Agenda not found for this date in active tenant
+      content:
+        application/problem+json:
+          schema:
+            allOf:
+              - { $ref: '#/components/schemas/ProblemDetails' }
+              - type: object
+                properties:
+                  status: { const: 404 }
+                  code: { const: AGENDA_NOT_FOUND }
+    IdempotencyKeyReused:
+      description: Idempotency-Key already used with a different artifact
+      content:
+        application/problem+json:
+          schema:
+            allOf:
+              - { $ref: '#/components/schemas/ProblemDetails' }
+              - type: object
+                properties:
+                  status: { const: 409 }
+                  code: { const: IDEMPOTENCY_KEY_REUSED }
+    AgendaUploadTooLarge:
+      description: Uploaded file exceeds the configured limit
+      content:
+        application/problem+json:
+          schema:
+            allOf:
+              - { $ref: '#/components/schemas/ProblemDetails' }
+              - type: object
+                properties:
+                  status: { const: 413 }
+                  code: { const: AGENDA_UPLOAD_TOO_LARGE }
+    AgendaArtifactUnsupported:
+      description: Artifact format or extension is not supported
+      content:
+        application/problem+json:
+          schema:
+            allOf:
+              - { $ref: '#/components/schemas/ProblemDetails' }
+              - type: object
+                properties:
+                  status: { const: 415 }
+                  code: { const: AGENDA_ARTIFACT_UNSUPPORTED }
+    AgendaLayoutRejected:
+      description: File content does not match the recognized SIMEF HTML layout
+      content:
+        application/problem+json:
+          schema:
+            allOf:
+              - { $ref: '#/components/schemas/ProblemDetails' }
+              - type: object
+                properties:
+                  status: { const: 422 }
+                  code: { const: AGENDA_LAYOUT_REJECTED }
+    AgendaImportFailed:
+      description: Unexpected technical failure; rollback performed
+      content:
+        application/problem+json:
+          schema:
+            allOf:
+              - { $ref: '#/components/schemas/ProblemDetails' }
+              - type: object
+                properties:
+                  status: { const: 500 }
+                  code: { const: AGENDA_IMPORT_FAILED }
+    AgendaImportTimeout:
+      description: Import processing timed out; rollback performed
+      content:
+        application/problem+json:
+          schema:
+            allOf:
+              - { $ref: '#/components/schemas/ProblemDetails' }
+              - type: object
+                properties:
+                  status: { const: 504 }
+                  code: { const: AGENDA_IMPORT_TIMEOUT }

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
 const file = new URL('../../openapi/sigac-v1.yaml', import.meta.url);
-const contract = fs.readFileSync(file, 'utf8');
+const contract = fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
 
 const includes = (fragment, message) => assert.ok(contract.includes(fragment), message);
 const excludes = (fragment, message) => assert.ok(!contract.includes(fragment), message);
@@ -125,3 +125,109 @@ for (const forbidden of ['tenant', 'actor', 'requestId', 'correlationId', 'occur
 }
 
 console.log('OpenAPI Expediente Workspace contract validation OK');
+
+// ---------------------------------------------------------------------------
+// Agenda Preparation contract validation
+// ---------------------------------------------------------------------------
+
+const agendaPaths = [...contract.matchAll(/^  (\/agenda-imports[^:]*|\/agendas[^:]*):$/gm)].map((m) => m[1]);
+assert.deepEqual(agendaPaths.sort(), [
+  '/agenda-imports',
+  '/agenda-imports/{importacionId}',
+  '/agenda-imports/{importacionId}/incidents',
+  '/agendas/{date}',
+  '/agendas/{date}/preparation-items',
+  '/agendas/{date}/preparation-items/print',
+].sort(), 'Agenda Preparation must expose exactly the seven approved paths');
+
+for (const op of ['importAgenda', 'listAgendaImports', 'getAgendaImportDetail',
+  'getAgendaImportIncidents', 'getAgendaDaySummary', 'getAgendaPreparationList',
+  'printAgendaPreparationList']) {
+  includes(`operationId: ${op}`, `Missing Agenda operation ${op}`);
+}
+
+// Response shapes
+includes('AgendaImportResponse', 'AgendaImportResponse schema is required');
+includes('AgendaDayReadModel', 'AgendaDayReadModel schema is required');
+includes('AgendaPreparationItem', 'AgendaPreparationItem is required');
+includes('AgendaImportHistoryPage', 'AgendaImportHistoryPage is required');
+
+// Pagination contracts
+const prepListBlock = contract.match(/  \/agendas\/\{date\}\/preparation-items:\n([\s\S]*?)  \/agendas\/\{date\}\/preparation-items\/print:/)?.[1] ?? '';
+assert.match(prepListBlock, /name: limit\n\s+required: true/, 'Preparation list limit must be required');
+assert.match(prepListBlock, /name: order/, 'Preparation list order parameter is required');
+assert.match(prepListBlock, /APPOINTMENT_TIME_ASC/, 'APPOINTMENT_TIME_ASC must appear in order enum');
+assert.match(prepListBlock, /PATIENT_NAME_ASC/, 'PATIENT_NAME_ASC must appear in order enum');
+assert.match(prepListBlock, /AgendaPreparationPage/, 'Preparation list must return AgendaPreparationPage');
+
+// Multipart upload contract
+const importPostBlock = contract.match(/  \/agenda-imports:\n([\s\S]*?)  \/agenda-imports\/\{importacionId\}:/)?.[1] ?? '';
+assert.match(importPostBlock, /multipart\/form-data/, 'Import must use multipart/form-data');
+assert.match(importPostBlock, /Idempotency-Key/, 'Idempotency-Key header must be documented');
+assert.match(importPostBlock, /'201':/, 'Successful import returns 201');
+assert.match(importPostBlock, /'413':/, 'Import must document 413 too large');
+assert.match(importPostBlock, /'415':/, 'Import must document 415 unsupported');
+assert.match(importPostBlock, /'422':/, 'Import must document 422 layout rejected');
+assert.match(importPostBlock, /'409':/, 'Import must document 409 idempotency conflict');
+assert.match(importPostBlock, /'504':/, 'Import must document 504 timeout');
+
+// Privacy: no raw, fingerprint, filename, CURP in Agenda schemas
+const agendaSchemaSection = contract.slice(contract.indexOf('    AgendaImportResponse:'));
+for (const forbidden of ['fingerprint', 'filename', 'rawRow', 'raw_row', 'curp', 'turno', 'consultorio', 'destino']) {
+  assert.ok(!agendaSchemaSection.includes(forbidden),
+    `Agenda schemas must not expose ${forbidden}`);
+}
+
+// Metrics shape
+const metricsBlock = contract.match(/    AgendaImportMetrics:\n([\s\S]*?)    AgendaImportSummary:/)?.[1] ?? '';
+for (const field of ['receivedRecords', 'processed', 'added', 'updated', 'unchanged', 'restored',
+  'pendingReview', 'rejected', 'duplicateFolio', 'withdrawnFromAgenda', 'incidents', 'errors']) {
+  assert.match(metricsBlock, new RegExp(`\\b${field}\\b`), `Metrics missing field: ${field}`);
+}
+
+// RecordProcessingResult closed catalog
+const resultBlock = contract.match(/    RegistroImportadoResult:\n([\s\S]*?)    AgendaImportDetail:/)?.[1] ?? '';
+for (const result of ['ADDED', 'UPDATED', 'UNCHANGED', 'RESTORED', 'PENDING_REVIEW', 'REJECTED', 'DUPLICATE_FOLIO']) {
+  assert.match(resultBlock, new RegExp(result), `RecordProcessingResult missing: ${result}`);
+}
+
+// ImportIncident closed catalog
+const incidentEnum = contract.match(/    AgendaImportIncidentSummary:\n([\s\S]*?)    AgendaImportIncidentsPage:/)?.[1] ?? '';
+for (const inc of ['PHYSICIAN_NOT_RESOLVED', 'PHYSICIAN_AMBIGUOUS', 'SERVICE_NOT_RESOLVED',
+  'EXPEDIENT_NOT_RESOLVED', 'REQUIRED_DATA_MISSING', 'ROW_INCONSISTENT', 'DUPLICATE_FOLIO_IN_SNAPSHOT']) {
+  assert.match(incidentEnum, new RegExp(inc), `ImportIncident catalog missing: ${inc}`);
+}
+
+// AgendaPreparationItem must not contain Turno/Consultorio/Destino
+const prepItemBlock = contract.match(/    AgendaPreparationItem:\n([\s\S]*?)    AgendaPreparationPage:/)?.[1] ?? '';
+for (const forbidden of ['turno', 'consultorio', 'destino', 'curp', 'rawRow']) {
+  assert.ok(!prepItemBlock.toLowerCase().includes(forbidden),
+    `AgendaPreparationItem must not contain ${forbidden}`);
+}
+assert.match(prepItemBlock, /tipoConsulta/, 'AgendaPreparationItem must have tipoConsulta');
+assert.match(prepItemBlock, /FIRST_TIME/, 'tipoConsulta must include FIRST_TIME');
+assert.match(prepItemBlock, /SUBSEQUENT/, 'tipoConsulta must include SUBSEQUENT');
+
+// ImportOutcome closed catalog (no ALREADY_IMPORTED variants or extensions)
+for (const outcome of ['IMPORTED', 'ALREADY_IMPORTED', 'RECONCILED']) {
+  includes(outcome, `ImportOutcome must include: ${outcome}`);
+}
+
+// New error codes documented
+for (const code of ['AGENDA_IMPORT_NOT_FOUND', 'AGENDA_NOT_FOUND', 'IDEMPOTENCY_KEY_REUSED',
+  'AGENDA_UPLOAD_TOO_LARGE', 'AGENDA_ARTIFACT_UNSUPPORTED', 'AGENDA_LAYOUT_REJECTED',
+  'AGENDA_IMPORT_FAILED', 'AGENDA_IMPORT_TIMEOUT']) {
+  includes(code, `Missing Agenda error code: ${code}`);
+}
+
+// New HTTP status codes for Agenda (413, 415, 422, 500, 504)
+for (const status of ['413', '415', '422', '500', '504']) {
+  includes(`status: { const: ${status} }`, `Missing RFC7807 mapping for HTTP ${status}`);
+}
+
+// AGENDA_IMPORT, AGENDA_VIEW, AGENDA_INCIDENT_VIEW must be in Permission enum
+for (const perm of ['AGENDA_IMPORT', 'AGENDA_VIEW', 'AGENDA_INCIDENT_VIEW']) {
+  includes(perm, `Permission enum must include ${perm}`);
+}
+
+console.log('OpenAPI Agenda Preparation contract validation OK');
