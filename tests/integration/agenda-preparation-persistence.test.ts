@@ -102,10 +102,10 @@ function makeMedico(): MedicoReferencia {
   });
 }
 
-function makeCitaSnapshot(folio: string): Parameters<typeof Cita.create>[0] {
+function makeCitaSnapshot(folio: string, fecha: AgendaFecha = FECHA): Parameters<typeof Cita.create>[0] {
   return {
     folio: FolioCita.parse(folio),
-    agendaFecha: FECHA,
+    agendaFecha: fecha,
     hora: HoraCita.parse('08:00'),
     expedienteReference: null,
     nombrePaciente: 'PACIENTE SINTETICO',
@@ -408,11 +408,12 @@ describe('T-10 — Agenda Preparation PostgreSQL integration', () => {
     const agendaRepo = new PostgresAgendaRepository(router);
 
     // Create Agenda with 2 citas
+    const fecha0902 = AgendaFecha.parse('2026-09-02');
     const agenda = Agenda.create({
-      fecha: AgendaFecha.parse('2026-09-02'),
+      fecha: fecha0902,
       citasIniciales: [
-        Cita.create(makeCitaSnapshot('FOLIO-A')),
-        Cita.create(makeCitaSnapshot('FOLIO-B')),
+        Cita.create(makeCitaSnapshot('FOLIO-A', fecha0902)),
+        Cita.create(makeCitaSnapshot('FOLIO-B', fecha0902)),
       ],
     });
     await agendaRepo.save(agenda, tenant(0));
@@ -425,7 +426,7 @@ describe('T-10 — Agenda Preparation PostgreSQL integration', () => {
     expect(citaRows.rows.every((r) => r.lifecycle === 'ACTIVA')).toBe(true);
 
     // Reconcile: only FOLIO-A incoming → FOLIO-B becomes RETIRADA
-    agenda.reconcile({ incoming: [makeCitaSnapshot('FOLIO-A')] });
+    agenda.reconcile({ incoming: [makeCitaSnapshot('FOLIO-A', fecha0902)] });
     await agendaRepo.save(agenda, tenant(0));
 
     citaRows = await clients[0]!.query<{ folio: string; lifecycle: string }>(
@@ -443,7 +444,7 @@ describe('T-10 — Agenda Preparation PostgreSQL integration', () => {
     const fecha = AgendaFecha.parse('2026-09-03');
 
     // Step 1: create with FOLIO-X
-    const agenda1 = Agenda.create({ fecha, citasIniciales: [Cita.create(makeCitaSnapshot('FOLIO-X'))] });
+    const agenda1 = Agenda.create({ fecha, citasIniciales: [Cita.create(makeCitaSnapshot('FOLIO-X', fecha))] });
     await agendaRepo.save(agenda1, tenant(0));
 
     // Step 2: reconcile empty → FOLIO-X withdrawn
@@ -457,7 +458,7 @@ describe('T-10 — Agenda Preparation PostgreSQL integration', () => {
     expect(foliox!.lifecycle).toBe('RETIRADA_DE_AGENDA');
 
     // Step 4: RESTORE — reconcile with FOLIO-X again
-    rehydrated!.reconcile({ incoming: [makeCitaSnapshot('FOLIO-X')] });
+    rehydrated!.reconcile({ incoming: [makeCitaSnapshot('FOLIO-X', fecha)] });
     await agendaRepo.save(rehydrated!, tenant(0));
 
     const restored = await agendaRepo.findByFecha(fecha, tenant(0));
@@ -587,7 +588,7 @@ describe('T-10 — Agenda Preparation PostgreSQL integration', () => {
       await tx.importacionAgendaRepository.save(importacion, tenant(0));
 
       // Persist Agenda + Cita
-      const agenda = Agenda.create({ fecha, citasIniciales: [Cita.create(makeCitaSnapshot('FOLIO-UOW'))] });
+      const agenda = Agenda.create({ fecha, citasIniciales: [Cita.create(makeCitaSnapshot('FOLIO-UOW', fecha))] });
       await tx.agendaRepository.save(agenda, tenant(0));
 
       // Associate metadata
