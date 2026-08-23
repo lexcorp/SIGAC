@@ -131,3 +131,14 @@ v0.1.7 aprueba PORT-AP-001..010 y PREP-AP-001..004 mediante
 Audit, persistencia separada de fingerprint y agrupación/orden/impresión de la lista.
 T-04A extrae el contrato Audit a `@sigac/audit` sin cambios semánticos antes de T-05.
 No quedan gaps documentales conocidos para T-05; `implementation_ready` continúa true.
+
+
+## Agenda Preparation v0.1.8
+
+T-08A cierra el bloqueo documental de T-09 mediante `PHYSICAL-SCHEMA-DECISION.md`
+(PHY-AP-001..018): siete tablas tenant-local, columnas normalizadas para originalValues,
+PKs compuestas, FKs NO ACTION, CHECKs para catálogos cerrados, índices mínimos aprobados
+y migration strategy forward-only. `AP-OQ-007` queda RESOLVED.
+
+T-09 puede implementarse sin inventar DDL, nullability ni constraints. No quedan gaps
+documentales bloqueantes para la implementación del schema físico.

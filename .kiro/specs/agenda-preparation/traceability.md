@@ -1,8 +1,8 @@
 ---
 spec: agenda-preparation
-version: "0.1.7"
+version: "0.1.8"
 status: "Approved for Implementation"
-date: "2026-08-21"
+date: "2026-08-22"
 ---
 
 # Agenda Preparation — Traceability
@@ -47,6 +47,7 @@ La precedencia de fuentes es la de `knowledge/README.md`. Un procedimiento deriv
 | SRC-AP-026 | `docs/decisions/agenda-preparation/IMPORTACION-AGENDA-DOMAIN-DECISION.md` | Decisión APPROVED | Contratos completos de Aggregate, registros, incidencias, métricas y lifecycle T-02 |
 | SRC-AP-027 | `docs/decisions/agenda-preparation/AGENDA-CITA-DOMAIN-DECISION.md` | Decisión APPROVED | Contratos completos de Agenda, Cita, reconciliación, errores y eventos diferidos T-03 |
 | SRC-AP-028 | `docs/decisions/agenda-preparation/APPLICATION-PORTS-AND-PREPARATION-READ-DECISION.md` | Decisión APPROVED | Ports T-05, ownership Audit, metadata técnica, UoW y orden/impresión |
+| SRC-AP-029 | `docs/decisions/agenda-preparation/PHYSICAL-SCHEMA-DECISION.md` | Decisión APPROVED | Schema físico PHY-AP-001..018: tablas, columnas, nullability, PKs, FKs, CHECKs, índices, fingerprint storage, idempotency storage y migration strategy |
 
 ## 3. Business-rule registry
 
@@ -90,6 +91,9 @@ La precedencia de fuentes es la de `knowledge/README.md`. Un procedimiento deriv
 | BR-AP-036 | Fingerprint es metadata Application separada, con equivalencia 0..1 y sin unicidad conceptual. | SRC-AP-028 |
 | BR-AP-037 | PreparationList agrupa Servicio/Médico y admite orden por hora o paciente, idéntico en pantalla e impresión. | SRC-AP-028 |
 | BR-AP-038 | La importación confirmada persiste Domain, metadata y audit success en una única UoW tenant-scoped. | SRC-AP-028 |
+| BR-AP-039 | Schema físico usa UUID PK, text fields, CHECK constraints para catálogos, columnas normalizadas para originalValues, timestamps server-side y database-per-tenant sin tenant_id. | SRC-AP-029 |
+| BR-AP-040 | `agenda_imports` persiste estado funcional; fingerprint/metadata van a tabla separada `agenda_artifact_metadata`; `citas` preserva historia con `lifecycle` sin timestamps adicionales. | SRC-AP-029 |
+| BR-AP-041 | Idempotency key se almacena con importacion_id en `agenda_idempotency_keys`; replay reconstruye respuesta desde tablas canónicas sin persistir respuesta serializada. | SRC-AP-029 |
 
 ## 4. Matriz end-to-end
 
@@ -118,6 +122,7 @@ La precedencia de fuentes es la de `knowledge/README.md`. Un procedimiento deriv
 | TR-AP-021 | SRC-AP-028 | BR-AP-035/038 | REQ-AP-021 | design §7/12/14 | T-04A/T-05/06/10 | TEST-AP-PORT-001..006; TEST-AP-UOW-001..003 |
 | TR-AP-022 | SRC-AP-028 | BR-AP-036 | REQ-AP-021; AC-AP-015 | design §7/14 | T-05/06/09/10 | TEST-AP-IDEMP-001..004; TEST-AP-META-001..003 |
 | TR-AP-023 | SRC-AP-028 | BR-AP-037 | REQ-AP-022; AC-AP-016 | design §8/9 | T-05/07/13..15 | TEST-AP-PREP-001..008; TEST-AP-PRINT-001..003 |
+| TR-AP-024 | SRC-AP-029 | BR-AP-039..041 | REQ-AP-008/014/015/017; AC-AP-015; BR-AP-036 | design §14 | T-08A, T-09, T-10 | TEST-AP-SCHEMA-001..007; TEST-AP-MIGRATION-001..004 |
 
 Namespaces: `INV-AP-001..012` son invariantes globales canónicas del slice;
 `INV-IMP-AP-001..006` son invariantes verificables de `ImportacionAgenda` derivadas de
@@ -152,6 +157,7 @@ las decisiones `IMP-AP-001..014`. Ningún namespace sustituye a otro.
 | AP-OQ-004 | SRC-AP-024 | RESOLVED — RESULT-AP-001..014 | Cerrado |
 | AP-OQ-005 | domain-boundaries.md; design.md §13 | integración posterior con Solicitud/proyección | No bloquea T-01..T-19 del alcance inicial |
 | AP-OQ-006 | design.md §4/15 | lifecycle de cierre/reapertura | No bloquea si no se expone reapertura |
+| AP-OQ-007 | design.md §14; tasks.md T-09 fuente | RESOLVED — PHY-AP-001..018 | T-09 (desbloqueada por T-08A) |
 
 ## 7. SDB propagation required
 
@@ -163,7 +169,7 @@ las decisiones `IMP-AP-001..014`. Ningún namespace sustituye a otro.
 | Volume 05 | Use Cases, permissions y outcomes | T-00 |
 | Volume 06 | ACL/parser, ownership, UoW e integración | T-00 |
 | Volume 07 | autorización, audit, tenant y privacidad raw | T-00 |
-| Volume 08 | contratos de datos/API y modelo físico tras decisiones | T-00 y posteriormente T-09/T-14 |
+| Volume 08 | contratos de datos/API y modelo físico tras decisiones | T-00, T-08A y posteriormente T-09/T-14 |
 | Volume 09 | read models y UX sin reglas de negocio | T-00 y posteriormente T-15 |
 | Volume 10 | estrategia de tests y Golden Dataset | T-00/T-12 |
 | Volume 11 | operación, retención, reproceso y observabilidad | T-00 |
@@ -175,7 +181,7 @@ las decisiones `IMP-AP-001..014`. Ningún namespace sustituye a otro.
 - Invariantes con test futuro: `12/12` mediante TR-AP-001..011.
 - Acceptance criteria con test futuro: `14/14`.
 - Gaps bloqueantes identificados: `0`.
-- Gaps no bloqueantes identificados: `2` (`AP-OQ-005..006`).
+- Gaps no bloqueantes identificados: `2` (`AP-OQ-005..006`; `AP-OQ-007` RESOLVED).
 - `requirements_ready: true`
 - `design_ready: true`
 - `tasks_ready: true`

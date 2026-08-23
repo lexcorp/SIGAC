@@ -50,4 +50,5 @@ y conteos. El schema físico permanece pendiente.
 En el modelo conceptual IMP-AP-001..014, fingerprint/layout técnico permanece en
 `ImportArtifactMetadata` fuera de Domain. `ImportacionAgenda` conserva sólo id, fecha de
 Agenda, importedAt, outcome, registros/incidencias minimizados y métricas derivadas.
-Esta precisión no decide DDL, nullability física ni migrations.
+Esta precisión ha sido resuelta por `PHYSICAL-SCHEMA-DECISION.md` (PHY-AP-001..018);
+el schema físico queda aprobado y T-09 puede generar el DDL correspondiente.

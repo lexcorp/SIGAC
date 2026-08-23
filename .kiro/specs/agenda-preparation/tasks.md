@@ -1,8 +1,8 @@
 ---
 spec: agenda-preparation
-version: "0.1.7"
+version: "0.1.8"
 status: "Approved for Implementation"
-date: "2026-08-21"
+date: "2026-08-22"
 requires:
   - "requirements.md v0.1.7"
   - "design.md v0.1.7"
@@ -53,6 +53,9 @@ T-01 -----> T-02 -----+
                             |
                             v
                            T-06 --> T-07 --> T-08
+                                             |
+                                             v
+                                           T-08A
                                              |
                                              v
                                             T-09 --> T-10 --> T-11 --> T-12
@@ -187,11 +190,24 @@ retirada excluida, minimización y aislamiento tenant.
 
 **Gate:** typecheck, tests del módulo y `git diff --check`.
 
-### T-09 — Modelo físico y migrations tenant
+### T-08A — Physical persistence decision
 
 **Dependencias:** T-08.
 
-**Fuentes:** decisión física aprobada en T-00, REQ-AP-008/014/015/017.
+**Objetivo:** formalizar el modelo físico de persistencia de Agenda Preparation mediante
+`PHYSICAL-SCHEMA-DECISION.md` y propagar a spec/SDB. Prerrequisito documental de T-09
+sin el cual no puede definirse DDL, nullability ni migrations sin inventar schema.
+
+**Entregables:** `PHYSICAL-SCHEMA-DECISION.md` APPROVED; T-09 fuente actualizada;
+traceability y SDB propagados.
+
+**Gate:** revisión documental y `git diff --check`.
+
+### T-09 — Modelo físico y migrations tenant
+
+**Dependencias:** T-08A.
+
+**Fuentes:** `PHYSICAL-SCHEMA-DECISION.md` (PHY-AP-001..018), REQ-AP-008/014/015/017.
 
 **Objetivo:** definir schema PostgreSQL y migrations no destructivas. Aplicar
 RAW-AP-001..012: no persistir archivo/fila raw ni filename cliente; separar metadata,
@@ -299,6 +315,7 @@ API-AP-001..014/v0.1.1, sin raw ni outcomes no aprobados.
 | Domain | T-01..T-04 | typecheck + unit/property tests |
 | Shared Audit prerequisite | T-04A | typecheck + tests de consumidores sin cambio semántico |
 | Application | T-05..T-08 | typecheck + unit/contract tests |
+| Physical schema decision | T-08A | revisión documental, diff check |
 | Persistence | T-09..T-10 | migrations + PostgreSQL integration focalizada |
 | Importer | T-11..T-12 | parser/golden regression + privacy scan |
 | API/OpenAPI | T-13..T-14 | API tests + OpenAPI validation |
@@ -312,8 +329,10 @@ API-AP-001..014/v0.1.1, sin raw ni outcomes no aprobados.
 |---|---|
 | T-00 | PASS — AP-OQ-001..004 RESOLVED y SDB propagado |
 | T-01..T-04 | PASS |
-| T-04A | NOT STARTED — prerequisite técnico de T-05 |
-| T-05 | NOT STARTED — documentalmente ready; depende de T-04A |
-| T-06..T-19 | NOT STARTED |
+| T-04A | PASS |
+| T-05..T-08 | PASS |
+| T-08A | PASS — PHYSICAL-SCHEMA-DECISION.md aprobado |
+| T-09 | NOT STARTED |
+| T-10..T-19 | NOT STARTED |
 
 No puede declararse `agenda-preparation implementation: COMPLETE` hasta que T-19 y todos sus gates estén en PASS.
