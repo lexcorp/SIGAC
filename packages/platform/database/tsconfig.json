@@ -10,6 +10,9 @@
       "@sigac/archive-operations": [
         "../../../dist/packages/modules/archive-operations/index.d.ts"
       ],
+      "@sigac/agenda-preparation": [
+        "../../../dist/packages/modules/agenda-preparation/index.d.ts"
+      ],
       "@sigac/tenant": [
         "../../../dist/packages/platform/tenant/index.d.ts"
       ]

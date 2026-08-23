@@ -15,6 +15,13 @@
       "when": 1786821856812,
       "tag": "0001_uneven_terrax",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787447526782,
+      "tag": "0002_military_carlie_cooper",
+      "breakpoints": true
     }
   ]
 }

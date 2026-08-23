@@ -1,0 +1,1292 @@
+{
+  "id": "748c6d89-0ddc-4166-890b-95446f6fe48a",
+  "prevId": "a5bbcabd-48d9-4270-98bf-8b6f31dbeffb",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.agenda_artifact_metadata": {
+      "name": "agenda_artifact_metadata",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "importacion_id": {
+          "name": "importacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "agenda_date": {
+          "name": "agenda_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fingerprint": {
+          "name": "fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "imported_at": {
+          "name": "imported_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "agenda_artifact_metadata_date_fp_idx": {
+          "name": "agenda_artifact_metadata_date_fp_idx",
+          "columns": [
+            {
+              "expression": "agenda_date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fingerprint",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "imported_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "importacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "agenda_artifact_metadata_importacion_id_agenda_imports_id_fk": {
+          "name": "agenda_artifact_metadata_importacion_id_agenda_imports_id_fk",
+          "tableFrom": "agenda_artifact_metadata",
+          "tableTo": "agenda_imports",
+          "columnsFrom": [
+            "importacion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.agenda_idempotency_keys": {
+      "name": "agenda_idempotency_keys",
+      "schema": "",
+      "columns": {
+        "idempotency_key": {
+          "name": "idempotency_key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "importacion_id": {
+          "name": "importacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "recorded_at": {
+          "name": "recorded_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "agenda_idempotency_keys_importacion_id_agenda_imports_id_fk": {
+          "name": "agenda_idempotency_keys_importacion_id_agenda_imports_id_fk",
+          "tableFrom": "agenda_idempotency_keys",
+          "tableTo": "agenda_imports",
+          "columnsFrom": [
+            "importacion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.agenda_imports": {
+      "name": "agenda_imports",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "agenda_date": {
+          "name": "agenda_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "imported_at": {
+          "name": "imported_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "outcome": {
+          "name": "outcome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "received_records": {
+          "name": "received_records",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "processed": {
+          "name": "processed",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "added": {
+          "name": "added",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "updated": {
+          "name": "updated",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "unchanged": {
+          "name": "unchanged",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "restored": {
+          "name": "restored",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "pending_review": {
+          "name": "pending_review",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "rejected": {
+          "name": "rejected",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "duplicate_folio": {
+          "name": "duplicate_folio",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "withdrawn_from_agenda": {
+          "name": "withdrawn_from_agenda",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "incidents": {
+          "name": "incidents",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "errors": {
+          "name": "errors",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        }
+      },
+      "indexes": {
+        "agenda_imports_imported_at_id_idx": {
+          "name": "agenda_imports_imported_at_id_idx",
+          "columns": [
+            {
+              "expression": "imported_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "agenda_imports_agenda_date_idx": {
+          "name": "agenda_imports_agenda_date_idx",
+          "columns": [
+            {
+              "expression": "agenda_date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "agenda_imports_outcome_check": {
+          "name": "agenda_imports_outcome_check",
+          "value": "\"agenda_imports\".\"outcome\" IN ('IMPORTED', 'ALREADY_IMPORTED', 'RECONCILED')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.agenda_incidencias": {
+      "name": "agenda_incidencias",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "importacion_id": {
+          "name": "importacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "registro_id": {
+          "name": "registro_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_position": {
+          "name": "source_position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "incident_type": {
+          "name": "incident_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "agenda_incidencias_importacion_id_idx": {
+          "name": "agenda_incidencias_importacion_id_idx",
+          "columns": [
+            {
+              "expression": "importacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "agenda_incidencias_importacion_source_idx": {
+          "name": "agenda_incidencias_importacion_source_idx",
+          "columns": [
+            {
+              "expression": "importacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "source_position",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "agenda_incidencias_importacion_id_agenda_imports_id_fk": {
+          "name": "agenda_incidencias_importacion_id_agenda_imports_id_fk",
+          "tableFrom": "agenda_incidencias",
+          "tableTo": "agenda_imports",
+          "columnsFrom": [
+            "importacion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "agenda_incidencias_registro_id_agenda_registros_id_fk": {
+          "name": "agenda_incidencias_registro_id_agenda_registros_id_fk",
+          "tableFrom": "agenda_incidencias",
+          "tableTo": "agenda_registros",
+          "columnsFrom": [
+            "registro_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "agenda_incidencias_incident_type_check": {
+          "name": "agenda_incidencias_incident_type_check",
+          "value": "\"agenda_incidencias\".\"incident_type\" IN ('PHYSICIAN_NOT_RESOLVED','PHYSICIAN_AMBIGUOUS','SERVICE_NOT_RESOLVED','EXPEDIENT_NOT_RESOLVED','REQUIRED_DATA_MISSING','ROW_INCONSISTENT','DUPLICATE_FOLIO_IN_SNAPSHOT')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.agenda_registros": {
+      "name": "agenda_registros",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "importacion_id": {
+          "name": "importacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_position": {
+          "name": "source_position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "processing_result": {
+          "name": "processing_result",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "orig_folio": {
+          "name": "orig_folio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "orig_patient_name": {
+          "name": "orig_patient_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "orig_expediente_reference": {
+          "name": "orig_expediente_reference",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "orig_beneficiary_type": {
+          "name": "orig_beneficiary_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "orig_first_time_marker": {
+          "name": "orig_first_time_marker",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "orig_subsequent_marker": {
+          "name": "orig_subsequent_marker",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "orig_agenda_date": {
+          "name": "orig_agenda_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "orig_appointment_time": {
+          "name": "orig_appointment_time",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "orig_physician_employee_number": {
+          "name": "orig_physician_employee_number",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "orig_physician_name": {
+          "name": "orig_physician_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "orig_service_code": {
+          "name": "orig_service_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "orig_service_name": {
+          "name": "orig_service_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "interp_folio": {
+          "name": "interp_folio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "interp_agenda_date": {
+          "name": "interp_agenda_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "interp_beneficiary_type": {
+          "name": "interp_beneficiary_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "interp_appointment_kind": {
+          "name": "interp_appointment_kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "interp_appointment_time": {
+          "name": "interp_appointment_time",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "interp_numero_empleado": {
+          "name": "interp_numero_empleado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "interp_servicio_codigo": {
+          "name": "interp_servicio_codigo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "interp_servicio_nombre": {
+          "name": "interp_servicio_nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "resolved_expediente_id": {
+          "name": "resolved_expediente_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "resolved_physician_reference": {
+          "name": "resolved_physician_reference",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "agenda_registros_importacion_id_idx": {
+          "name": "agenda_registros_importacion_id_idx",
+          "columns": [
+            {
+              "expression": "importacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "agenda_registros_importacion_source_idx": {
+          "name": "agenda_registros_importacion_source_idx",
+          "columns": [
+            {
+              "expression": "importacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "source_position",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "agenda_registros_importacion_id_agenda_imports_id_fk": {
+          "name": "agenda_registros_importacion_id_agenda_imports_id_fk",
+          "tableFrom": "agenda_registros",
+          "tableTo": "agenda_imports",
+          "columnsFrom": [
+            "importacion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "agenda_registros_source_position_check": {
+          "name": "agenda_registros_source_position_check",
+          "value": "\"agenda_registros\".\"source_position\" > 0"
+        },
+        "agenda_registros_processing_result_check": {
+          "name": "agenda_registros_processing_result_check",
+          "value": "\"agenda_registros\".\"processing_result\" IN ('ADDED','UPDATED','UNCHANGED','RESTORED','PENDING_REVIEW','REJECTED','DUPLICATE_FOLIO')"
+        },
+        "agenda_registros_interp_appointment_kind_check": {
+          "name": "agenda_registros_interp_appointment_kind_check",
+          "value": "\"agenda_registros\".\"interp_appointment_kind\" IS NULL OR \"agenda_registros\".\"interp_appointment_kind\" IN ('FIRST_TIME','SUBSEQUENT')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.agendas": {
+      "name": "agendas",
+      "schema": "",
+      "columns": {
+        "agenda_date": {
+          "name": "agenda_date",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.audit_log": {
+      "name": "audit_log",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "actor_ref": {
+          "name": "actor_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "action": {
+          "name": "action",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "resource_type": {
+          "name": "resource_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "resource_id": {
+          "name": "resource_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "result": {
+          "name": "result",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "correlation_id": {
+          "name": "correlation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "occurred_at": {
+          "name": "occurred_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "change_summary": {
+          "name": "change_summary",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "security_context": {
+          "name": "security_context",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "audit_log_result_check": {
+          "name": "audit_log_result_check",
+          "value": "\"audit_log\".\"result\" IN ('success', 'denied', 'not-found', 'conflict', 'invalid-transition')"
+        },
+        "audit_log_source_check": {
+          "name": "audit_log_source_check",
+          "value": "\"audit_log\".\"source\" IN ('WEB', 'INTERNAL')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.citas": {
+      "name": "citas",
+      "schema": "",
+      "columns": {
+        "agenda_date": {
+          "name": "agenda_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "folio": {
+          "name": "folio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hora": {
+          "name": "hora",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expediente_reference": {
+          "name": "expediente_reference",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nombre_paciente": {
+          "name": "nombre_paciente",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo_derechohabiente": {
+          "name": "tipo_derechohabiente",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo_consulta": {
+          "name": "tipo_consulta",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "medico_numero_empleado": {
+          "name": "medico_numero_empleado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "medico_nombre": {
+          "name": "medico_nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "servicio_codigo": {
+          "name": "servicio_codigo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "servicio_nombre": {
+          "name": "servicio_nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lifecycle": {
+          "name": "lifecycle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "citas_agenda_date_lifecycle_idx": {
+          "name": "citas_agenda_date_lifecycle_idx",
+          "columns": [
+            {
+              "expression": "agenda_date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "lifecycle",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "citas_agenda_date_servicio_idx": {
+          "name": "citas_agenda_date_servicio_idx",
+          "columns": [
+            {
+              "expression": "agenda_date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "lifecycle",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "servicio_codigo",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "servicio_nombre",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "medico_nombre",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "medico_numero_empleado",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "hora",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "folio",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "citas_agenda_date_agendas_agenda_date_fk": {
+          "name": "citas_agenda_date_agendas_agenda_date_fk",
+          "tableFrom": "citas",
+          "tableTo": "agendas",
+          "columnsFrom": [
+            "agenda_date"
+          ],
+          "columnsTo": [
+            "agenda_date"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "citas_pkey": {
+          "name": "citas_pkey",
+          "columns": [
+            "agenda_date",
+            "folio"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "citas_tipo_consulta_check": {
+          "name": "citas_tipo_consulta_check",
+          "value": "\"citas\".\"tipo_consulta\" IN ('FIRST_TIME', 'SUBSEQUENT')"
+        },
+        "citas_lifecycle_check": {
+          "name": "citas_lifecycle_check",
+          "value": "\"citas\".\"lifecycle\" IN ('ACTIVA', 'RETIRADA_DE_AGENDA')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.expedientes": {
+      "name": "expedientes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "expediente_numero": {
+          "name": "expediente_numero",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expediente_numero_normalizado": {
+          "name": "expediente_numero_normalizado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "paciente_id_institucional": {
+          "name": "paciente_id_institucional",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "paciente_curp": {
+          "name": "paciente_curp",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "paciente_nombre_operativo": {
+          "name": "paciente_nombre_operativo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "paciente_numero_issste": {
+          "name": "paciente_numero_issste",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estado_operativo": {
+          "name": "estado_operativo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ubicacion_actual_id": {
+          "name": "ubicacion_actual_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "custodio_tipo": {
+          "name": "custodio_tipo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "custodio_ref": {
+          "name": "custodio_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "custodio_servicio": {
+          "name": "custodio_servicio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "custodio_location": {
+          "name": "custodio_location",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "custodio_accepted_at": {
+          "name": "custodio_accepted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "row_version": {
+          "name": "row_version",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "0"
+        }
+      },
+      "indexes": {
+        "expedientes_numero_normalizado_idx": {
+          "name": "expedientes_numero_normalizado_idx",
+          "columns": [
+            {
+              "expression": "expediente_numero_normalizado",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "expedientes_ubicacion_actual_id_ubicaciones_id_fk": {
+          "name": "expedientes_ubicacion_actual_id_ubicaciones_id_fk",
+          "tableFrom": "expedientes",
+          "tableTo": "ubicaciones",
+          "columnsFrom": [
+            "ubicacion_actual_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "expedientes_estado_operativo_check": {
+          "name": "expedientes_estado_operativo_check",
+          "value": "\"expedientes\".\"estado_operativo\" IN ('DISPONIBLE', 'APARTADO', 'EN_TRASLADO', 'EN_CONSULTA', 'NO_LOCALIZADO', 'EXTRAVIADO')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.movimientos_expediente": {
+      "name": "movimientos_expediente",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "expediente_id": {
+          "name": "expediente_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "movement_type": {
+          "name": "movement_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "origin_location_id": {
+          "name": "origin_location_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "destination_location_id": {
+          "name": "destination_location_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "origin_custodian_ref": {
+          "name": "origin_custodian_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "destination_custodian_ref": {
+          "name": "destination_custodian_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "business_reference_type": {
+          "name": "business_reference_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "business_reference_id": {
+          "name": "business_reference_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "occurred_at": {
+          "name": "occurred_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "recorded_at": {
+          "name": "recorded_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actor_ref": {
+          "name": "actor_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "correlation_id": {
+          "name": "correlation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "movimientos_expediente_expediente_id_expedientes_id_fk": {
+          "name": "movimientos_expediente_expediente_id_expedientes_id_fk",
+          "tableFrom": "movimientos_expediente",
+          "tableTo": "expedientes",
+          "columnsFrom": [
+            "expediente_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "movimientos_expediente_source_check": {
+          "name": "movimientos_expediente_source_check",
+          "value": "\"movimientos_expediente\".\"source\" IN ('WEB', 'INTERNAL')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.ubicaciones": {
+      "name": "ubicaciones",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "codigo": {
+          "name": "codigo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "descripcion": {
+          "name": "descripcion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
