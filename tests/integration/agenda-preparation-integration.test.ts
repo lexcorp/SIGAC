@@ -19,6 +19,7 @@
 import { randomUUID } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 import {
+  AgendaFecha,
   ImportAgenda,
   MedicoReferencia,
   NumeroEmpleado,
@@ -26,6 +27,10 @@ import {
 } from '../../packages/modules/agenda-preparation/src/index.js';
 import {
   PostgresAgendaPreparationUnitOfWork,
+  PostgresAgendaDayQueryPort,
+  PostgresAgendaImportHistoryQueryPort,
+  PostgresAgendaImportIncidentsQueryPort,
+  PostgresAgendaPreparationQueryPort,
   PostgresIdempotencyKeyRepository,
   PostgresImportArtifactMetadataRepository,
   TenantDatabaseRouter,
@@ -804,5 +809,327 @@ describe('T-17 — Agenda Preparation PostgreSQL integration', () => {
         expect(actualCols, `columna prohibida encontrada: ${col}`).not.toContain(col);
       }
     }
+  });
+});
+
+// =============================================================================
+// T-17B — Read Query Adapters Integration (regression for null-adapter bug)
+//
+// Root cause of bug: dev-composition-root.ts wired nullHistoryQuery, nullDayQuery
+// and nullPreparationQuery for the Agenda read use cases. The write path used
+// real Postgres adapters, so imports succeeded, but GET /agendas/:date returned
+// 404 and GET /agenda-imports returned [] regardless of DB contents.
+//
+// These tests verify PostgresAgendaDayQueryPort, PostgresAgendaImportHistoryQueryPort
+// and PostgresAgendaPreparationQueryPort against real PostgreSQL.
+// =============================================================================
+
+describe('T-17B — Read Query Adapters PostgreSQL integration (regression)', () => {
+  const admin2 = new Client({ connectionString: adminUrl });
+  const suffix2 = randomUUID().replaceAll('-', '');
+  const DB_READ_A = `sigac_ap_read_a_${suffix2}`;
+  const DB_READ_B = `sigac_ap_read_b_${suffix2}`;
+
+  const clients2 = [
+    new Client({ connectionString: databaseUrl(DB_READ_A) }),
+    new Client({ connectionString: databaseUrl(DB_READ_B) }),
+  ] as const;
+
+  const router2 = new TenantDatabaseRouter([
+    { tenantId: 'read-tenant-1', databaseName: DB_READ_A, connectionString: databaseUrl(DB_READ_A) },
+    { tenantId: 'read-tenant-2', databaseName: DB_READ_B, connectionString: databaseUrl(DB_READ_B) },
+  ]);
+
+  const tenantRead1: TenantContext = {
+    tenantId: 'read-tenant-1', slug: 'read-1', hospitalId: 'read-h-1',
+    databaseName: DB_READ_A, timezone: 'America/Mexico_City',
+  };
+  const tenantRead2: TenantContext = {
+    tenantId: 'read-tenant-2', slug: 'read-2', hospitalId: 'read-h-2',
+    databaseName: DB_READ_B, timezone: 'America/Mexico_City',
+  };
+
+  const READ_DATE = '2026-09-15';
+
+  beforeAll(async () => {
+    await admin2.connect();
+    for (const db of [DB_READ_A, DB_READ_B]) await admin2.query(`CREATE DATABASE "${db}"`);
+    for (const client of clients2) {
+      await client.connect();
+      await applyMigrations(client);
+    }
+
+    // Seed tenant A with a known import, agenda, and citas
+    const importId = randomUUID();
+    await clients2[0]!.query(
+      `INSERT INTO agenda_imports (id, agenda_date, imported_at, outcome,
+         received_records, processed, added, updated, unchanged, restored,
+         pending_review, rejected, duplicate_folio, withdrawn_from_agenda, incidents, errors)
+       VALUES ($1,$2,now(),'IMPORTED',3,3,3,0,0,0,0,0,0,0,0,0)`,
+      [importId, READ_DATE],
+    );
+    await clients2[0]!.query(
+      `INSERT INTO agenda_artifact_metadata (id, importacion_id, agenda_date, fingerprint, imported_at)
+       VALUES ($1,$2,$3,'deadbeef',now())`,
+      [randomUUID(), importId, READ_DATE],
+    );
+    await clients2[0]!.query(
+      `INSERT INTO agendas (agenda_date) VALUES ($1)`,
+      [READ_DATE],
+    );
+    // Insert 3 citas: 2 ACTIVA + 1 RETIRADA
+    for (const [folio, hora, lifecycle] of [
+      ['READ-001', '08:00', 'ACTIVA'],
+      ['READ-002', '09:00', 'ACTIVA'],
+      ['READ-003', '10:00', 'RETIRADA_DE_AGENDA'],
+    ]) {
+      await clients2[0]!.query(
+        `INSERT INTO citas (agenda_date, folio, hora, expediente_reference,
+           nombre_paciente, tipo_derechohabiente, tipo_consulta,
+           medico_numero_empleado, medico_nombre, servicio_codigo, servicio_nombre, lifecycle)
+         VALUES ($1,$2,$3,null,'PACIENTE READ','PENSIONISTA','FIRST_TIME',
+                 '55501','DR READ SINTETICO','CIR','CIRUGIA READ',$4)`,
+        [READ_DATE, folio, hora, lifecycle],
+      );
+    }
+  }, 60_000);
+
+  afterAll(async () => {
+    await router2.close();
+    for (const client of clients2) await client.end();
+    for (const db of [DB_READ_A, DB_READ_B]) await admin2.query(`DROP DATABASE "${db}"`);
+    await admin2.end();
+  }, 30_000);
+
+  // ─── PostgresAgendaDayQueryPort ────────────────────────────────────────────
+
+  it('T-17B: PostgresAgendaDayQueryPort.findByDate returns model for existing date', async () => {
+    const port = new PostgresAgendaDayQueryPort(router2);
+    const fecha = AgendaFecha.parse(READ_DATE);
+    const model = await port.findByDate(fecha, tenantRead1);
+
+    expect(model).not.toBeNull();
+    expect(model!.agendaDate).toBe(READ_DATE);
+    expect(model!.activeAppointments).toBe(2);   // 2 ACTIVA citas
+    expect(model!.physicians).toBe(1);
+    expect(model!.services).toBe(1);
+    expect(model!.latestOutcome).toBe('IMPORTED');
+  });
+
+  it('T-17B: PostgresAgendaDayQueryPort.findByDate returns null for non-existent date', async () => {
+    const port = new PostgresAgendaDayQueryPort(router2);
+    const fecha = AgendaFecha.parse('2026-01-01');
+    const model = await port.findByDate(fecha, tenantRead1);
+    expect(model).toBeNull();
+  });
+
+  it('T-17B: PostgresAgendaDayQueryPort — tenant isolation: tenant B cannot see tenant A data', async () => {
+    const port = new PostgresAgendaDayQueryPort(router2);
+    const fecha = AgendaFecha.parse(READ_DATE);
+    // Tenant B has no data — must return null
+    const model = await port.findByDate(fecha, tenantRead2);
+    expect(model).toBeNull();
+  });
+
+  // ─── PostgresAgendaImportHistoryQueryPort ─────────────────────────────────
+
+  it('T-17B: PostgresAgendaImportHistoryQueryPort.findAll returns items for tenant with data', async () => {
+    const port = new PostgresAgendaImportHistoryQueryPort(router2);
+    const page = await port.findAll(undefined, { limit: 20 }, tenantRead1);
+
+    expect(page.items.length).toBe(1);
+    expect(page.items[0]!.agendaDate).toBe(READ_DATE);
+    expect(page.items[0]!.outcome).toBe('IMPORTED');
+    expect(page.items[0]!.metrics.receivedRecords).toBe(3);
+    expect(page.items[0]!.metrics.processed).toBe(3);
+    expect(page.nextCursor).toBeNull();
+  });
+
+  it('T-17B: PostgresAgendaImportHistoryQueryPort.findAll returns empty for tenant with no data', async () => {
+    const port = new PostgresAgendaImportHistoryQueryPort(router2);
+    const page = await port.findAll(undefined, { limit: 20 }, tenantRead2);
+    expect(page.items).toHaveLength(0);
+    expect(page.nextCursor).toBeNull();
+  });
+
+  it('T-17B: PostgresAgendaImportHistoryQueryPort — agendaDate filter narrows results', async () => {
+    const port = new PostgresAgendaImportHistoryQueryPort(router2);
+    // Filter by the exact date that has data
+    const pageMatch = await port.findAll(READ_DATE, { limit: 20 }, tenantRead1);
+    expect(pageMatch.items.length).toBe(1);
+
+    // Filter by a date that has no data
+    const pageEmpty = await port.findAll('2020-01-01', { limit: 20 }, tenantRead1);
+    expect(pageEmpty.items).toHaveLength(0);
+  });
+
+  it('T-17B: PostgresAgendaImportHistoryQueryPort — metrics satisfy receivedRecords invariant', async () => {
+    const port = new PostgresAgendaImportHistoryQueryPort(router2);
+    const page = await port.findAll(undefined, { limit: 20 }, tenantRead1);
+    for (const item of page.items) {
+      const m = item.metrics;
+      expect(m.receivedRecords).toBe(
+        m.processed + m.pendingReview + m.rejected + m.duplicateFolio,
+      );
+    }
+  });
+
+  // ─── PostgresAgendaPreparationQueryPort ───────────────────────────────────
+
+  it('T-17B: PostgresAgendaPreparationQueryPort.findPage returns only ACTIVA citas', async () => {
+    const port = new PostgresAgendaPreparationQueryPort(router2);
+    const fecha = AgendaFecha.parse(READ_DATE);
+    const page = await port.findPage(fecha, 'APPOINTMENT_TIME_ASC', { limit: 20 }, tenantRead1);
+
+    expect(page.items.length).toBe(2);   // 2 ACTIVA, 1 RETIRADA excluded
+    const folios = page.items.map((i) => i.folio);
+    expect(folios).toContain('READ-001');
+    expect(folios).toContain('READ-002');
+    expect(folios).not.toContain('READ-003');  // RETIRADA must be excluded
+    expect(page.nextCursor).toBeNull();
+  });
+
+  it('T-17B: PostgresAgendaPreparationQueryPort.findPage — APPOINTMENT_TIME_ASC order', async () => {
+    const port = new PostgresAgendaPreparationQueryPort(router2);
+    const fecha = AgendaFecha.parse(READ_DATE);
+    const page = await port.findPage(fecha, 'APPOINTMENT_TIME_ASC', { limit: 20 }, tenantRead1);
+
+    expect(page.items[0]!.appointmentTime).toBe('08:00');
+    expect(page.items[1]!.appointmentTime).toBe('09:00');
+  });
+
+  it('T-17B: PostgresAgendaPreparationQueryPort.listForPrint returns all ACTIVA citas', async () => {
+    const port = new PostgresAgendaPreparationQueryPort(router2);
+    const fecha = AgendaFecha.parse(READ_DATE);
+    const items = await port.listForPrint(fecha, 'APPOINTMENT_TIME_ASC', tenantRead1);
+
+    expect(items.length).toBe(2);
+  });
+
+  it('T-17B: PostgresAgendaPreparationQueryPort — tenant isolation: tenant B sees empty', async () => {
+    const port = new PostgresAgendaPreparationQueryPort(router2);
+    const fecha = AgendaFecha.parse(READ_DATE);
+    const page = await port.findPage(fecha, 'APPOINTMENT_TIME_ASC', { limit: 20 }, tenantRead2);
+    expect(page.items).toHaveLength(0);
+  });
+
+  it('T-17B: PostgresAgendaPreparationQueryPort — cursor pagination works', async () => {
+    const port = new PostgresAgendaPreparationQueryPort(router2);
+    const fecha = AgendaFecha.parse(READ_DATE);
+
+    // Get first page with limit=1
+    const page1 = await port.findPage(fecha, 'APPOINTMENT_TIME_ASC', { limit: 1 }, tenantRead1);
+    expect(page1.items.length).toBe(1);
+    expect(page1.nextCursor).not.toBeNull();
+
+    // Get second page using cursor
+    const page2 = await port.findPage(
+      fecha, 'APPOINTMENT_TIME_ASC',
+      { limit: 1, cursor: page1.nextCursor! },
+      tenantRead1,
+    );
+    expect(page2.items.length).toBe(1);
+    // The two pages must have different folios
+    expect(page1.items[0]!.folio).not.toBe(page2.items[0]!.folio);
+    // Second page is the last — no more cursor
+    expect(page2.nextCursor).toBeNull();
+  });
+});
+
+// =============================================================================
+// T-17C — PostgresAgendaImportIncidentsQueryPort integration (BUG-1 regression)
+// =============================================================================
+// Root cause of BUG-1: nullIncidentsQuery returned [] unconditionally.
+// GET /api/v1/agenda-imports/{id}/incidents?limit=25 always returned {items:[]}.
+// Fix: PostgresAgendaImportIncidentsQueryPort reads from agenda_incidencias.
+// =============================================================================
+
+describe('T-17C — Incidents Read Query Adapter PostgreSQL integration (BUG-1 regression)', () => {
+  const admin3 = new Client({ connectionString: adminUrl });
+  const suffix3 = randomUUID().replaceAll('-', '');
+  const DB_INC_A = `sigac_ap_inc_a_${suffix3}`;
+  const DB_INC_B = `sigac_ap_inc_b_${suffix3}`;
+
+  const clientInc = new Client({ connectionString: databaseUrl(DB_INC_A) });
+  const clientIncB = new Client({ connectionString: databaseUrl(DB_INC_B) });
+
+  const router3 = new TenantDatabaseRouter([
+    { tenantId: 'inc-tenant-1', databaseName: DB_INC_A, connectionString: databaseUrl(DB_INC_A) },
+    { tenantId: 'inc-tenant-2', databaseName: DB_INC_B, connectionString: databaseUrl(DB_INC_B) },
+  ]);
+
+  const tenantInc1 = { tenantId: 'inc-tenant-1', slug: 'inc-1', hospitalId: 'inc-h-1', databaseName: DB_INC_A, timezone: 'UTC' };
+  const tenantInc2 = { tenantId: 'inc-tenant-2', slug: 'inc-2', hospitalId: 'inc-h-2', databaseName: DB_INC_B, timezone: 'UTC' };
+
+  const INC_IMPORT_ID = randomUUID();
+  const INC_REGISTRO_ID = randomUUID();
+  const INC_INCIDENCIA_ID = randomUUID();
+
+  beforeAll(async () => {
+    await admin3.connect();
+    for (const db of [DB_INC_A, DB_INC_B]) await admin3.query(`CREATE DATABASE "${db}"`);
+    await clientInc.connect();
+    await clientIncB.connect();
+    await applyMigrations(clientInc);
+    await applyMigrations(clientIncB);
+
+    // Seed an import with one REQUIRED_DATA_MISSING incident in tenant A
+    await clientInc.query(
+      `INSERT INTO agenda_imports (id, agenda_date, imported_at, outcome,
+         received_records, processed, added, updated, unchanged, restored,
+         pending_review, rejected, duplicate_folio, withdrawn_from_agenda, incidents, errors)
+       VALUES ($1,'2026-09-20',now(),'IMPORTED',3,2,2,0,0,0,0,1,0,0,1,1)`,
+      [INC_IMPORT_ID],
+    );
+    await clientInc.query(
+      `INSERT INTO agenda_registros (id, importacion_id, source_position, processing_result,
+         orig_folio, orig_patient_name, orig_beneficiary_type)
+       VALUES ($1,$2,3,'REJECTED','T17C-FOLIO','PACIENTE T17C','PENSIONISTA')`,
+      [INC_REGISTRO_ID, INC_IMPORT_ID],
+    );
+    await clientInc.query(
+      `INSERT INTO agenda_incidencias (id, importacion_id, registro_id, source_position, incident_type)
+       VALUES ($1,$2,$3,3,'REQUIRED_DATA_MISSING')`,
+      [INC_INCIDENCIA_ID, INC_IMPORT_ID, INC_REGISTRO_ID],
+    );
+    // Tenant B has no incidents
+  }, 60_000);
+
+  afterAll(async () => {
+    await router3.close();
+    await clientInc.end();
+    await clientIncB.end();
+    for (const db of [DB_INC_A, DB_INC_B]) await admin3.query(`DROP DATABASE "${db}"`);
+    await admin3.end();
+  }, 30_000);
+
+  it('T-17C: BUG-1 — findByImportacionId returns incidents when they exist', async () => {
+    const port = new PostgresAgendaImportIncidentsQueryPort(router3);
+    const { ImportacionAgendaId } = await import('../../packages/modules/agenda-preparation/src/index.js');
+    const id = ImportacionAgendaId.parse(INC_IMPORT_ID);
+    const incidents = await port.findByImportacionId(id, tenantInc1);
+    expect(incidents).toHaveLength(1);
+    expect(incidents[0]!.type).toBe('REQUIRED_DATA_MISSING');
+    expect(incidents[0]!.sourcePosition).toBe(3);
+    expect(incidents[0]!.registroId).toBe(INC_REGISTRO_ID);
+    expect(incidents[0]!.incidenciaId).toBe(INC_INCIDENCIA_ID);
+  });
+
+  it('T-17C: BUG-1 — findByImportacionId returns empty array when no incidents', async () => {
+    const port = new PostgresAgendaImportIncidentsQueryPort(router3);
+    const { ImportacionAgendaId } = await import('../../packages/modules/agenda-preparation/src/index.js');
+    // Use an import ID that doesn't exist
+    const id = ImportacionAgendaId.parse(randomUUID());
+    const incidents = await port.findByImportacionId(id, tenantInc1);
+    expect(incidents).toHaveLength(0);
+  });
+
+  it('T-17C: BUG-1 — tenant isolation: tenant B cannot see tenant A incidents', async () => {
+    const port = new PostgresAgendaImportIncidentsQueryPort(router3);
+    const { ImportacionAgendaId } = await import('../../packages/modules/agenda-preparation/src/index.js');
+    const id = ImportacionAgendaId.parse(INC_IMPORT_ID);
+    // Tenant B has no data — must return empty
+    const incidents = await port.findByImportacionId(id, tenantInc2);
+    expect(incidents).toHaveLength(0);
   });
 });

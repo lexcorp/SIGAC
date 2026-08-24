@@ -123,6 +123,65 @@ describe('useAgendaImportHistory', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(api.listImports).toHaveBeenCalledWith(10, undefined, '2026-08-25');
   });
+
+  // ── Bug 1 regression: GET /agenda-imports must ALWAYS include limit ─────────
+  // Root cause: if limit were missing from the call, the API returns
+  // 400 HTTP_VALIDATION_ERROR { field: "limit", code: "REQUIRED" }.
+  // These tests document the invariant that useAgendaImportHistory NEVER
+  // calls listImports without an explicit limit value.
+
+  it('BUG-1 regression: listImports always receives a numeric limit — never undefined', async () => {
+    const api = {
+      listImports: vi.fn().mockResolvedValue({ items: [], nextCursor: null }),
+    };
+    const { result } = renderHook(
+      () => useAgendaImportHistory(undefined, 20, api as unknown as Parameters<typeof useAgendaImportHistory>[2]),
+      { wrapper },
+    );
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    // The first argument to listImports (limit) must be a positive number
+    const calls = api.listImports.mock.calls;
+    expect(calls.length).toBeGreaterThan(0);
+    for (const call of calls) {
+      const limit = call[0];
+      expect(typeof limit).toBe('number');
+      expect(limit).toBeGreaterThan(0);
+    }
+  });
+
+  it('BUG-1 regression: listImports always called with limit=20 (default)', async () => {
+    const api = {
+      listImports: vi.fn().mockResolvedValue({ items: [], nextCursor: null }),
+    };
+    renderHook(
+      () => useAgendaImportHistory(undefined, undefined, api as unknown as Parameters<typeof useAgendaImportHistory>[2]),
+      { wrapper },
+    );
+    await waitFor(() => expect(api.listImports).toHaveBeenCalled());
+    // limit must be 20 (the default), never undefined/null
+    expect(api.listImports).toHaveBeenCalledWith(20, undefined, undefined);
+    const limitArg = (api.listImports.mock.calls[0] as unknown[])[0];
+    expect(limitArg).toBe(20);
+    expect(limitArg).not.toBeUndefined();
+    expect(limitArg).not.toBeNull();
+  });
+
+  it('BUG-1 regression: agendaApi.listImports URL always contains ?limit=N', async () => {
+    // Verifies the AgendaApi layer always builds a URL with limit param
+    // (regression against someone calling /api/v1/agenda-imports without ?limit)
+    const calls: string[] = [];
+    const mockFetcher = vi.fn().mockImplementation((url: string) => {
+      calls.push(url);
+      return Promise.resolve(new Response(JSON.stringify({ items: [], nextCursor: null }), {
+        status: 200, headers: { 'Content-Type': 'application/json' },
+      }));
+    });
+    const { AgendaApi } = await import('../api/agendaApi');
+    const api = new AgendaApi(mockFetcher);
+    await api.listImports(20);
+    expect(calls[0]).toContain('limit=20');
+    expect(calls[0]).not.toMatch(/[?&]limit($|&)/);  // limit has a value, not empty
+  });
 });
 
 describe('useAgendaImportIncidents', () => {

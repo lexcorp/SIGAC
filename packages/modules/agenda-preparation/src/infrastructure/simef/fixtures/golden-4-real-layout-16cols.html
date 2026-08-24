@@ -1,0 +1,34 @@
+<html><body>
+<!--
+  Golden Fixture 4: Real SIMEF extended 16-column layout.
+  Synthetic desidentified data only. No PII.
+  Covers:
+  - HH:mm - HH:mm interval time format (spaced)
+  - HH:mm-HH:mm interval time format (no space)
+  - Medico: with HTML entity &eacute; (2-cell row structure)
+  - Servicio: at cell[1] of same Medico row
+  - 16 total columns per appointment row
+  - Extra excluded columns at positions 7-9
+  - SEXO at col 12 (F/M — must be excluded, never enter marker fields)
+  - EDAD at col 13 (excluded — años values)
+  - 1A. VEZ at col 14 (X for primera vez)
+  - SUBS. at col 15 (X for subsecuente)
+  - Multiple physicians in same file
+-->
+<table>
+<tr><td>ISSSTE</td><td>Consultas del 24/08/2026</td><td>HOSPITAL SINTETICO T12G4</td></tr>
+</table>
+<table>
+<tr><td>No. CITA</td><td>FECHA DE LA CITA</td><td>HORA DE LA CITA</td><td>FOLIO</td><td>EXPEDIENTE</td><td>TIPO</td><td>NOMBRE DEL DERECHOHABIENTE</td><td>CONTACTO</td><td>VIGENCIA DE DERECHOS</td><td>SEXO</td><td>EDAD</td><td>1A. VEZ</td><td>SUBS.</td></tr>
+<tr><td>M&eacute;dico: 55501 DR PRIMERO SINTETICO</td><td>Servicio: CIR CIRUGIA SINTETICA</td></tr>
+<!-- 16-col rows: 0=NoCita,1=Fecha,2=Hora,3=Folio,4=Expediente,5=Tipo,6=Nombre,
+     7=excl-A,8=excl-B,9=excl-C, 10=Vigencia*, 11=extra*, 12=SEXO*, 13=EDAD*,
+     14=1A.VEZ, 15=SUBS.  (* excluded fields) -->
+<tr><td>1</td><td>24/08/2026</td><td>07:00 - 07:20</td><td>G4-FOLIO-001</td><td>G4-EXP-001</td><td>10</td><td>PACIENTE SINTETICO UNO</td><td></td><td></td><td></td><td>X</td><td></td><td>F</td><td>45 anos</td><td>X</td><td></td></tr>
+<tr><td>2</td><td>24/08/2026</td><td>07:20 - 07:40</td><td>G4-FOLIO-002</td><td>G4-EXP-002</td><td>20</td><td>PACIENTE SINTETICO DOS</td><td></td><td></td><td></td><td>X</td><td></td><td>M</td><td>62 anos</td><td></td><td>X</td></tr>
+<tr><td>3</td><td>24/08/2026</td><td>08:00-08:20</td><td>G4-FOLIO-003</td><td>G4-EXP-003</td><td>70</td><td>PACIENTE SINTETICO TRES</td><td></td><td></td><td></td><td>X</td><td></td><td>F</td><td>33 anos</td><td>X</td><td></td></tr>
+<tr><td>M&eacute;dico: 55502 DR SEGUNDO SINTETICO</td><td>Servicio: CARD CARDIOLOGIA SINTETICA</td></tr>
+<tr><td>4</td><td>24/08/2026</td><td>09:00 - 09:20</td><td>G4-FOLIO-004</td><td>G4-EXP-004</td><td>30</td><td>PACIENTE SINTETICO CUATRO</td><td></td><td></td><td></td><td>X</td><td></td><td>F</td><td>55 anos</td><td></td><td>X</td></tr>
+<tr><td>5</td><td>24/08/2026</td><td>09:20 - 09:40</td><td>G4-FOLIO-005</td><td>G4-EXP-005</td><td>10</td><td>PACIENTE SINTETICO CINCO</td><td></td><td></td><td>extra</td><td>X</td><td></td><td>M</td><td>28 anos</td><td>X</td><td></td></tr>
+</table>
+</body></html>

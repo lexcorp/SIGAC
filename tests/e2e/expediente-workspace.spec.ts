@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { E2E } from './harness/fixtures.js';
 
 async function search(page: Page, numero: string): Promise<void> {
-  await page.goto('/');
+  await page.goto('/expedientes');
   await page.getByLabel('Número de expediente').fill(numero);
   const response = page.waitForResponse((candidate) => candidate.url().includes('/api/v1/expedientes?numero='));
   await page.getByRole('button', { name: 'Buscar' }).click();

@@ -428,3 +428,124 @@ describe('ImportAgenda', () => {
     });
   });
 });
+
+// =============================================================================
+// BUG-2 regression: ALREADY_IMPORTED metrics invariant
+// =============================================================================
+// Root cause: the ALREADY_IMPORTED path previously set receivedRecords to
+// interpreted.rows.length (e.g., 411) while all other counters were 0,
+// violating the domain invariant:
+//   receivedRecords = processed + pendingReview + rejected + duplicateFolio
+//
+// Fix: all counters are 0 for ALREADY_IMPORTED — no records were processed
+// in this attempt. The caller can retrieve the original import's metrics
+// via GET /agenda-imports/{importacionId}.
+// =============================================================================
+
+describe('BUG-2 regression — ALREADY_IMPORTED metrics invariant', () => {
+  it('BUG-2: ALREADY_IMPORTED metrics all zero — receivedRecords = 0', async () => {
+    const { useCase, metadataRepository } = makeMocks();
+    const priorId = ImportacionAgendaId.parse('88ec5220-cac3-47ef-91e2-502d24d27d2d');
+    (metadataRepository.findEquivalent as Mock).mockResolvedValue({
+      importacionId: priorId,
+      importedAt: new Date('2026-08-24T04:18:47.277Z'),
+    } satisfies ImportEquivalentReference);
+
+    const result = await useCase.execute(makeInput());
+    const m = result.metrics;
+
+    // All metrics must be zero — no records were processed in this attempt
+    expect(m.receivedRecords).toBe(0);
+    expect(m.processed).toBe(0);
+    expect(m.added).toBe(0);
+    expect(m.updated).toBe(0);
+    expect(m.unchanged).toBe(0);
+    expect(m.restored).toBe(0);
+    expect(m.pendingReview).toBe(0);
+    expect(m.rejected).toBe(0);
+    expect(m.duplicateFolio).toBe(0);
+    expect(m.withdrawnFromAgenda).toBe(0);
+    expect(m.incidents).toBe(0);
+    expect(m.errors).toBe(0);
+  });
+
+  it('BUG-2: ALREADY_IMPORTED satisfies receivedRecords = processed + pendingReview + rejected + duplicateFolio', async () => {
+    const { useCase, metadataRepository } = makeMocks();
+    (metadataRepository.findEquivalent as Mock).mockResolvedValue({
+      importacionId: ImportacionAgendaId.parse('prior-invariant-check'),
+      importedAt: new Date('2026-08-24T04:00:00Z'),
+    } satisfies ImportEquivalentReference);
+
+    const result = await useCase.execute(makeInput());
+    const m = result.metrics;
+
+    expect(m.receivedRecords).toBe(
+      m.processed + m.pendingReview + m.rejected + m.duplicateFolio,
+    );
+  });
+
+  it('BUG-2: ALREADY_IMPORTED satisfies processed = added + updated + unchanged + restored', async () => {
+    const { useCase, metadataRepository } = makeMocks();
+    (metadataRepository.findEquivalent as Mock).mockResolvedValue({
+      importacionId: ImportacionAgendaId.parse('prior-processed-check'),
+      importedAt: new Date('2026-08-24T04:00:00Z'),
+    } satisfies ImportEquivalentReference);
+
+    const result = await useCase.execute(makeInput());
+    const m = result.metrics;
+
+    expect(m.processed).toBe(m.added + m.updated + m.unchanged + m.restored);
+  });
+
+  it('BUG-2: ALREADY_IMPORTED satisfies errors = rejected + duplicateFolio', async () => {
+    const { useCase, metadataRepository } = makeMocks();
+    (metadataRepository.findEquivalent as Mock).mockResolvedValue({
+      importacionId: ImportacionAgendaId.parse('prior-errors-check'),
+      importedAt: new Date('2026-08-24T04:00:00Z'),
+    } satisfies ImportEquivalentReference);
+
+    const result = await useCase.execute(makeInput());
+    const m = result.metrics;
+
+    expect(m.errors).toBe(m.rejected + m.duplicateFolio);
+  });
+
+  it('BUG-2: ALREADY_IMPORTED returns the PRIOR importacionId (not a new one)', async () => {
+    const { useCase, metadataRepository, unitOfWork } = makeMocks();
+    const equivalentId = '88ec5220-cac3-47ef-91e2-502d24d27d2d';
+    (metadataRepository.findEquivalent as Mock).mockResolvedValue({
+      importacionId: ImportacionAgendaId.parse(equivalentId),
+      importedAt: new Date('2026-08-24T04:18:47Z'),
+    } satisfies ImportEquivalentReference);
+
+    const result = await useCase.execute(makeInput());
+
+    // The returned ID must be the PRIOR equivalent import's ID
+    expect(result.importacionId).toBe(equivalentId);
+    expect(result.outcome).toBe('ALREADY_IMPORTED');
+    // No new ImportacionAgenda was created (UoW not called)
+    expect((unitOfWork.execute as Mock).mock.calls).toHaveLength(0);
+  });
+
+  it('BUG-2: ALREADY_IMPORTED receivedRecords is NOT the number of rows in the file', async () => {
+    // This is the direct regression test for the original bug:
+    // before the fix, receivedRecords = interpreted.rows.length (e.g. 411)
+    // after the fix, receivedRecords = 0
+    const { useCase, metadataRepository, interpreter } = makeMocks();
+
+    // Simulate 411 rows in the interpreted file (as in the real smoke test)
+    const manyRows = Array.from({ length: 411 }, (_, i) => makeValidRow(`FOLIO-${i}`, i + 1));
+    (interpreter.interpret as Mock).mockResolvedValue(makeInterpretedFile(manyRows));
+    (metadataRepository.findEquivalent as Mock).mockResolvedValue({
+      importacionId: ImportacionAgendaId.parse('prior-with-411-rows'),
+      importedAt: new Date('2026-08-24T04:18:47Z'),
+    } satisfies ImportEquivalentReference);
+
+    const result = await useCase.execute(makeInput());
+
+    // receivedRecords must be 0, NOT 411
+    expect(result.metrics.receivedRecords).toBe(0);
+    expect(result.metrics.receivedRecords).not.toBe(411);
+    expect(result.outcome).toBe('ALREADY_IMPORTED');
+  });
+});

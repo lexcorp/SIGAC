@@ -48,7 +48,10 @@ const databaseNames = [`sigac_e2e_workspace_a_${databaseSuffix}`, `sigac_e2e_wor
 const dbUrl = (name: string) => { const url = new URL(adminUrl); url.pathname = `/${name}`; return url.toString(); };
 const tenant = (key: 'a' | 'b'): TenantContext => ({ tenantId: `e2e-${key}`, slug: `e2e-${key}`, hospitalId: `hospital-${key}`, databaseName: key === 'a' ? databaseNames[0] : databaseNames[1], timezone: 'America/Mexico_City' });
 const actors = {
-  full: { tenant: tenant('a'), actor: { actorId: 'e2e-full', roles: new Set(['ARCHIVISTA', 'RECEPTOR_SERVICIO']), permissions: new Set(['EXPEDIENT_VIEW', 'EXPEDIENT_AUDIT_VIEW', 'LOCATION_VIEW', 'EXPEDIENT_DISPATCH', 'CUSTODY_ACCEPT', 'LOAN_OPEN']), tenantIds: new Set(['e2e-a']) } },
+  // 'full' is the default DEMO actor (no sigac_e2e_actor cookie).
+  // Includes all permissions required to exercise every implemented feature in the DEMO environment,
+  // including Agenda Preparation (AGENDA_VIEW, AGENDA_IMPORT, AGENDA_INCIDENT_VIEW).
+  full: { tenant: tenant('a'), actor: { actorId: 'e2e-full', roles: new Set(['ARCHIVISTA', 'RECEPTOR_SERVICIO']), permissions: new Set(['EXPEDIENT_VIEW', 'EXPEDIENT_AUDIT_VIEW', 'LOCATION_VIEW', 'EXPEDIENT_DISPATCH', 'CUSTODY_ACCEPT', 'LOAN_OPEN', 'AGENDA_VIEW', 'AGENDA_IMPORT', 'AGENDA_INCIDENT_VIEW']), tenantIds: new Set(['e2e-a']) } },
   noAudit: { tenant: tenant('a'), actor: { actorId: 'e2e-no-audit', roles: new Set(['ARCHIVISTA']), permissions: new Set(['EXPEDIENT_VIEW', 'LOCATION_VIEW', 'EXPEDIENT_DISPATCH', 'LOAN_OPEN']), tenantIds: new Set(['e2e-a']) } },
   tenantB: { tenant: tenant('b'), actor: { actorId: 'e2e-b', roles: new Set(['ARCHIVISTA']), permissions: new Set(['EXPEDIENT_VIEW']), tenantIds: new Set(['e2e-b']) } },
   // Agenda actors
@@ -108,119 +111,119 @@ async function seed(client: Client, key: 'a' | 'b'): Promise<void> {
 }
 
 async function main(): Promise<void> {
-await recreateDatabases();
-const router = new TenantDatabaseRouter([
-  { tenantId: 'e2e-a', databaseName: databaseNames[0], connectionString: dbUrl(databaseNames[0]) },
-  { tenantId: 'e2e-b', databaseName: databaseNames[1], connectionString: dbUrl(databaseNames[1]) },
-]);
-const repository = new PostgresExpedienteRepository(router); const auditWriter = new PostgresAuditWriter(router);
-const emptyRequest: ActiveRequestQueryPort = { async findActiveByExpedienteId() { return null; } };
-const emptyLoan: ActiveLoanQueryPort = { async findActiveByExpedienteId() { return null; } };
-const emptyIncidents: OpenIncidentsQueryPort = { async findOpenByExpedienteId() { return []; } };
-const sources: ExitEnablingSourceQueryPort = { async findAvailableByExpediente(id) { return id.value === E2E.loanValid ? [{ tipo: 'CONSULTA_PROGRAMADA', validada: true }] : id.value === E2E.loanInvalid ? [{ tipo: 'VALE_ARCHIVO_SM_1_14', validada: false }] : []; } };
-const unitOfWork = new PostgresArchiveOperationsUnitOfWork(router);
-const apiModule = ExpedienteApiModule.register({
-  requestContextResolver: resolver,
-  getExpediente: new GetExpediente({ expedienteRepository: repository, activeRequestQuery: emptyRequest, activeLoanQuery: emptyLoan, openIncidentsQuery: emptyIncidents, exitEnablingSourceQuery: sources, capabilityService: new ExpedienteCapabilityService(), auditWriter }),
-  getExpedienteTimeline: new GetExpedienteTimeline({ expedienteRepository: repository, timelineQuery: new PostgresExpedienteTimelineQueryPort(router), auditWriter }),
-  getExpedienteAudit: new GetExpedienteAudit({ expedienteRepository: repository, auditQuery: new PostgresExpedienteAuditQueryPort(router) }),
-  getSessionAuthorization: new GetSessionAuthorization(), listUbicaciones: new ListUbicaciones(new PostgresUbicacionesQueryPort(router)),
-  searchExpedientesByNumero: new SearchExpedientesByNumero({ expedienteRepository: repository, auditWriter }),
-  dispatchExpediente: new DispatchExpediente({ unitOfWork, auditWriter }), acceptCustody: new AcceptCustody({ unitOfWork, auditWriter }),
-});
+  await recreateDatabases();
+  const router = new TenantDatabaseRouter([
+    { tenantId: 'e2e-a', databaseName: databaseNames[0], connectionString: dbUrl(databaseNames[0]) },
+    { tenantId: 'e2e-b', databaseName: databaseNames[1], connectionString: dbUrl(databaseNames[1]) },
+  ]);
+  const repository = new PostgresExpedienteRepository(router); const auditWriter = new PostgresAuditWriter(router);
+  const emptyRequest: ActiveRequestQueryPort = { async findActiveByExpedienteId() { return null; } };
+  const emptyLoan: ActiveLoanQueryPort = { async findActiveByExpedienteId() { return null; } };
+  const emptyIncidents: OpenIncidentsQueryPort = { async findOpenByExpedienteId() { return []; } };
+  const sources: ExitEnablingSourceQueryPort = { async findAvailableByExpediente(id) { return id.value === E2E.loanValid ? [{ tipo: 'CONSULTA_PROGRAMADA', validada: true }] : id.value === E2E.loanInvalid ? [{ tipo: 'VALE_ARCHIVO_SM_1_14', validada: false }] : []; } };
+  const unitOfWork = new PostgresArchiveOperationsUnitOfWork(router);
+  const apiModule = ExpedienteApiModule.register({
+    requestContextResolver: resolver,
+    getExpediente: new GetExpediente({ expedienteRepository: repository, activeRequestQuery: emptyRequest, activeLoanQuery: emptyLoan, openIncidentsQuery: emptyIncidents, exitEnablingSourceQuery: sources, capabilityService: new ExpedienteCapabilityService(), auditWriter }),
+    getExpedienteTimeline: new GetExpedienteTimeline({ expedienteRepository: repository, timelineQuery: new PostgresExpedienteTimelineQueryPort(router), auditWriter }),
+    getExpedienteAudit: new GetExpedienteAudit({ expedienteRepository: repository, auditQuery: new PostgresExpedienteAuditQueryPort(router) }),
+    getSessionAuthorization: new GetSessionAuthorization(), listUbicaciones: new ListUbicaciones(new PostgresUbicacionesQueryPort(router)),
+    searchExpedientesByNumero: new SearchExpedientesByNumero({ expedienteRepository: repository, auditWriter }),
+    dispatchExpediente: new DispatchExpediente({ unitOfWork, auditWriter }), acceptCustody: new AcceptCustody({ unitOfWork, auditWriter }),
+  });
 
-// ---------------------------------------------------------------------------
-// Agenda Preparation wiring
-// ---------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
+  // Agenda Preparation wiring
+  // ---------------------------------------------------------------------------
 
-// E2E-only medico query: resolves any employee number synthetically
-const e2eMedicoQuery = {
-  findByEmployeeNumber: async (numeroEmpleado: NumeroEmpleado) => ({
-    kind: 'RESOLVED' as const,
-    medico: MedicoReferencia.create({
-      numeroEmpleado,
-      nombre: 'DR E2E SINTETICO',
+  // E2E-only medico query: resolves any employee number synthetically
+  const e2eMedicoQuery = {
+    findByEmployeeNumber: async (numeroEmpleado: NumeroEmpleado) => ({
+      kind: 'RESOLVED' as const,
+      medico: MedicoReferencia.create({
+        numeroEmpleado,
+        nombre: 'DR E2E SINTETICO',
+      }),
     }),
-  }),
-  findControlledFallback: async (_nombre: string) => ({ kind: 'NOT_FOUND' as const }),
-};
+    findControlledFallback: async (_nombre: string) => ({ kind: 'NOT_FOUND' as const }),
+  };
 
-// E2E-only expediente query: no expediente resolution needed for import flow
-const e2eExpedienteQuery = {
-  resolve: async () => [] as const,
-};
+  // E2E-only expediente query: no expediente resolution needed for import flow
+  const e2eExpedienteQuery = {
+    resolve: async () => [] as const,
+  };
 
-// E2E-only null query adapters for read use cases
-// T-18 tests focus on the import (write) path; read endpoints return empty/not-found
-const nullImportResultQuery = {
-  findById: async (): Promise<AgendaImportResult | null> => null,
-};
-const nullHistoryQuery = {
-  findAll: async (): Promise<AgendaImportHistoryPage> => ({ items: [], nextCursor: null }),
-};
-const nullDayQuery = {
-  findByDate: async (): Promise<AgendaDayReadModel | null> => null,
-};
-const nullPreparationQuery = {
-  findPage: async (): Promise<PreparationPage> => ({ items: [], nextCursor: null }),
-  listForPrint: async (): Promise<readonly PreparationItem[]> => [],
-};
-const nullIncidentsQuery = {
-  findByImportacionId: async (): Promise<readonly AgendaImportIncidentSummary[]> => [],
-};
+  // E2E-only null query adapters for read use cases
+  // T-18 tests focus on the import (write) path; read endpoints return empty/not-found
+  const nullImportResultQuery = {
+    findById: async (): Promise<AgendaImportResult | null> => null,
+  };
+  const nullHistoryQuery = {
+    findAll: async (): Promise<AgendaImportHistoryPage> => ({ items: [], nextCursor: null }),
+  };
+  const nullDayQuery = {
+    findByDate: async (): Promise<AgendaDayReadModel | null> => null,
+  };
+  const nullPreparationQuery = {
+    findPage: async (): Promise<PreparationPage> => ({ items: [], nextCursor: null }),
+    listForPrint: async (): Promise<readonly PreparationItem[]> => [],
+  };
+  const nullIncidentsQuery = {
+    findByImportacionId: async (): Promise<readonly AgendaImportIncidentSummary[]> => [],
+  };
 
-const agendaParser = new SimefAgendaParserAdapter();
-const agendaUoW = new PostgresAgendaPreparationUnitOfWork(router);
-const agendaMetadataRepo = new PostgresImportArtifactMetadataRepository(router);
-const agendaIdempotencyRepo = new PostgresIdempotencyKeyRepository(router);
+  const agendaParser = new SimefAgendaParserAdapter();
+  const agendaUoW = new PostgresAgendaPreparationUnitOfWork(router);
+  const agendaMetadataRepo = new PostgresImportArtifactMetadataRepository(router);
+  const agendaIdempotencyRepo = new PostgresIdempotencyKeyRepository(router);
 
-const agendaApiModule = AgendaApiModule.register({
-  requestContextResolver: resolver,
-  importAgenda: new ImportAgenda({
-    interpreter: agendaParser,
-    medicoQuery: e2eMedicoQuery,
-    expedienteQuery: e2eExpedienteQuery,
-    metadataRepository: agendaMetadataRepo,
-    idempotencyKeyRepository: agendaIdempotencyRepo,
-    unitOfWork: agendaUoW,
-  }),
-  getAgendaImportResult: new GetAgendaImportResult({
-    importResultQuery: nullImportResultQuery,
-    auditWriter,
-  }),
-  listAgendaImports: new ListAgendaImports({
-    historyQuery: nullHistoryQuery,
-    auditWriter,
-  }),
-  getAgendaDaySummary: new GetAgendaDaySummary({
-    dayQuery: nullDayQuery,
-    auditWriter,
-  }),
-  getAgendaPreparationList: new GetAgendaPreparationList({
-    preparationQuery: nullPreparationQuery,
-    auditWriter,
-  }),
-  printAgendaPreparationList: new PrintAgendaPreparationList({
-    preparationQuery: nullPreparationQuery,
-    auditWriter,
-  }),
-  getAgendaImportIncidents: new GetAgendaImportIncidents({
-    incidentsQuery: nullIncidentsQuery,
-    auditWriter,
-  }),
-});
+  const agendaApiModule = AgendaApiModule.register({
+    requestContextResolver: resolver,
+    importAgenda: new ImportAgenda({
+      interpreter: agendaParser,
+      medicoQuery: e2eMedicoQuery,
+      expedienteQuery: e2eExpedienteQuery,
+      metadataRepository: agendaMetadataRepo,
+      idempotencyKeyRepository: agendaIdempotencyRepo,
+      unitOfWork: agendaUoW,
+    }),
+    getAgendaImportResult: new GetAgendaImportResult({
+      importResultQuery: nullImportResultQuery,
+      auditWriter,
+    }),
+    listAgendaImports: new ListAgendaImports({
+      historyQuery: nullHistoryQuery,
+      auditWriter,
+    }),
+    getAgendaDaySummary: new GetAgendaDaySummary({
+      dayQuery: nullDayQuery,
+      auditWriter,
+    }),
+    getAgendaPreparationList: new GetAgendaPreparationList({
+      preparationQuery: nullPreparationQuery,
+      auditWriter,
+    }),
+    printAgendaPreparationList: new PrintAgendaPreparationList({
+      preparationQuery: nullPreparationQuery,
+      auditWriter,
+    }),
+    getAgendaImportIncidents: new GetAgendaImportIncidents({
+      incidentsQuery: nullIncidentsQuery,
+      auditWriter,
+    }),
+  });
 
-@Module({ imports: [apiModule, agendaApiModule] }) class E2eModule {}
-const app = await NestFactory.create(E2eModule, { logger: false }); app.setGlobalPrefix('api/v1'); await app.listen(3000);
-async function shutdown() {
-  await app.close(); await router.close();
-  const admin = new Client({ connectionString: adminUrl }); await admin.connect();
-  for (const name of databaseNames) {
-    await admin.query(`DROP DATABASE "${name}" WITH (FORCE)`);
+  @Module({ imports: [apiModule, agendaApiModule] }) class E2eModule { }
+  const app = await NestFactory.create(E2eModule, { logger: false }); app.setGlobalPrefix('api/v1'); await app.listen(3000);
+  async function shutdown() {
+    await app.close(); await router.close();
+    const admin = new Client({ connectionString: adminUrl }); await admin.connect();
+    for (const name of databaseNames) {
+      await admin.query(`DROP DATABASE "${name}" WITH (FORCE)`);
+    }
+    await admin.end(); process.exit(0);
   }
-  await admin.end(); process.exit(0);
-}
-process.on('SIGTERM', () => { void shutdown(); }); process.on('SIGINT', () => { void shutdown(); });
+  process.on('SIGTERM', () => { void shutdown(); }); process.on('SIGINT', () => { void shutdown(); });
 }
 
 void main();

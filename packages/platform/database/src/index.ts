@@ -12,3 +12,4 @@ export * from './agenda-preparation/PostgresAgendaRepository.js';
 export * from './agenda-preparation/PostgresImportArtifactMetadataRepository.js';
 export * from './agenda-preparation/PostgresIdempotencyKeyRepository.js';
 export * from './agenda-preparation/PostgresAgendaPreparationUnitOfWork.js';
+export * from './agenda-preparation/PostgresAgendaReadQueryPorts.js';

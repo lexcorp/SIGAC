@@ -199,7 +199,10 @@ export function AgendaPreparationWorkspace({ permissions }: Props) {
           onLoadMore={() => {
             void historyQuery.fetchNextPage();
           }}
-          onSelect={setSelectedImportId}
+          onSelect={(id) => {
+            setSelectedImportId(id);
+            setActiveTab('incidencias');  // navigate to Incidencias tab on Detail click
+          }}
         />
       )}
 

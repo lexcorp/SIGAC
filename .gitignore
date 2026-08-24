@@ -14,3 +14,5 @@ test-results/
 # Nx local workspace cache
 .nx/workspace-data/
 *.tsbuildinfo
+# Local controlled artifacts - NEVER COMMIT
+.local/

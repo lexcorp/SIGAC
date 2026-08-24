@@ -156,13 +156,21 @@ export class ImportAgenda {
     );
 
     if (equivalent !== null) {
-      // If the same idempotency key was used before for a DIFFERENT fingerprint, that is a
-      // conflict.  But here we found an equivalent fingerprint, so the content matches.
-      // If the key also matches a prior confirmed import with a DIFFERENT artifact we would
-      // already have caught it above (same key, different fingerprint → handled below).
       // Here equivalent exists → return ALREADY_IMPORTED (no new state, no audit).
+      //
+      // Metrics semantics for ALREADY_IMPORTED:
+      //   receivedRecords = 0  — no records were processed in this attempt.
+      //   All other counters = 0.
+      //   This satisfies the domain invariant:
+      //     receivedRecords = processed + pendingReview + rejected + duplicateFolio
+      //     0 = 0 + 0 + 0 + 0
+      //   and:
+      //     errors = rejected + duplicateFolio  →  0 = 0 + 0
+      //
+      // The caller who needs the outcome of the original import can retrieve it
+      // via GET /agenda-imports/:id using the returned importacionId.
       const alreadyMetrics: ImportacionAgendaMetrics = {
-        receivedRecords: interpreted.rows.length,
+        receivedRecords: 0,
         processed: 0,
         added: 0,
         updated: 0,

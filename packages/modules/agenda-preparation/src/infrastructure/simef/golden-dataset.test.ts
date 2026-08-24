@@ -84,6 +84,19 @@ const BASELINES: FixtureBaseline[] = [
     uniqueServices: 1,
     privacy: { forbidden: [/curp/i, /rfc/i, /nss/i, /\btelef/i, /\bcelular/i] },
   },
+  {
+    // Golden Fixture 4: Real SIMEF 16-column extended layout.
+    // Covers interval time format (HH:mm - HH:mm and HH:mm-HH:mm),
+    // Médico: with HTML entity, Servicio: at cell[1] of same row,
+    // excluded columns at positions 7-9 (Turno/Celular/Email) and 12-13 (Sexo/Edad).
+    name: 'golden-4-real-layout-16cols.html',
+    agendaDate: '2026-08-24',
+    receivedRecords: 5,
+    rowsWithFolio: 5,
+    uniquePhysicians: 2,
+    uniqueServices: 2,
+    privacy: { forbidden: [/curp/i, /rfc/i, /nss/i] },
+  },
 ];
 
 describe('T-12 — Golden Dataset Regression', () => {

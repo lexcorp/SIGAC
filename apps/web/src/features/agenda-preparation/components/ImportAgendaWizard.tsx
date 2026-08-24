@@ -1,6 +1,7 @@
 import { useId, useRef, useState } from 'react';
 import type { AgendaImportResponse, AgendaProblemDetails } from '../types/agenda.types';
 import { AgendaMetrics } from './AgendaMetrics';
+import { generateKey } from '../utils/generateKey';
 
 type WizardStep = 'select' | 'submitting' | 'result' | 'error';
 
@@ -11,10 +12,6 @@ interface Props {
 }
 
 const SUPPORTED_EXTENSION = /\.xls$/i;
-
-function generateKey(): string {
-  return crypto.randomUUID();
-}
 
 const STEP_LABELS: readonly ('select' | 'submitting' | 'result')[] = ['select', 'submitting', 'result'];
 const STEP_NAMES: Record<'select' | 'submitting' | 'result', string> = {
