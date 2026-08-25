@@ -9,3 +9,7 @@ export const E2E = {
   conflict: '20000000-0000-4000-8000-000000000006',
   tenantBOnly: '20000000-0000-4000-8000-000000000099',
 } as const;
+
+// T-27: synthetic agenda date seeded for preparation-report E2E tests
+export const E2E_PR_DATE = '2026-09-01';
+export const E2E_PR_IMPORT_ID = '88888888-9999-4000-8000-000000000027';

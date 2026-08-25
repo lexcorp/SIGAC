@@ -716,4 +716,4 @@ El contrato OpenAPI existente de `agenda-preparation` se extiende con:
 - `requirements_ready: true`
 - `design_ready: true` — incluye ADR-0031 turno derivado + sourceImportId (2026-08-26)
 - `tasks_ready: false` — pendiente tasks.md
-- `implementation_ready: false` — pendiente T-20..T-27
+- `implementation_ready: true` — T-20..T-27 en PASS

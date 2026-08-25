@@ -324,4 +324,4 @@ No existen preguntas bloqueantes para esta spec. Las siguientes son no bloqueant
 - `requirements_ready: true`
 - `design_ready: false` — pendiente design.md
 - `tasks_ready: false` — pendiente tasks.md
-- `implementation_ready: false` — pendiente T-20..T-27
+- `implementation_ready: true` — T-20..T-27 en PASS
