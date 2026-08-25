@@ -368,3 +368,218 @@ describe('T-16 Application — tenant isolation', () => {
     expect(tenantUsed).not.toStrictEqual(TENANT_B);
   });
 });
+
+// ===========================================================================
+// T-25 — Application-level security: GeneratePreparationReport
+//
+// Fuentes: REQ-PR-006, REQ-PR-007, INV-PR-005, INV-PR-008, design.md §5.3.
+// Complementa los tests de T-21 desde la perspectiva de seguridad.
+// ===========================================================================
+
+import { Readable } from 'node:stream';
+import {
+  GeneratePreparationReport,
+  type GeneratePreparationReportCommand,
+} from './use-cases/GeneratePreparationReport.js';
+import type { PreparationItem } from './ports/ReadQueryPorts.js';
+
+// Fixtures sintéticos T-25
+const AGENDA_DATE_T25 = AgendaFecha.parse('2026-09-15');
+
+const TENANT_PR: TenantContext = {
+  tenantId: 'tenant-pr-t25',
+  slug: 'hospital-pr-t25',
+  hospitalId: 'hosp-pr-t25',
+  databaseName: 'sigac_pr_t25',
+  timezone: 'America/Mexico_City',
+};
+
+const TENANT_OTHER: TenantContext = {
+  tenantId: 'tenant-other',
+  slug: 'hospital-other',
+  hospitalId: 'hosp-other',
+  databaseName: 'sigac_other',
+  timezone: 'America/Mexico_City',
+};
+
+function makePrContext(tenant: TenantContext = TENANT_PR): RequestContext {
+  return {
+    actor: {
+      actorId: 'actor-pr-t25',
+      roles: new Set(['ARCHIVISTA']),
+      permissions: new Set(['AGENDA_VIEW', 'AGENDA_PRINT']),
+      tenantIds: new Set([tenant.tenantId]),
+    },
+    tenant,
+    requestId: 'req-pr-t25',
+    correlationId: 'corr-pr-t25',
+    source: 'WEB',
+  };
+}
+
+function makePrItem(overrides: Partial<PreparationItem> = {}): PreparationItem {
+  return {
+    folio: 'FOLIO-T25-001',
+    nombrePaciente: 'PACIENTE SINTETICO T25',
+    expediente: { original: 'T25XX810101/10', reference: null },
+    tipoDerechohabiente: '10',
+    tipoConsulta: 'FIRST_TIME',
+    agendaDate: '2026-09-15',
+    appointmentTime: '08:00',
+    medico: { numeroEmpleado: '77701', nombre: 'DR SINTETICO T25' },
+    servicioEspecialidad: { codigo: 'CARD', nombre: 'CARDIOLOGIA SINTETICA' },
+    ...overrides,
+  };
+}
+
+function makePrMocks(items: readonly PreparationItem[] = [makePrItem()]) {
+  const auditWriter = { append: vi.fn().mockResolvedValue(undefined) };
+  const preparationListQuery = {
+    findPage: vi.fn(),
+    listForPrint: vi.fn().mockResolvedValue(items),
+  };
+  const reportGenerator = {
+    generate: vi.fn().mockResolvedValue({
+      stream: Readable.from(['%PDF-1.4 sintetico-t25']),
+      filename: 'lista-preparacion-2026-09-15.pdf',
+    }),
+  };
+  const useCase = new GeneratePreparationReport({
+    preparationListQuery,
+    reportGenerator,
+    auditWriter,
+  });
+  return { useCase, preparationListQuery, reportGenerator, auditWriter };
+}
+
+function makePrCommand(
+  overrides: Partial<GeneratePreparationReportCommand> = {},
+): GeneratePreparationReportCommand {
+  return {
+    agendaDate: AGENDA_DATE_T25,
+    order: 'APPOINTMENT_TIME_ASC',
+    context: makePrContext(),
+    sourceImportId: 'import-pr-t25-001',
+    ...overrides,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// T-25 — INV-PR-005: Tenant isolation a nivel Application
+// ---------------------------------------------------------------------------
+
+describe('T-25 Application — INV-PR-005: tenant isolation en GeneratePreparationReport', () => {
+  it('listForPrint recibe el TenantContext exacto del command — nunca un tenant externo', async () => {
+    const { useCase, preparationListQuery } = makePrMocks();
+    await useCase.execute(makePrCommand());
+
+    const [, , tenantPassed] = (preparationListQuery.listForPrint as ReturnType<typeof vi.fn>)
+      .mock.calls[0] as unknown[];
+
+    expect(tenantPassed).toStrictEqual(TENANT_PR);
+    expect(tenantPassed).not.toStrictEqual(TENANT_OTHER);
+  });
+
+  it('context de TENANT_OTHER se propaga correctamente si se cambia el command', async () => {
+    const { useCase, preparationListQuery } = makePrMocks();
+    await useCase.execute(
+      makePrCommand({ context: makePrContext(TENANT_OTHER) }),
+    );
+
+    const [, , tenantPassed] = (preparationListQuery.listForPrint as ReturnType<typeof vi.fn>)
+      .mock.calls[0] as unknown[];
+
+    expect(tenantPassed).toStrictEqual(TENANT_OTHER);
+    expect(tenantPassed).not.toStrictEqual(TENANT_PR);
+  });
+
+  it('audit entry lleva el RequestContext completo — tenantId correcto, sin cruce', async () => {
+    const { useCase, auditWriter } = makePrMocks();
+    await useCase.execute(makePrCommand());
+
+    const calls = (auditWriter.append as ReturnType<typeof vi.fn>).mock.calls as [
+      import('@sigac/audit').AuditEntry,
+      RequestContext,
+    ][];
+    const successCall = calls.find(([e]) => e.result === 'success');
+    expect(successCall).toBeDefined();
+    const [, ctx] = successCall!;
+
+    expect(ctx.tenant.tenantId).toBe(TENANT_PR.tenantId);
+    expect(ctx.tenant.databaseName).toBe(TENANT_PR.databaseName);
+    expect(ctx.tenant).not.toStrictEqual(TENANT_OTHER);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T-25 — INV-PR-008: Audit entry hygiene — sin PII
+// ---------------------------------------------------------------------------
+
+describe('T-25 Application — INV-PR-008: audit entry sin PII', () => {
+  it('changeSummary de SUCCESS no contiene nombre de paciente, folio ni expediente', async () => {
+    const { useCase, auditWriter } = makePrMocks([
+      makePrItem({ folio: 'FOLIO-PRIVADO-001', nombrePaciente: 'MARIA SINTETICA' }),
+      makePrItem({ folio: 'FOLIO-PRIVADO-002', expediente: { original: 'EXP-PRIVADO-002', reference: null } }),
+    ]);
+    await useCase.execute(makePrCommand());
+
+    const calls = (auditWriter.append as ReturnType<typeof vi.fn>).mock.calls as [
+      import('@sigac/audit').AuditEntry,
+      RequestContext,
+    ][];
+    const successCall = calls.find(([e]) => e.result === 'success');
+    expect(successCall).toBeDefined();
+    const [entry] = successCall!;
+
+    const json = JSON.stringify(entry.changeSummary ?? {});
+
+    // PII prohibida en changeSummary (REQ-PR-006 §AC-3)
+    expect(json).not.toContain('FOLIO-PRIVADO');
+    expect(json).not.toContain('MARIA SINTETICA');
+    expect(json).not.toContain('EXP-PRIVADO');
+    expect(json).not.toMatch(/curp/i);
+
+    // Campos aprobados presentes (non-PII)
+    expect(entry.changeSummary).toHaveProperty('agendaDate');
+    expect(entry.changeSummary).toHaveProperty('sourceImportId');
+    expect(entry.changeSummary).toHaveProperty('recordCount');
+    expect(entry.changeSummary).toHaveProperty('serviceCount');
+  });
+
+  it('changeSummary de NOT-FOUND (sin citas) no contiene datos de servicio ni paciente', async () => {
+    const { useCase, auditWriter } = makePrMocks([]);
+    await useCase.execute(makePrCommand()).catch(() => undefined);
+
+    const calls = (auditWriter.append as ReturnType<typeof vi.fn>).mock.calls as [
+      import('@sigac/audit').AuditEntry,
+      RequestContext,
+    ][];
+    const notFoundCall = calls.find(([e]) => e.result === 'not-found');
+    expect(notFoundCall).toBeDefined();
+    const [entry] = notFoundCall!;
+
+    const json = JSON.stringify(entry);
+    expect(json).not.toMatch(/paciente/i);
+    expect(json).not.toMatch(/folio/i);
+    expect(json).not.toMatch(/curp/i);
+    expect(entry.action).toBe('AGENDA_REPORT_GENERATED');
+    expect(entry.resourceType).toBe('AGENDA');
+  });
+
+  it('resourceId del audit entry es la fecha de agenda — no un ID de paciente', async () => {
+    const { useCase, auditWriter } = makePrMocks();
+    await useCase.execute(makePrCommand());
+
+    const calls = (auditWriter.append as ReturnType<typeof vi.fn>).mock.calls as [
+      import('@sigac/audit').AuditEntry,
+      RequestContext,
+    ][];
+    const successCall = calls.find(([e]) => e.result === 'success');
+    const [entry] = successCall!;
+
+    // resourceId es la fecha (YYYY-MM-DD), nunca un folio o expediente
+    expect(entry.resourceId).toBe('2026-09-15');
+    expect(entry.resourceId).not.toMatch(/folio/i);
+    expect(entry.resourceId).not.toMatch(/exp/i);
+  });
+});

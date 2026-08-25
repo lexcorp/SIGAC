@@ -72,6 +72,41 @@ export class AgendaApi {
     return this.get(`/api/v1/agendas/${encodeURIComponent(date)}/preparation-items/print?${params}`);
   }
 
+  /**
+   * POST /api/v1/agendas/{date}/preparation-report
+   * Generates and downloads a PDF preparation report.
+   * Returns a Blob — caller must trigger browser download.
+   * Requires AGENDA_VIEW + AGENDA_PRINT (enforced server-side).
+   * T-23 / preparation-reports REQ-PR-002.
+   */
+  async generatePreparationReport(
+    date: string,
+    options: {
+      readonly services?: readonly string[] | null;
+      readonly order?: PreparationOrder;
+    } = {},
+  ): Promise<{ blob: Blob; filename: string }> {
+    const body: Record<string, unknown> = { order: options.order ?? 'APPOINTMENT_TIME_ASC' };
+    if (options.services != null && options.services.length > 0) {
+      body['services'] = options.services;
+    }
+    const response = await this.fetcher(
+      `/api/v1/agendas/${encodeURIComponent(date)}/preparation-report`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/pdf' },
+        body: JSON.stringify(body),
+      },
+    );
+    if (!response.ok) throw await this.toError(response);
+    const blob = await response.blob();
+    // Extract filename from Content-Disposition header if present
+    const disposition = response.headers.get('Content-Disposition') ?? '';
+    const match = /filename="([^"]+)"/.exec(disposition);
+    const filename = match?.[1] ?? `lista-preparacion-${date}.pdf`;
+    return { blob, filename };
+  }
+
   /** GET /api/v1/agenda-imports */
   async listImports(
     limit: number,

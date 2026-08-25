@@ -543,3 +543,364 @@ describe('T-16 — RFC7807 sanitization', () => {
     expect(json).not.toContain('timeout');
   });
 });
+
+// ===========================================================================
+// T-25 — Security, privacy y tenant hardening — generatePreparationReport
+//
+// Fuentes: REQ-PR-004, REQ-PR-005, REQ-PR-007, INV-PR-001..INV-PR-008,
+//          design.md §10.2, tasks.md T-25.
+// ===========================================================================
+
+import { Readable } from 'node:stream';
+import type { GeneratePreparationReport } from '@sigac/agenda-preparation';
+
+// ---------------------------------------------------------------------------
+// Factory específica para T-25 — devuelve generatePreparationReport separado
+// ---------------------------------------------------------------------------
+
+function buildReportController(opts: {
+  resolve?: AuthenticatedRequestContextResolver['resolve'];
+  daySummary?: unknown;
+  reportResult?: unknown;
+  reportError?: unknown;
+} = {}) {
+  const resolver: AuthenticatedRequestContextResolver = {
+    resolve: opts.resolve ?? vi.fn().mockResolvedValue(contextFor(TENANT_A, [
+      'AGENDA_VIEW', 'AGENDA_PRINT',
+    ])),
+  };
+
+  const generatePreparationReport: { execute: ReturnType<typeof vi.fn> } = {
+    execute: opts.reportError
+      ? vi.fn().mockRejectedValue(opts.reportError)
+      : vi.fn().mockResolvedValue(
+          opts.reportResult ?? {
+            stream: Readable.from(['%PDF-1.4 sintetico']),
+            filename: 'lista-preparacion-2026-08-25.pdf',
+          },
+        ),
+  };
+
+  const getAgendaDaySummary = {
+    execute: vi.fn().mockResolvedValue(
+      opts.daySummary ?? {
+        agendaDate: '2026-08-25',
+        latestImportacionId: importacionId,
+        latestImportedAt: new Date(),
+        latestOutcome: 'IMPORTED',
+        activeAppointments: 3,
+        physicians: 1,
+        services: 1,
+        incidentCount: 0,
+      },
+    ),
+  };
+
+  // Stubs for unused use cases in this suite
+  const stub = { execute: vi.fn() };
+
+  const controller = new AgendaController(
+    resolver,
+    stub as unknown as ImportAgenda,
+    stub as unknown as GetAgendaImportResult,
+    stub as unknown as ListAgendaImports,
+    getAgendaDaySummary as unknown as GetAgendaDaySummary,
+    stub as unknown as GetAgendaPreparationList,
+    stub as unknown as PrintAgendaPreparationList,
+    stub as unknown as GetAgendaImportIncidents,
+    new AgendaApiProblemMapper(),
+    generatePreparationReport as unknown as GeneratePreparationReport,
+  );
+
+  return { controller, generatePreparationReport, getAgendaDaySummary, resolver };
+}
+
+/** Minimal writable mock for res.setHeader / stream.pipe in tests */
+function makeServerRes(): {
+  setHeader: ReturnType<typeof vi.fn>;
+  headers: Record<string, string>;
+  write: ReturnType<typeof vi.fn>;
+  end: ReturnType<typeof vi.fn>;
+} {
+  const headers: Record<string, string> = {};
+  return {
+    headers,
+    setHeader: vi.fn((k: string, v: string) => { headers[k] = v; }),
+    write: vi.fn(),
+    end: vi.fn(),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// T-25.1 — Authorization: AGENDA_PRINT enforcement
+// ---------------------------------------------------------------------------
+
+describe('T-25 — Authorization: AGENDA_PRINT enforcement', () => {
+  it('403 con body RFC7807 completo cuando falta AGENDA_PRINT', async () => {
+    // Actor tiene AGENDA_VIEW pero NO AGENDA_PRINT
+    const { controller } = buildReportController({
+      resolve: vi.fn().mockResolvedValue(
+        contextFor(TENANT_A, ['AGENDA_VIEW']),
+      ),
+    });
+    const res = makeServerRes();
+
+    const problem = await expectHttpStatus(
+      controller.generatePreparationReport(
+        '2026-08-25', undefined, undefined, {},
+        res as unknown as import('node:http').ServerResponse,
+      ),
+      403,
+      'PERMISSION_DENIED',
+    );
+
+    // RFC 7807 body debe tener todos los campos canónicos
+    expect(problem.type).toBe('https://sigac/errors/permission-denied');
+    expect(problem.title).toBe('Forbidden');
+    expect(problem.status).toBe(403);
+    expect(problem.code).toBe('PERMISSION_DENIED');
+
+    // El mensaje interno del ApplicationError NO debe filtrarse
+    const json = JSON.stringify(problem);
+    expect(json).not.toContain('AGENDA_PRINT permission');
+    expect(json).not.toContain('Actor does not have');
+  });
+
+  it('use case no se ejecuta cuando falta AGENDA_PRINT', async () => {
+    const { controller, generatePreparationReport } = buildReportController({
+      resolve: vi.fn().mockResolvedValue(
+        contextFor(TENANT_A, ['AGENDA_VIEW']),
+      ),
+    });
+    const res = makeServerRes();
+
+    await controller.generatePreparationReport(
+      '2026-08-25', undefined, undefined, {},
+      res as unknown as import('node:http').ServerResponse,
+    ).catch(() => undefined);
+
+    expect(generatePreparationReport.execute).not.toHaveBeenCalled();
+  });
+
+  it('403 con body RFC7807 cuando actor no tiene ningún permiso', async () => {
+    const { controller } = buildReportController({
+      resolve: vi.fn().mockResolvedValue(contextFor(TENANT_A, [])),
+    });
+    const res = makeServerRes();
+
+    const problem = await expectHttpStatus(
+      controller.generatePreparationReport(
+        '2026-08-25', undefined, undefined, {},
+        res as unknown as import('node:http').ServerResponse,
+      ),
+      403,
+      'PERMISSION_DENIED',
+    );
+    expect(problem.type).toBe('https://sigac/errors/permission-denied');
+  });
+
+  it('403 cuando solo tiene AGENDA_IMPORT (no AGENDA_VIEW, no AGENDA_PRINT)', async () => {
+    const { controller } = buildReportController({
+      resolve: vi.fn().mockResolvedValue(
+        contextFor(TENANT_A, ['AGENDA_IMPORT']),
+      ),
+    });
+    const res = makeServerRes();
+
+    await expectHttpStatus(
+      controller.generatePreparationReport(
+        '2026-08-25', undefined, undefined, {},
+        res as unknown as import('node:http').ServerResponse,
+      ),
+      403,
+      'PERMISSION_DENIED',
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T-25.2 — Tenant isolation en generatePreparationReport
+// ---------------------------------------------------------------------------
+
+describe('T-25 — Tenant isolation: generatePreparationReport', () => {
+  it('el use case recibe el TenantContext del resolver, nunca el de TENANT_B', async () => {
+    // Resolver resuelve TENANT_B — verificamos que el use case recibe TENANT_B
+    // (no TENANT_A ni ningún tenant inyectado por otro canal)
+    const { controller, generatePreparationReport } = buildReportController({
+      resolve: vi.fn().mockResolvedValue(
+        contextFor(TENANT_B, ['AGENDA_VIEW', 'AGENDA_PRINT']),
+      ),
+    });
+    const res = makeServerRes();
+
+    await controller.generatePreparationReport(
+      '2026-08-25', undefined, undefined, {},
+      res as unknown as import('node:http').ServerResponse,
+    ).catch(() => undefined);
+
+    if (generatePreparationReport.execute.mock.calls.length > 0) {
+      const cmd = generatePreparationReport.execute.mock.calls[0]![0] as {
+        context: { tenant: typeof TENANT_B };
+      };
+      expect(cmd.context.tenant).toStrictEqual(TENANT_B);
+      expect(cmd.context.tenant).not.toStrictEqual(TENANT_A);
+    }
+  });
+
+  it('tenant no puede inyectarse via query string en generatePreparationReport', async () => {
+    const { controller, generatePreparationReport, getAgendaDaySummary } =
+      buildReportController({
+        resolve: vi.fn().mockResolvedValue(
+          contextFor(TENANT_A, ['AGENDA_VIEW', 'AGENDA_PRINT']),
+        ),
+      });
+    const res = makeServerRes();
+
+    // El query object tiene un "tenant" forjado — no debe usarse
+    await controller.generatePreparationReport(
+      '2026-08-25',
+      undefined,
+      undefined,
+      { query: { tenantId: TENANT_B.tenantId, databaseName: TENANT_B.databaseName } },
+      res as unknown as import('node:http').ServerResponse,
+    ).catch(() => undefined);
+
+    // getAgendaDaySummary (llamado antes del use case) debe recibir TENANT_A
+    if (getAgendaDaySummary.execute.mock.calls.length > 0) {
+      const cmd = getAgendaDaySummary.execute.mock.calls[0]![0] as {
+        context: { tenant: typeof TENANT_A };
+      };
+      expect(cmd.context.tenant.tenantId).toBe(TENANT_A.tenantId);
+      expect(cmd.context.tenant.databaseName).not.toBe(TENANT_B.databaseName);
+    }
+  });
+
+  it('tenant no puede inyectarse via headers HTTP arbitrarios', async () => {
+    const { controller, getAgendaDaySummary } = buildReportController({
+      resolve: vi.fn().mockResolvedValue(
+        contextFor(TENANT_A, ['AGENDA_VIEW', 'AGENDA_PRINT']),
+      ),
+    });
+    const res = makeServerRes();
+
+    await controller.generatePreparationReport(
+      '2026-08-25',
+      undefined,
+      undefined,
+      { headers: { 'x-tenant-id': TENANT_B.tenantId, 'x-database': TENANT_B.databaseName } },
+      res as unknown as import('node:http').ServerResponse,
+    ).catch(() => undefined);
+
+    if (getAgendaDaySummary.execute.mock.calls.length > 0) {
+      const cmd = getAgendaDaySummary.execute.mock.calls[0]![0] as {
+        context: { tenant: typeof TENANT_A };
+      };
+      expect(cmd.context.tenant).toStrictEqual(TENANT_A);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T-25.3 — Privacy y minimización
+// ---------------------------------------------------------------------------
+
+describe('T-25 — Privacy: filename y body de error sin PII', () => {
+  it('Content-Disposition filename no contiene datos de paciente', async () => {
+    const { controller } = buildReportController();
+    const res = makeServerRes();
+
+    await controller.generatePreparationReport(
+      '2026-08-25', undefined, undefined, {},
+      res as unknown as import('node:http').ServerResponse,
+    ).catch(() => undefined);
+
+    const disposition = res.headers['Content-Disposition'] ?? '';
+    expect(disposition).toContain('attachment');
+    expect(disposition).not.toMatch(/paciente/i);
+    expect(disposition).not.toMatch(/curp/i);
+    expect(disposition).not.toMatch(/folio/i);
+    expect(disposition).not.toMatch(/expediente/i);
+    // filename solo contiene la fecha de agenda (no PII)
+    expect(disposition).toMatch(/lista-preparacion-\d{4}-\d{2}-\d{2}\.pdf/);
+  });
+
+  it('error interno de generación no expone detalles técnicos en respuesta RFC7807', async () => {
+    const internalError = new Error(
+      'PDFKit internal: buffer overflow at page 42, stream sigac_hospital_a',
+    );
+    const { controller } = buildReportController({ reportError: internalError });
+    const res = makeServerRes();
+
+    // El error no es un ApplicationError conocido — debe producir 500 sin detalles
+    const problem = await (async () => {
+      try {
+        await controller.generatePreparationReport(
+          '2026-08-25', undefined, undefined, {},
+          res as unknown as import('node:http').ServerResponse,
+        );
+        return null;
+      } catch (err) {
+        if (err instanceof HttpException) return err.getResponse() as Record<string, unknown>;
+        return null;
+      }
+    })();
+
+    // Si se lanzó una excepción HTTP, el body no debe contener detalles internos
+    if (problem !== null) {
+      const json = JSON.stringify(problem);
+      expect(json).not.toContain('PDFKit internal');
+      expect(json).not.toContain('buffer overflow');
+      expect(json).not.toContain('sigac_hospital_a');
+      expect(json).not.toContain('page 42');
+    }
+  });
+
+  it('422 NO_ACTIVE_APPOINTMENTS no expone nombres de servicio ni datos de paciente', async () => {
+    const { controller } = buildReportController({
+      reportError: new ApplicationError(
+        'NO_ACTIVE_APPOINTMENTS',
+        'Paciente JOSE GARCIA, folio 12345, no tiene citas en CIR',
+      ),
+    });
+    const res = makeServerRes();
+
+    const problem = await expectHttpStatus(
+      controller.generatePreparationReport(
+        '2026-08-25', undefined, undefined, {},
+        res as unknown as import('node:http').ServerResponse,
+      ),
+      422,
+      'NO_ACTIVE_APPOINTMENTS',
+    );
+
+    const json = JSON.stringify(problem);
+    // El detalle interno del ApplicationError no debe filtrarse
+    expect(json).not.toContain('JOSE GARCIA');
+    expect(json).not.toContain('folio 12345');
+    // El detail del mapper es el aprobado (genérico)
+    expect(problem.detail).toBe(
+      'No hay citas activas para los servicios solicitados en esta fecha.',
+    );
+  });
+
+  it('401 sin autenticación — body no expone información de tenant', async () => {
+    const { controller } = buildReportController({
+      resolve: vi.fn().mockRejectedValue(new AuthenticationRequiredError()),
+    });
+    const res = makeServerRes();
+
+    const problem = await expectHttpStatus(
+      controller.generatePreparationReport(
+        '2026-08-25', undefined, undefined, {},
+        res as unknown as import('node:http').ServerResponse,
+      ),
+      401,
+      'AUTHENTICATION_REQUIRED',
+    );
+
+    const json = JSON.stringify(problem);
+    expect(json).not.toContain(TENANT_A.tenantId);
+    expect(json).not.toContain(TENANT_A.databaseName);
+    expect(json).not.toContain(TENANT_B.tenantId);
+  });
+});

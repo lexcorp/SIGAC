@@ -16,6 +16,7 @@ import {
 import type { ServerResponse } from 'node:http';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
+  ApplicationError,
   type GeneratePreparationReport,
   type GetAgendaDaySummary,
   type GetAgendaImportIncidents,
@@ -335,17 +336,13 @@ export class AgendaController {
 
       const context = await this.requestContextResolver.resolve({ nativeRequest: request });
 
-      // Enforce AGENDA_PRINT before invoking the use case (INV-PR-002)
+      // Enforce AGENDA_PRINT before invoking the use case (INV-PR-002).
+      // Use ApplicationError so AgendaApiProblemMapper produces a consistent
+      // RFC 7807 body — same shape as every other 403 in this controller.
       if (!context.actor.permissions.has('AGENDA_PRINT')) {
-        throw new HttpException(
-          {
-            type: 'https://sigac/errors/permission-denied',
-            title: 'Forbidden',
-            status: 403,
-            code: 'PERMISSION_DENIED',
-            detail: 'The authenticated actor is not allowed to generate preparation reports.',
-          },
-          403,
+        throw new ApplicationError(
+          'PERMISSION_DENIED',
+          'Actor does not have AGENDA_PRINT permission.',
         );
       }
 
