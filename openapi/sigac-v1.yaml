@@ -325,6 +325,50 @@ paths:
         '400': { $ref: '#/components/responses/HttpValidationError' }
         '401': { $ref: '#/components/responses/AuthenticationRequired' }
         '403': { $ref: '#/components/responses/AgendaPermissionDenied' }
+  /agendas/{date}/preparation-report:
+    post:
+      operationId: generatePreparationReport
+      summary: Genera y descarga el PDF de lista de preparación para Archivo Clínico
+      description: |
+        Genera un PDF operativo agrupado por servicio y médico, listo para imprimir.
+        El PDF se genera en memoria y se descarga directamente (sin persistencia).
+        Requiere AGENDA_VIEW + AGENDA_PRINT.
+        La fecha y el tenant se obtienen del contexto de autorización; nunca del body.
+        Ref: preparation-reports spec REQ-PR-002, ADR-0030, ADR-0031.
+      parameters:
+        - in: path
+          name: date
+          required: true
+          schema: { type: string, format: date, example: "2026-08-26" }
+        - in: query
+          name: order
+          required: false
+          description: Ordenamiento de citas. Default APPOINTMENT_TIME_ASC.
+          schema:
+            type: string
+            enum: [APPOINTMENT_TIME_ASC, PATIENT_NAME_ASC]
+        - in: query
+          name: services
+          required: false
+          description: |
+            Lista de códigos de servicio separados por coma, ej. "CL05,CL06".
+            Omitir o dejar vacío para incluir todos los servicios.
+          schema: { type: string }
+      responses:
+        '200':
+          description: PDF generado correctamente, descarga directa
+          headers:
+            Content-Disposition:
+              description: attachment; filename="lista-preparacion-{date}.pdf"
+              schema: { type: string }
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        '400': { $ref: '#/components/responses/HttpValidationError' }
+        '401': { $ref: '#/components/responses/AuthenticationRequired' }
+        '403': { $ref: '#/components/responses/AgendaPermissionDenied' }
+        '422': { $ref: '#/components/responses/NoActiveAppointments' }
+        '500': { $ref: '#/components/responses/AgendaImportFailed' }
 components:
   parameters:
     ExpedienteId:
@@ -335,7 +379,7 @@ components:
   schemas:
     Permission:
       type: string
-      enum: [REQUEST_CREATE, REQUEST_ASSIGN, SEARCH_START, SEARCH_MARK_LOCATED, SEARCH_MARK_NOT_LOCATED, PREPARATION_MARK_READY, CUSTODY_TRANSFER, EXPEDIENT_DISPATCH, CUSTODY_ACCEPT, LOAN_OPEN, LOAN_RENEW, RETURN_RECEIVE, REARCHIVE_CONFIRM, INCIDENT_OPEN, INCIDENT_RESOLVE, EXPEDIENT_VIEW, EXPEDIENT_AUDIT_VIEW, LOCATION_VIEW, REPORT_VIEW, ADMIN_CONFIGURE, AGENDA_IMPORT, AGENDA_VIEW, AGENDA_INCIDENT_VIEW]
+      enum: [REQUEST_CREATE, REQUEST_ASSIGN, SEARCH_START, SEARCH_MARK_LOCATED, SEARCH_MARK_NOT_LOCATED, PREPARATION_MARK_READY, CUSTODY_TRANSFER, EXPEDIENT_DISPATCH, CUSTODY_ACCEPT, LOAN_OPEN, LOAN_RENEW, RETURN_RECEIVE, REARCHIVE_CONFIRM, INCIDENT_OPEN, INCIDENT_RESOLVE, EXPEDIENT_VIEW, EXPEDIENT_AUDIT_VIEW, LOCATION_VIEW, REPORT_VIEW, ADMIN_CONFIGURE, AGENDA_IMPORT, AGENDA_VIEW, AGENDA_INCIDENT_VIEW, AGENDA_PRINT]
     SessionAuthorizationReadModel:
       type: object
       additionalProperties: false
@@ -947,3 +991,14 @@ components:
                 properties:
                   status: { const: 504 }
                   code: { const: AGENDA_IMPORT_TIMEOUT }
+    NoActiveAppointments:
+      description: No hay citas activas para los servicios solicitados en esta fecha
+      content:
+        application/problem+json:
+          schema:
+            allOf:
+              - { $ref: '#/components/schemas/ProblemDetails' }
+              - type: object
+                properties:
+                  status: { const: 422 }
+                  code: { const: NO_ACTIVE_APPOINTMENTS }

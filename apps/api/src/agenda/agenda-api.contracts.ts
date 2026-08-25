@@ -1,4 +1,5 @@
 import type {
+  GeneratePreparationReport,
   GetAgendaDaySummary,
   GetAgendaImportIncidents,
   GetAgendaImportResult,
@@ -27,6 +28,8 @@ export interface AgendaApiModuleDependencies {
   readonly getAgendaPreparationList: GetAgendaPreparationList;
   readonly printAgendaPreparationList: PrintAgendaPreparationList;
   readonly getAgendaImportIncidents: GetAgendaImportIncidents;
+  // T-23: preparation-reports PDF generation
+  readonly generatePreparationReport: GeneratePreparationReport;
 }
 
 export const AGENDA_API_TOKENS = {
@@ -38,6 +41,8 @@ export const AGENDA_API_TOKENS = {
   getAgendaPreparationList: Symbol('GetAgendaPreparationList'),
   printAgendaPreparationList: Symbol('PrintAgendaPreparationList'),
   getAgendaImportIncidents: Symbol('GetAgendaImportIncidents'),
+  // T-23
+  generatePreparationReport: Symbol('GeneratePreparationReport'),
 } as const;
 
 /** Environment variable key for the upload size limit (bytes). */

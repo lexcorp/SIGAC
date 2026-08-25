@@ -89,6 +89,13 @@ const AGENDA_APPLICATION_PROBLEMS: Record<
     type: 'https://sigac/errors/idempotency-key-reused',
     detail: 'The Idempotency-Key was already used with a different artifact.',
   },
+  // T-23 preparation-reports REQ-PR-002 §6
+  NO_ACTIVE_APPOINTMENTS: {
+    status: 422,
+    title: 'Unprocessable Content',
+    type: 'https://sigac/errors/no-active-appointments',
+    detail: 'No hay citas activas para los servicios solicitados en esta fecha.',
+  },
 };
 
 // ---------------------------------------------------------------------------

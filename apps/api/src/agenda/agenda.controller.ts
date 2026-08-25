@@ -9,11 +9,14 @@ import {
   Post,
   Query,
   Req,
+  Res,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
+import type { ServerResponse } from 'node:http';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
+  type GeneratePreparationReport,
   type GetAgendaDaySummary,
   type GetAgendaImportIncidents,
   type GetAgendaImportResult,
@@ -43,6 +46,7 @@ import {
   parseOptionalCursor,
   parsePaginationLimit,
   parsePreparationOrder,
+  parseOptionalServicesList,
 } from './agenda-http-validation.js';
 import { toJsonValue } from '../expediente/json-serializer.js';
 
@@ -95,6 +99,8 @@ export class AgendaController {
     private readonly getAgendaImportIncidentsUseCase: GetAgendaImportIncidents,
     @Inject(AgendaApiProblemMapper)
     private readonly problemMapper: AgendaApiProblemMapper,
+    @Inject(AGENDA_API_TOKENS.generatePreparationReport)
+    private readonly generatePreparationReportUseCase: GeneratePreparationReport,
   ) {}
 
   // -------------------------------------------------------------------------
@@ -294,6 +300,84 @@ export class AgendaController {
       });
       return toJsonValue(result);
     });
+  }
+
+
+  // -------------------------------------------------------------------------
+  // T-23 — POST /api/v1/agendas/:date/preparation-report
+  // Generates and streams a PDF preparation report (REQ-PR-002, design.md §7).
+  //
+  // Authorization:
+  //   - AGENDA_VIEW  enforced by GeneratePreparationReport use case (via listForPrint)
+  //   - AGENDA_PRINT enforced here before invoking the use case
+  //
+  // Response:
+  //   200  application/pdf — stream piped directly to response
+  //   403  PERMISSION_DENIED — missing AGENDA_VIEW or AGENDA_PRINT
+  //   422  NO_ACTIVE_APPOINTMENTS — no active citas for requested services
+  //
+  // No PDFKit code is here — generation is in packages/platform/pdf.
+  // -------------------------------------------------------------------------
+  @Post('agendas/:date/preparation-report')
+  @HttpCode(200)
+  async generatePreparationReport(
+    @Param('date') date: string,
+    @Query('order') order: string | undefined,
+    @Query('services') servicesQuery: string | undefined,
+    @Req() request: unknown,
+    @Res() res: ServerResponse,
+  ): Promise<void> {
+    const mapper = this.problemMapper;
+    try {
+      const agendaDate = parseAgendaDate(date);
+      const parsedOrder = parsePreparationOrder(order);
+      const services = parseOptionalServicesList(servicesQuery);
+
+      const context = await this.requestContextResolver.resolve({ nativeRequest: request });
+
+      // Enforce AGENDA_PRINT before invoking the use case (INV-PR-002)
+      if (!context.actor.permissions.has('AGENDA_PRINT')) {
+        throw new HttpException(
+          {
+            type: 'https://sigac/errors/permission-denied',
+            title: 'Forbidden',
+            status: 403,
+            code: 'PERMISSION_DENIED',
+            detail: 'The authenticated actor is not allowed to generate preparation reports.',
+          },
+          403,
+        );
+      }
+
+      // sourceImportId: obtain latestImportacionId from the day summary.
+      // This links the PDF to the specific SIMEF import that sourced the citas
+      // (audit metadata only — never rendered in the PDF).
+      const daySummary = await this.getAgendaDaySummaryUseCase.execute({
+        agendaDate,
+        context,
+      });
+
+      const result = await this.generatePreparationReportUseCase.execute({
+        agendaDate,
+        services: services.length > 0 ? services : undefined,
+        order: parsedOrder,
+        context,
+        sourceImportId: daySummary.latestImportacionId,
+      });
+
+      // Stream PDF directly to response — no buffering in controller
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${result.filename}"`,
+      );
+      result.stream.pipe(res as import('node:stream').Writable);
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      const mapped = mapper.toHttpException(error);
+      if (mapped !== null) throw mapped;
+      throw error;
+    }
   }
 
   // ---------------------------------------------------------------------------

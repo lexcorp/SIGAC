@@ -14,6 +14,11 @@ export const PERMISSIONS = [
   'EXPEDIENT_VIEW', 'EXPEDIENT_AUDIT_VIEW', 'LOCATION_VIEW', 'REPORT_VIEW',
   'ADMIN_CONFIGURE',
   'AGENDA_IMPORT', 'AGENDA_VIEW', 'AGENDA_INCIDENT_VIEW',
+  // T-20 / preparation-reports — REQ-PR-005, ADR-0030
+  // Required to generate the preparation PDF report (POST /agendas/{date}/preparation-report).
+  // Does NOT grant AGENDA_VIEW by itself; both permissions are required AND-together.
+  // Not derived automatically from any role.
+  'AGENDA_PRINT',
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];

@@ -31,6 +31,9 @@
       ],
       "@sigac/database": [
         "./packages/platform/database/src/index.ts"
+      ],
+      "@sigac/pdf": [
+        "./packages/platform/pdf/src/index.ts"
       ]
     }
   }

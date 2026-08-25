@@ -35,6 +35,7 @@ import {
   type OpenIncidentsQueryPort,
 } from '@sigac/archive-operations';
 import {
+  GeneratePreparationReport,
   GetAgendaDaySummary,
   GetAgendaImportIncidents,
   GetAgendaImportResult,
@@ -46,6 +47,7 @@ import {
   PrintAgendaPreparationList,
   SimefAgendaParserAdapter,
 } from '@sigac/agenda-preparation';
+import { PDFKitPreparationReportGenerator } from '@sigac/pdf';
 import {
   PostgresAgendaPreparationUnitOfWork,
   PostgresAgendaDayQueryPort,
@@ -116,6 +118,8 @@ const DEMO_ACTORS: Record<ActorKey, DemoActor> = {
       'EXPEDIENT_DISPATCH', 'CUSTODY_ACCEPT', 'LOAN_OPEN',
       // Agenda Preparation — required for AgendaPreparationWorkspace
       'AGENDA_VIEW', 'AGENDA_IMPORT', 'AGENDA_INCIDENT_VIEW',
+      // Preparation Reports — T-20 REQ-PR-005
+      'AGENDA_PRINT',
     ]),
   },
   noAudit: {
@@ -310,6 +314,12 @@ export function buildAgendaApiModule(router: TenantDatabaseRouter) {
     }),
     getAgendaImportIncidents:  new GetAgendaImportIncidents({
       incidentsQuery:          new PostgresAgendaImportIncidentsQueryPort(router), // ← FIXED
+      auditWriter,
+    }),
+    // T-23 preparation-reports: PDF generation (ADR-0030 + ADR-0031)
+    generatePreparationReport: new GeneratePreparationReport({
+      preparationListQuery: preparationQueryPort,
+      reportGenerator:      new PDFKitPreparationReportGenerator(),
       auditWriter,
     }),
   });

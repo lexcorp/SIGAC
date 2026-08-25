@@ -138,11 +138,12 @@ assert.deepEqual(agendaPaths.sort(), [
   '/agendas/{date}',
   '/agendas/{date}/preparation-items',
   '/agendas/{date}/preparation-items/print',
-].sort(), 'Agenda Preparation must expose exactly the seven approved paths');
+  '/agendas/{date}/preparation-report',
+].sort(), 'Agenda Preparation must expose exactly the eight approved paths');
 
 for (const op of ['importAgenda', 'listAgendaImports', 'getAgendaImportDetail',
   'getAgendaImportIncidents', 'getAgendaDaySummary', 'getAgendaPreparationList',
-  'printAgendaPreparationList']) {
+  'printAgendaPreparationList', 'generatePreparationReport']) {
   includes(`operationId: ${op}`, `Missing Agenda operation ${op}`);
 }
 

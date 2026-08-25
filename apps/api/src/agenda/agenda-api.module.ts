@@ -22,6 +22,8 @@ export class AgendaApiModule {
         { provide: AGENDA_API_TOKENS.getAgendaPreparationList, useValue: dependencies.getAgendaPreparationList },
         { provide: AGENDA_API_TOKENS.printAgendaPreparationList, useValue: dependencies.printAgendaPreparationList },
         { provide: AGENDA_API_TOKENS.getAgendaImportIncidents, useValue: dependencies.getAgendaImportIncidents },
+        // T-23 preparation-reports
+        { provide: AGENDA_API_TOKENS.generatePreparationReport, useValue: dependencies.generatePreparationReport },
       ],
     };
   }

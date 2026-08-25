@@ -22,7 +22,8 @@ export type Permission =
   | 'RETURN_RECEIVE' | 'REARCHIVE_CONFIRM' | 'INCIDENT_OPEN' | 'INCIDENT_RESOLVE'
   | 'EXPEDIENT_VIEW' | 'EXPEDIENT_AUDIT_VIEW' | 'LOCATION_VIEW' | 'REPORT_VIEW'
   | 'ADMIN_CONFIGURE'
-  | 'AGENDA_IMPORT' | 'AGENDA_VIEW' | 'AGENDA_INCIDENT_VIEW';
+  | 'AGENDA_IMPORT' | 'AGENDA_VIEW' | 'AGENDA_INCIDENT_VIEW'
+  | 'AGENDA_PRINT';   // T-20 preparation-reports REQ-PR-005
 
 export interface SessionAuthorizationReadModel {
   readonly actorId: string;

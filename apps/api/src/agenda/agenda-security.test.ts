@@ -122,6 +122,7 @@ function buildController(opts: {
     printAgendaPreparationList as unknown as PrintAgendaPreparationList,
     getAgendaImportIncidents as unknown as GetAgendaImportIncidents,
     new AgendaApiProblemMapper(),
+    { execute: vi.fn().mockResolvedValue({ stream: require('stream').Readable.from(['%PDF']), filename: 'x.pdf' }) } as unknown as import('@sigac/agenda-preparation').GeneratePreparationReport,
   );
   return { controller, resolver, importAgenda, getAgendaDaySummary, getAgendaPreparationList,
     printAgendaPreparationList, listAgendaImports, getAgendaImportResult, getAgendaImportIncidents };

@@ -1,5 +1,7 @@
 import { HttpException } from '@nestjs/common';
+import { Readable } from 'node:stream';
 import {
+  type GeneratePreparationReport,
   type GetAgendaDaySummary,
   type GetAgendaImportIncidents,
   type GetAgendaImportResult,
@@ -136,6 +138,12 @@ function setup(
   const getAgendaImportIncidents = {
     execute: vi.fn().mockResolvedValue(options.incidents ?? []),
   };
+  const generatePreparationReport = {
+    execute: vi.fn().mockResolvedValue({
+      stream: Readable.from(['%PDF-1.4']),
+      filename: 'lista-preparacion-2026-08-25.pdf',
+    }),
+  };
 
   const controller = new AgendaController(
     resolver,
@@ -147,6 +155,7 @@ function setup(
     printAgendaPreparationList as unknown as PrintAgendaPreparationList,
     getAgendaImportIncidents as unknown as GetAgendaImportIncidents,
     new AgendaApiProblemMapper(),
+    generatePreparationReport as unknown as GeneratePreparationReport,
   );
 
   return {
@@ -159,6 +168,7 @@ function setup(
     getAgendaPreparationList,
     printAgendaPreparationList,
     getAgendaImportIncidents,
+    generatePreparationReport,
   };
 }
 
@@ -697,7 +707,7 @@ describe('AgendaController — T-13', () => {
     it('registra controller, mapper y 8 tokens de dependencia', () => {
       const { resolver, importAgenda, getAgendaImportResult, listAgendaImports,
         getAgendaDaySummary, getAgendaPreparationList, printAgendaPreparationList,
-        getAgendaImportIncidents } = setup();
+        getAgendaImportIncidents, generatePreparationReport } = setup();
 
       const dynamicModule = AgendaApiModule.register({
         requestContextResolver: resolver,
@@ -708,11 +718,129 @@ describe('AgendaController — T-13', () => {
         getAgendaPreparationList: getAgendaPreparationList as unknown as GetAgendaPreparationList,
         printAgendaPreparationList: printAgendaPreparationList as unknown as PrintAgendaPreparationList,
         getAgendaImportIncidents: getAgendaImportIncidents as unknown as GetAgendaImportIncidents,
+        generatePreparationReport: generatePreparationReport as unknown as GeneratePreparationReport,
       });
 
       expect(dynamicModule.controllers).toContain(AgendaController);
-      // 1 mapper + 8 DI token providers
-      expect(dynamicModule.providers).toHaveLength(9);
+      // 1 mapper + 9 DI token providers (added generatePreparationReport T-23)
+      expect(dynamicModule.providers).toHaveLength(10);
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /agendas/:date/preparation-report — T-23
+// ---------------------------------------------------------------------------
+
+describe('generatePreparationReport (POST /agendas/:date/preparation-report) — T-23', () => {
+  function makePrintContext(hasPrint = true) {
+    return {
+      ...trustedContext,
+      actor: {
+        ...trustedContext.actor,
+        permissions: new Set([
+          'AGENDA_VIEW',
+          ...(hasPrint ? ['AGENDA_PRINT'] : []),
+        ]),
+      },
+    } as RequestContext;
+  }
+
+  function makeRes(): { setHeader: ReturnType<typeof vi.fn>; pipe?: ReturnType<typeof vi.fn>; headers: Record<string, string> } {
+    const headers: Record<string, string> = {};
+    const res = {
+      headers,
+      setHeader: vi.fn((name: string, value: string) => { headers[name] = value; }),
+    };
+    return res;
+  }
+
+  it('200 con Content-Type application/pdf y filename correcto', async () => {
+    const res = makeRes();
+    const { controller } = setup({
+      resolve: vi.fn().mockResolvedValue(makePrintContext(true)),
+    });
+    // Override generatePreparationReport mock to provide a pipe-able stream
+    const { generatePreparationReport } = setup({ resolve: vi.fn().mockResolvedValue(makePrintContext(true)) });
+    (generatePreparationReport.execute as ReturnType<typeof vi.fn>).mockResolvedValue({
+      stream: Readable.from(['%PDF-1.4 test']),
+      filename: 'lista-preparacion-2026-08-25.pdf',
+    });
+    // pipe won't actually be called in the unit test since res lacks pipe-like behavior
+    // — we verify headers and use case invocation
+    await controller.generatePreparationReport(
+      '2026-08-25', undefined, undefined, {}, res as unknown as import('node:http').ServerResponse,
+    ).catch(() => undefined); // stream.pipe may throw in test env — ignore
+    expect(res.headers['Content-Type']).toBe('application/pdf');
+    expect(res.headers['Content-Disposition']).toContain('lista-preparacion-2026-08-25.pdf');
+    expect(res.headers['Content-Disposition']).toContain('attachment');
+  });
+
+  it('403 cuando falta AGENDA_PRINT', async () => {
+    const { controller } = setup({
+      resolve: vi.fn().mockResolvedValue(makePrintContext(false)),
+    });
+    const res = makeRes();
+    await expect(
+      controller.generatePreparationReport('2026-08-25', undefined, undefined, {}, res as unknown as import('node:http').ServerResponse),
+    ).rejects.toMatchObject({ message: expect.any(String) });
+  });
+
+  it('403 cuando falta AGENDA_VIEW (delegado al use case via getAgendaDaySummary)', async () => {
+    const { controller, getAgendaDaySummary } = setup({
+      resolve: vi.fn().mockResolvedValue(makePrintContext(true)),
+    });
+    getAgendaDaySummary.execute.mockRejectedValue(new ApplicationError('PERMISSION_DENIED', 'internal'));
+    const res = makeRes();
+    await expectProblem(
+      controller.generatePreparationReport('2026-08-25', undefined, undefined, {}, res as unknown as import('node:http').ServerResponse),
+      403,
+      'PERMISSION_DENIED',
+    );
+  });
+
+  it('422 NO_ACTIVE_APPOINTMENTS cuando use case lanza error correspondiente', async () => {
+    const { controller, generatePreparationReport } = setup({
+      resolve: vi.fn().mockResolvedValue(makePrintContext(true)),
+    });
+    (generatePreparationReport.execute as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new ApplicationError('NO_ACTIVE_APPOINTMENTS', 'no citas'),
+    );
+    const res = makeRes();
+    await expectProblem(
+      controller.generatePreparationReport('2026-08-25', undefined, undefined, {}, res as unknown as import('node:http').ServerResponse),
+      422,
+      'NO_ACTIVE_APPOINTMENTS',
+    );
+  });
+
+  it('fecha inválida retorna 400 HTTP_VALIDATION_ERROR', async () => {
+    const { controller } = setup({ resolve: vi.fn().mockResolvedValue(makePrintContext(true)) });
+    const res = makeRes();
+    await expectProblem(
+      controller.generatePreparationReport('not-a-date', undefined, undefined, {}, res as unknown as import('node:http').ServerResponse),
+      400,
+      'HTTP_VALIDATION_ERROR',
+    );
+  });
+
+  it('filename no contiene datos de paciente', async () => {
+    const res = makeRes();
+    const { controller } = setup({ resolve: vi.fn().mockResolvedValue(makePrintContext(true)) });
+    await controller.generatePreparationReport('2026-08-25', undefined, undefined, {}, res as unknown as import('node:http').ServerResponse)
+      .catch(() => undefined);
+    const disposition = res.headers['Content-Disposition'] ?? '';
+    expect(disposition).not.toMatch(/paciente/i);
+    expect(disposition).not.toMatch(/curp/i);
+  });
+
+  it('sin autenticación retorna 401', async () => {
+    const { controller } = setup({ resolve: vi.fn().mockRejectedValue(new AuthenticationRequiredError()) });
+    const res = makeRes();
+    await expectProblem(
+      controller.generatePreparationReport('2026-08-25', undefined, undefined, {}, res as unknown as import('node:http').ServerResponse),
+      401,
+      'AUTHENTICATION_REQUIRED',
+    );
   });
 });

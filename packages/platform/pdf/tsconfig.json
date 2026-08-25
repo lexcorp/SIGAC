@@ -1,0 +1,15 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "../../../dist/packages/platform/pdf",
+    "paths": {
+      "@sigac/agenda-preparation": [
+        "../../../dist/packages/modules/agenda-preparation/index.d.ts"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
+}

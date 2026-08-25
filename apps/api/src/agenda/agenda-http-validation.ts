@@ -95,3 +95,21 @@ export function parseOptionalAgendaDateFilter(value: unknown): string | undefine
   }
   return value.trim();
 }
+
+// ---------------------------------------------------------------------------
+// Services list for preparation report (T-23 REQ-PR-002)
+// ---------------------------------------------------------------------------
+
+/**
+ * Parses an optional comma-separated list of service codes from a query param.
+ * Returns an empty array when absent or blank (caller interprets as "all services").
+ * Each code is trimmed and uppercased; empty entries are discarded.
+ */
+export function parseOptionalServicesList(value: unknown): string[] {
+  if (value === undefined || value === null || value === '') return [];
+  if (typeof value !== 'string') throw new HttpValidationError('services', 'INVALID_TYPE');
+  return value
+    .split(',')
+    .map((s) => s.trim().toUpperCase())
+    .filter((s) => s.length > 0);
+}

@@ -20,7 +20,8 @@
     "@sigac/database": "workspace:*",
     "reflect-metadata": "latest",
     "rxjs": "latest",
-    "zod": "4.4.3"
+    "zod": "4.4.3",
+    "@sigac/pdf": "workspace:*"
   },
   "devDependencies": {
     "tsx": "latest",

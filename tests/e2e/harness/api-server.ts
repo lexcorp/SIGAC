@@ -55,9 +55,9 @@ const actors = {
   noAudit: { tenant: tenant('a'), actor: { actorId: 'e2e-no-audit', roles: new Set(['ARCHIVISTA']), permissions: new Set(['EXPEDIENT_VIEW', 'LOCATION_VIEW', 'EXPEDIENT_DISPATCH', 'LOAN_OPEN']), tenantIds: new Set(['e2e-a']) } },
   tenantB: { tenant: tenant('b'), actor: { actorId: 'e2e-b', roles: new Set(['ARCHIVISTA']), permissions: new Set(['EXPEDIENT_VIEW']), tenantIds: new Set(['e2e-b']) } },
   // Agenda actors
-  agendaImport: { tenant: tenant('a'), actor: { actorId: 'e2e-agenda-import', roles: new Set(['ARCHIVISTA']), permissions: new Set(['AGENDA_IMPORT', 'AGENDA_VIEW', 'AGENDA_INCIDENT_VIEW']), tenantIds: new Set(['e2e-a']) } },
+  agendaImport: { tenant: tenant('a'), actor: { actorId: 'e2e-agenda-import', roles: new Set(['ARCHIVISTA']), permissions: new Set(['AGENDA_IMPORT', 'AGENDA_VIEW', 'AGENDA_INCIDENT_VIEW', 'AGENDA_PRINT']), tenantIds: new Set(['e2e-a']) } },
   agendaView: { tenant: tenant('a'), actor: { actorId: 'e2e-agenda-view', roles: new Set(['ARCHIVISTA']), permissions: new Set(['AGENDA_VIEW', 'AGENDA_INCIDENT_VIEW']), tenantIds: new Set(['e2e-a']) } },
-  agendaTenantB: { tenant: tenant('b'), actor: { actorId: 'e2e-agenda-b', roles: new Set(['ARCHIVISTA']), permissions: new Set(['AGENDA_IMPORT', 'AGENDA_VIEW', 'AGENDA_INCIDENT_VIEW']), tenantIds: new Set(['e2e-b']) } },
+  agendaTenantB: { tenant: tenant('b'), actor: { actorId: 'e2e-agenda-b', roles: new Set(['ARCHIVISTA']), permissions: new Set(['AGENDA_IMPORT', 'AGENDA_VIEW', 'AGENDA_INCIDENT_VIEW', 'AGENDA_PRINT']), tenantIds: new Set(['e2e-b']) } },
 } as const;
 
 function actorKey(request: unknown): keyof typeof actors {

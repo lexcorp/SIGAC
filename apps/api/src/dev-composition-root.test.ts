@@ -101,10 +101,10 @@ describe('AgendaApiModule.register — agenda endpoints mounted', () => {
     expect(mod.controllers).toContain(AgendaController);
   });
 
-  it('has exactly 9 providers (8 tokens + AgendaApiProblemMapper)', () => {
+  it('has exactly 10 providers (9 tokens + AgendaApiProblemMapper) — T-23 adds generatePreparationReport', () => {
     const router = buildDemoRouter();
     const mod = buildAgendaApiModule(router);
-    expect(mod.providers).toHaveLength(9);
+    expect(mod.providers).toHaveLength(10);
   });
 });
 
@@ -288,9 +288,9 @@ describe('buildAgendaApiModule — real read query adapters (regression)', () =>
     // When they are replaced with real adapters, this test should be updated.
     const router = buildDemoRouter();
     const mod = buildAgendaApiModule(router);
-    // AgendaApiModule registers 9 providers: 8 tokens + AgendaApiProblemMapper
-    // The provider count should remain stable after the fix.
-    expect(mod.providers).toHaveLength(9);
+    // AgendaApiModule registers 10 providers: 9 tokens + AgendaApiProblemMapper
+    // T-23 added generatePreparationReport as the 9th token.
+    expect(mod.providers).toHaveLength(10);
   });
 });
 
@@ -313,7 +313,7 @@ describe('buildAgendaApiModule — incidents adapter is real (BUG-1 regression)'
     // Verify via module structure that provider count is unchanged (9 providers)
     const router = buildDemoRouter();
     const mod = buildAgendaApiModule(router);
-    expect(mod.providers).toHaveLength(9);
+    expect(mod.providers).toHaveLength(10); // 9 tokens + AgendaApiProblemMapper (T-23)
     // The module must contain AgendaController (incidents endpoint is there)
     expect(mod.controllers).toContain(AgendaController);
   });
