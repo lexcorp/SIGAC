@@ -7,6 +7,7 @@ function input(): GenerationSnapshotInput {
     agendaDate: '2026-08-29',
     sourceImportacionId: 'importacion-hash',
     sourceVersion: 'a'.repeat(64),
+    resolvedConflicts: [],
     groups: [{
       key: {
         agendaDate: '2026-08-29',
@@ -72,5 +73,42 @@ describe('AgendaSnapshotHasher', () => {
 
     expect(versionChanged).not.toBe(base);
     expect(valueChanged).not.toBe(base);
+  });
+
+  it('includes human conflict resolution and is independent of evidence ordering', async () => {
+    const hasher = new AgendaSnapshotHasher();
+    const original = input();
+    const card = { agendaDate: '2026-08-29', servicioCodigo: 'CARD', medicoNumeroEmpleado: 'EMP-1' };
+    const cir = { agendaDate: '2026-08-29', servicioCodigo: 'CIR', medicoNumeroEmpleado: 'EMP-2' };
+    const conflict = {
+      expedienteReference: 'EXP-1',
+      ownerGroup: card,
+      alternatives: [
+        { group: cir, references: [{ folio: 'F-2', servicioCodigo: 'CIR', medicoNumeroEmpleado: 'EMP-2' }] },
+        { group: card, references: [
+          { folio: 'F-1B', servicioCodigo: 'CARD', medicoNumeroEmpleado: 'EMP-1' },
+          { folio: 'F-1A', servicioCodigo: 'CARD', medicoNumeroEmpleado: 'EMP-1' },
+        ] },
+      ],
+    } as const;
+    const withConflict = { ...original, resolvedConflicts: [conflict] };
+    const reordered = {
+      ...original,
+      resolvedConflicts: [{
+        ...conflict,
+        alternatives: [...conflict.alternatives].reverse().map((alternative) => ({
+          ...alternative,
+          references: [...alternative.references].reverse(),
+        })),
+      }],
+    };
+
+    const resolvedHash = await hasher.compute(withConflict);
+    await expect(hasher.compute(reordered)).resolves.toBe(resolvedHash);
+    expect(resolvedHash).not.toBe(await hasher.compute(original));
+    await expect(hasher.compute({
+      ...withConflict,
+      resolvedConflicts: [{ ...conflict, ownerGroup: cir }],
+    })).resolves.not.toBe(resolvedHash);
   });
 });

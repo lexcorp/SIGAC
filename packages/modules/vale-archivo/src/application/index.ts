@@ -18,6 +18,8 @@ export type {
   ValeBatchIdempotencyKey,
   ValeBatchTraceSnapshot,
   ValeBatchItemTraceSnapshot,
+  ValeBatchGroupKey,
+  ValeBatchResolvedConflictSnapshot,
   ExistingGeneratedVale,
 } from './ports/ValeBatchUnitOfWork.js';
 export type {
@@ -40,6 +42,7 @@ export {
   GenerateValeBatch,
   type GenerateValeBatchCommand,
   type GenerateValeBatchGroup,
+  type GenerateValeBatchResolvedConflict,
   type GenerateValeBatchResult,
   type GenerateValeBatchDependencies,
 } from './use-cases/GenerateValeBatch.js';

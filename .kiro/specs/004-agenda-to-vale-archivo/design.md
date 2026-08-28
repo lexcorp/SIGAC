@@ -323,6 +323,11 @@ interface GenerateValesFromAgendaInput {
 }
 ```
 
+Invariante de resolución cross-group: **`ownerGroup` únicamente es válido si pertenece
+a los grupos candidatos detectados**. Un owner ajeno a esos candidatos se trata
+fail-closed como conflicto no resuelto; nunca elimina la demanda, elige otro grupo ni
+produce trazabilidad de una resolución inexistente.
+
 No recibe `tenant` o `actor` por separado: usa `context.tenant` y `context.actor`. No
 acepta NumeroVale, timestamps técnicos, importacionId, sourceVersion o hash del cliente.
 No se introducen filtros iniciales: la fuente es la Agenda vigente completa y cualquier

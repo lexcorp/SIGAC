@@ -277,6 +277,83 @@ describe('GenerateValesFromAgenda — T-02', () => {
     if (cirGroup) {
       expect(cirGroup.items.some((i: { expedienteReference: string }) => i.expedienteReference === 'EXP-RES')).toBe(false);
     }
+    expect(cmd.resolvedConflicts).toEqual([{
+      expedienteReference: 'EXP-RES',
+      ownerGroup: ownerKey,
+      alternatives: [
+        {
+          group: ownerKey,
+          references: [{ folio: 'F-RES-1', servicioCodigo: 'CARD', medicoNumeroEmpleado: 'EMP1' }],
+        },
+        {
+          group: { agendaDate: '2026-08-29', servicioCodigo: 'CIR', medicoNumeroEmpleado: 'EMP2' },
+          references: [{ folio: 'F-RES-2', servicioCodigo: 'CIR', medicoNumeroEmpleado: 'EMP2' }],
+        },
+      ],
+    }]);
+  });
+
+  it('invalid ownerGroup remains unresolved and never reaches generation evidence', async () => {
+    const items = [
+      makeItem({ folio: 'F-INV-1', expedienteReference: 'EXP-INV', servicio: { codigo: 'CARD', nombre: 'CARDIOLOGÍA' }, medico: { numeroEmpleado: 'EMP1', nombre: 'DR A' } }),
+      makeItem({ folio: 'F-INV-2', expedienteReference: 'EXP-INV', servicio: { codigo: 'CIR', nombre: 'CIRUGÍA' }, medico: { numeroEmpleado: 'EMP2', nombre: 'DR B' } }),
+    ];
+    const { svc, valePort } = makeSvc({ readPort: makeReadPort(makeProjection(items)) });
+
+    const result = await svc.execute({
+      agendaDate: '2026-08-29',
+      header: HEADER,
+      context: makeContext(),
+      conflictResolutions: [{
+        expedienteReference: 'EXP-INV',
+        ownerGroup: { agendaDate: '2026-08-29', servicioCodigo: 'NO-CANDIDATO', medicoNumeroEmpleado: 'X' },
+      }],
+    });
+
+    expect(result.conflicts).toEqual([{
+      expedienteReference: 'EXP-INV',
+      candidateGroups: [
+        { agendaDate: '2026-08-29', servicioCodigo: 'CARD', medicoNumeroEmpleado: 'EMP1' },
+        { agendaDate: '2026-08-29', servicioCodigo: 'CIR', medicoNumeroEmpleado: 'EMP2' },
+      ],
+      folios: ['F-INV-1', 'F-INV-2'],
+    }]);
+    expect(valePort.generateBatch).not.toHaveBeenCalled();
+  });
+
+  it('T-02C: resolvedConflicts in the batch command contain no patient/PII data', async () => {
+    // ResolvedValeGenerationConflict must only carry: expedienteReference, ownerGroup, alternatives.
+    // alternatives carry: group, references (folio + codes).
+    // No pacienteNombre, tipoDerechohabiente, tipoConsulta or any clinical field.
+    const ownerKey: ValeGroupKey = { agendaDate: '2026-08-29', servicioCodigo: 'CARD', medicoNumeroEmpleado: 'EMP1' };
+    const items = [
+      makeItem({ folio: 'F-PII-1', expedienteReference: 'EXP-PII', pacienteNombre: 'PACIENTE CONFIDENCIAL', servicio: { codigo: 'CARD', nombre: 'CARDIOLOGÍA' }, medico: { numeroEmpleado: 'EMP1', nombre: 'DR A' } }),
+      makeItem({ folio: 'F-PII-2', expedienteReference: 'EXP-PII', pacienteNombre: 'PACIENTE CONFIDENCIAL', servicio: { codigo: 'CIR',  nombre: 'CIRUGÍA' },     medico: { numeroEmpleado: 'EMP2', nombre: 'DR B' } }),
+    ];
+    const { svc, valePort } = makeSvc({ readPort: makeReadPort(makeProjection(items)) });
+    await svc.execute({
+      agendaDate: '2026-08-29',
+      header: HEADER,
+      context: makeContext(),
+      conflictResolutions: [{ expedienteReference: 'EXP-PII', ownerGroup: ownerKey }],
+    });
+    const cmd = (valePort.generateBatch as Mock).mock.calls[0]![0];
+    const payload = JSON.stringify(cmd.resolvedConflicts);
+    expect(payload).not.toContain('PACIENTE CONFIDENCIAL');
+    expect(payload).not.toContain('pacienteNombre');
+    expect(payload).not.toContain('tipoDerechohabiente');
+    expect(payload).not.toContain('tipoConsulta');
+    // Structural: only the allowed fields are present in each alternative
+    for (const conflict of cmd.resolvedConflicts) {
+      expect(Object.keys(conflict)).toEqual(
+        expect.arrayContaining(['expedienteReference', 'ownerGroup', 'alternatives']),
+      );
+      for (const alternative of conflict.alternatives) {
+        expect(Object.keys(alternative)).toEqual(
+          expect.arrayContaining(['group', 'references']),
+        );
+      }
+    }
   });
 
   // ── Unresolved items ──────────────────────────────────────────────────────

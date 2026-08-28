@@ -11,25 +11,25 @@ date: "2026-08-27"
 
 ```text
 T-00
-  -> T-01 -> T-02 -> T-02A -> T-02B -> T-03
-                    -> T-04 -> T-05 -> T-06 -> T-07
-                    -> T-08 -> T-09 -> T-10
+  -> T-01 -> T-02 -> T-02A -> T-02B -> T-03 -> T-02C
+                                                 -> T-04 -> T-05 -> T-06 -> T-07
+                                                           -> T-08 -> T-09 -> T-10
 ```
 
 ## T-00 — Cerrar decisiones bloqueantes
 
-**Dependencias:** ninguna.  
-**Estado:** PASS — ADR-0035..ADR-0040 aprobados en `decisions.md`.  
+**Dependencias:** ninguna.
+**Estado:** PASS — ADR-0035..ADR-0040 aprobados en `decisions.md`.
 **Objetivo cumplido:** OQ-AV-001..009 resueltos; numeración, operación explícita,
 permissions/audit, granularidad, repetidos, no resueltos, trazabilidad, reconciliación e
-integridad transaccional definidos.  
+integridad transaccional definidos.
 **Gate:** PASS; T-01 habilitada.
 
 ## T-01 — Contratos Application de integración
 
-**Dependencias:** T-00.  
+**Dependencias:** T-00.
 **Estado:** DESIGN COMPLETE / READY FOR IMPLEMENTATION — diseño técnico aprobado en
-`design.md` §11.  
+`design.md` §11.
 **Objetivo de T-01:** definir el módulo neutral, DTOs mínimos, ports, Application Service
 y contract tests sin crear código o infraestructura en la fase de diseño.
 
@@ -62,15 +62,15 @@ ejecución.
 
 ## T-02 — Application Service de orquestación
 
-**Dependencias:** T-01.  
+**Dependencias:** T-01.
 **Objetivo:** implementar agrupación, autorización, idempotencia y resultados por grupo
-sin infraestructura.  
+sin infraestructura.
 **Tests:** 0/1/N grupos; claves estables; replay; tenant propagation; cero parciales.
 
 ## T-02A — Proyección Application de Agenda para generación
 
-**Dependencias:** T-02.  
-**Estado:** PASS.  
+**Dependencias:** T-02.
+**Estado:** PASS.
 **Objetivo:** implementar en Agenda Preparation el Use Case/query
 `GetPreparedAgendaGenerationSource` aprobado por ADR-0041. Debe producir Citas `ACTIVA`,
 última importación confirmada y `sourceVersion` canónica sin exponer Aggregate, Entity,
@@ -88,8 +88,8 @@ orden FOLIO ASC, tenant propagation y verificación current/stale cubiertos por 
 
 ## T-02B — `GenerateValeBatch` en Application de Vale Archivo
 
-**Dependencias:** T-02A.  
-**Estado:** PASS.  
+**Dependencias:** T-02A.
+**Estado:** PASS.
 **Objetivo:** implementar el Use Case y ports Application definidos en ADR-0041, sin
 infraestructura concreta. Debe aceptar un batch propietario de Vale Archivo, exigir
 `REQUEST_CREATE`, crear un Vale por grupo mediante Domain y coordinar numeración,
@@ -108,10 +108,10 @@ coordinados por una sola transacción tenant-scoped. `RegistrarVale` permanece i
 
 ## T-03 — Adapters ACL de ambos contextos
 
-**Dependencias:** T-02A y T-02B.  
-**Estado:** PASS.  
+**Dependencias:** T-02A y T-02B.
+**Estado:** PASS.
 **Objetivo:** proyectar Citas elegibles y traducir comandos neutrales al Use Case de Vale
-sin compartir Aggregates/repositories.  
+sin compartir Aggregates/repositories.
 **Tests:** mapping, minimización, Citas retiradas/no elegibles y boundaries.
 
 Entregables una vez desbloqueada:
@@ -129,45 +129,60 @@ los Use Cases públicos. `AgendaSnapshotHasher` implementa SHA-256/JCS determini
 IO ni dependencias a bounded contexts. Tests cubren tenant/source propagation, errores
 de Agenda, replay `ALREADY_GENERATED` y canonicalización del snapshot.
 
+## T-02C — Evidencia de resolución cross-group
+
+**Dependencias:** T-03.
+**Estado:** PASS.
+**Objetivo:** representar completamente ADR-0038/ADR-0040 transportando owner humano,
+grupos candidatos y referencias excluidas desde el orquestador neutral hasta el snapshot
+propietario de Vale Archivo. `ownerGroup` sólo es válido si pertenece a los candidatos;
+un owner inválido permanece fail-closed como conflicto no resuelto.
+
+**Tests:** candidatos y referencias preservados; owner inválido; hash sensible a la
+resolución e independiente del orden; mapping ACL sin pérdida; asociación al ValeItem;
+rollback y replay.
+
+**Scope excluido:** migrations, persistence concreta, endpoints, OpenAPI y UI.
+
 ## T-04 — Persistence de trazabilidad e idempotencia
 
-**Dependencias:** T-03.  
+**Dependencias:** T-02C.
 **Objetivo:** schema/migration no destructiva, repository y constraint tenant-local
-según identidad aprobada.  
+según identidad aprobada.
 **Tests:** uniqueness concurrente, rollback e isolation.
 
 ## T-05 — UnitOfWork/composición transaccional
 
-**Dependencias:** T-04.  
-**Objetivo:** atomicidad aprobada entre Vale, items, trazabilidad y audit.  
+**Dependencias:** T-04.
+**Objetivo:** atomicidad aprobada entre Vale, items, trazabilidad y audit.
 **Tests:** commit/rollback y fallo en cada write.
 
 ## T-06 — API y OpenAPI
 
-**Dependencias:** T-05.  
-**Objetivo:** comando/query aprobado, RequestContext server-side y RFC7807.  
+**Dependencias:** T-05.
+**Objetivo:** comando/query aprobado, RequestContext server-side y RFC7807.
 **Tests:** validation, 401/403/conflict, replay y tenant no falsificable.
 
 ## T-07 — Frontend de confirmación
 
-**Dependencias:** T-06.  
-**Objetivo:** seleccionar Agenda/grupos y capturar sólo metadata aprobada.  
+**Dependencias:** T-06.
+**Objetivo:** seleccionar Agenda/grupos y capturar sólo metadata aprobada.
 **Tests:** loading/error/replay, accesibilidad y payload exacto.
 
 ## T-08 — PostgreSQL integration
 
-**Dependencias:** T-05 y T-06.  
-**Objetivo:** flujo real Agenda → ACL → Vale → vínculo → audit por tenant.  
+**Dependencias:** T-05 y T-06.
+**Objetivo:** flujo real Agenda → ACL → Vale → vínculo → audit por tenant.
 **Tests:** agrupación, duplicados concurrentes, trazabilidad, rollback y cross-tenant.
 
 ## T-09 — E2E
 
-**Dependencias:** T-07 y T-08.  
+**Dependencias:** T-07 y T-08.
 **Objetivo:** flujo real desde Agenda preparada hasta consulta del Vale generado.
 
 ## T-10 — Quality pipeline y release readiness
 
-**Dependencias:** T-09.  
+**Dependencias:** T-09.
 **Objetivo:** lint, typecheck, tests, build, OpenAPI, migrations, integration, isolation,
 E2E y `git diff --check`.
 

@@ -72,7 +72,46 @@ function command(
         }],
       }],
     })),
+    resolvedConflicts: [],
     context: requestContext,
+  };
+}
+
+function commandWithResolvedConflict(groups = 2): GenerateValeBatchCommand {
+  const base = command(groups);
+  return {
+    ...base,
+    resolvedConflicts: [{
+      expedienteNumero: 'EXP-1',
+      ownerGroup: {
+        agendaDate: '2026-08-29',
+        servicioCodigo: 'SERV-1',
+        medicoNumeroEmpleado: 'EMP-1',
+      },
+      alternatives: [{
+        group: {
+          agendaDate: '2026-08-29',
+          servicioCodigo: 'SERV-1',
+          medicoNumeroEmpleado: 'EMP-1',
+        },
+        appointmentReferences: [{
+          folio: 'FOLIO-1',
+          servicioCodigo: 'SERV-1',
+          medicoNumeroEmpleado: 'EMP-1',
+        }],
+      }, {
+        group: {
+          agendaDate: '2026-08-29',
+          servicioCodigo: 'SERV-2',
+          medicoNumeroEmpleado: 'EMP-2',
+        },
+        appointmentReferences: [{
+          folio: 'FOLIO-EXCLUDED',
+          servicioCodigo: 'SERV-2',
+          medicoNumeroEmpleado: 'EMP-2',
+        }],
+      }],
+    }],
   };
 }
 
@@ -183,6 +222,32 @@ describe('GenerateValeBatch — T-02B', () => {
     expect(unitOfWork.committedTraces).toHaveLength(3);
   });
 
+  it('associates resolved conflict evidence and excluded references to the owner ValeItem only', async () => {
+    const { useCase, unitOfWork } = setup();
+
+    await useCase.execute(commandWithResolvedConflict());
+
+    const ownerTrace = unitOfWork.committedTraces.find(
+      (trace) => trace.servicioCodigo === 'SERV-1',
+    )!;
+    const alternativeTrace = unitOfWork.committedTraces.find(
+      (trace) => trace.servicioCodigo === 'SERV-2',
+    )!;
+    expect(ownerTrace.resolvedConflicts).toHaveLength(1);
+    expect(ownerTrace.resolvedConflicts[0]).toMatchObject({
+      expedienteNumero: 'EXP-1',
+      ownerValeItemId: ownerTrace.items[0]!.valeItemId,
+      alternatives: [{
+        appointmentReferences: [{ folio: 'FOLIO-1' }],
+      }, {
+        appointmentReferences: [{ folio: 'FOLIO-EXCLUDED' }],
+      }],
+    });
+    expect(alternativeTrace.resolvedConflicts).toEqual([]);
+    expect(unitOfWork.committedVales[1]!.snapshot().items)
+      .not.toEqual(expect.arrayContaining([expect.objectContaining({ expedienteNumero: 'EXP-1' })]));
+  });
+
   it('returns an empty result without opening a transaction for an empty batch', async () => {
     const { useCase, unitOfWork } = setup();
 
@@ -201,7 +266,7 @@ describe('GenerateValeBatch — T-02B', () => {
     }];
     const { useCase } = setup(unitOfWork);
 
-    await expect(useCase.execute(command())).resolves.toEqual({
+    await expect(useCase.execute(commandWithResolvedConflict())).resolves.toEqual({
       generatedVales: [{ ...unitOfWork.replay[0], outcome: 'ALREADY_GENERATED' }],
     });
     expect(unitOfWork.committedVales).toHaveLength(0);
@@ -226,7 +291,7 @@ describe('GenerateValeBatch — T-02B', () => {
     unitOfWork.failOnSaveNumber = 2;
     const { useCase } = setup(unitOfWork);
 
-    await expect(useCase.execute(command(2))).rejects.toThrow('simulated persistence failure');
+    await expect(useCase.execute(commandWithResolvedConflict())).rejects.toThrow('simulated persistence failure');
     expect(unitOfWork.committedVales).toHaveLength(0);
     expect(unitOfWork.committedTraces).toHaveLength(0);
     expect(unitOfWork.committedAudits).toHaveLength(0);

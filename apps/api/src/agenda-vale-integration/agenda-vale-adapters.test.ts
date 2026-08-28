@@ -114,6 +114,14 @@ describe('ValeGenerationAdapter', () => {
       sourceImportacionId: 'importacion-acl',
       sourceVersion: 'a'.repeat(64),
       generationSnapshotHash: 'b'.repeat(64),
+      resolvedConflicts: [{
+        expedienteReference: 'EXP-1',
+        ownerGroup: { agendaDate: '2026-08-29', servicioCodigo: 'CARD', medicoNumeroEmpleado: 'EMP-1' },
+        alternatives: [{
+          group: { agendaDate: '2026-08-29', servicioCodigo: 'CIR', medicoNumeroEmpleado: 'EMP-2' },
+          references: [{ folio: 'F-2', servicioCodigo: 'CIR', medicoNumeroEmpleado: 'EMP-2' }],
+        }],
+      }],
       header: {
         fechaSolicitud: '2026-08-29',
         fechaRecepcion: '2026-08-29',
@@ -156,6 +164,14 @@ describe('ValeGenerationAdapter', () => {
         servicioCodigo: 'CARD',
         medicoNumeroEmpleado: 'EMP-1',
       })],
+      resolvedConflicts: [{
+        expedienteNumero: 'EXP-1',
+        ownerGroup: { agendaDate: '2026-08-29', servicioCodigo: 'CARD', medicoNumeroEmpleado: 'EMP-1' },
+        alternatives: [{
+          group: { agendaDate: '2026-08-29', servicioCodigo: 'CIR', medicoNumeroEmpleado: 'EMP-2' },
+          appointmentReferences: [{ folio: 'F-2', servicioCodigo: 'CIR', medicoNumeroEmpleado: 'EMP-2' }],
+        }],
+      }],
     }));
     expect(result).toEqual({
       generatedVales: [{
@@ -189,6 +205,7 @@ describe('ValeGenerationAdapter', () => {
       sourceImportacionId: 'i',
       sourceVersion: 'v',
       generationSnapshotHash: 'h',
+      resolvedConflicts: [],
       header: {
         fechaSolicitud: '2026-08-29', fechaRecepcion: '2026-08-29',
         unidadSolicitante: 'ARCHIVO',

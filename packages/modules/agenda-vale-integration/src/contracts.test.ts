@@ -69,6 +69,7 @@ const command: ValeGenerationBatchCommand = {
   sourceImportacionId: projection.sourceImportacionId,
   sourceVersion: projection.sourceVersion,
   generationSnapshotHash: 'opaque-hash',
+  resolvedConflicts: [],
   header: {
     fechaSolicitud: '2026-08-29',
     fechaRecepcion: '2026-08-27',
@@ -145,6 +146,7 @@ describe('@sigac/agenda-vale-integration — contract boundaries', () => {
       sourceImportacionId: command.sourceImportacionId,
       sourceVersion: command.sourceVersion,
       groups: command.groups,
+      resolvedConflicts: command.resolvedConflicts,
     })).resolves.toBe('opaque-hash');
     await expect(target.generateBatch(command, context)).resolves.toEqual({ generatedVales: [] });
   });

@@ -22,7 +22,29 @@ export interface GenerateValeBatchCommand {
     readonly autorizadorCargo: string;
   };
   readonly groups: readonly GenerateValeBatchGroup[];
+  readonly resolvedConflicts: readonly GenerateValeBatchResolvedConflict[];
   readonly context: RequestContext;
+}
+
+export interface GenerateValeBatchResolvedConflict {
+  readonly expedienteNumero: string;
+  readonly ownerGroup: {
+    readonly agendaDate: string;
+    readonly servicioCodigo: string;
+    readonly medicoNumeroEmpleado: string;
+  };
+  readonly alternatives: readonly {
+    readonly group: {
+      readonly agendaDate: string;
+      readonly servicioCodigo: string;
+      readonly medicoNumeroEmpleado: string;
+    };
+    readonly appointmentReferences: readonly {
+      readonly folio: string;
+      readonly servicioCodigo: string;
+      readonly medicoNumeroEmpleado: string;
+    }[];
+  }[];
 }
 
 export interface GenerateValeBatchGroup {
@@ -123,6 +145,7 @@ export class GenerateValeBatch {
         await transaction.appendTraceSnapshot(toTraceSnapshot(
           command.source,
           group,
+          command.resolvedConflicts,
           vale,
           transaction.operationOccurredAt,
         ));
@@ -176,6 +199,7 @@ function parseCivilDate(value: string): Date {
 function toTraceSnapshot(
   source: ValeBatchSourceIdentity,
   group: GenerateValeBatchGroup,
+  resolvedConflicts: readonly GenerateValeBatchResolvedConflict[],
   vale: ValeArchivo,
   generatedAt: Date,
 ): ValeBatchTraceSnapshot {
@@ -195,5 +219,24 @@ function toTraceSnapshot(
       expedienteNumero: item.expedienteNumero,
       appointmentReferences: group.items[index]!.appointmentReferences,
     })),
+    resolvedConflicts: resolvedConflicts
+      .filter((conflict) => groupKeysEqual(conflict.ownerGroup, group))
+      .map((conflict) => ({
+        expedienteNumero: conflict.expedienteNumero,
+        ownerValeItemId: snapshot.items.find(
+          (item) => item.expedienteNumero === conflict.expedienteNumero,
+        )!.id,
+        ownerGroup: conflict.ownerGroup,
+        alternatives: conflict.alternatives,
+      })),
   };
+}
+
+function groupKeysEqual(
+  left: GenerateValeBatchResolvedConflict['ownerGroup'],
+  right: GenerateValeBatchGroup,
+): boolean {
+  return left.agendaDate === right.agendaDate &&
+    left.servicioCodigo === right.servicioCodigo &&
+    left.medicoNumeroEmpleado === right.medicoNumeroEmpleado;
 }

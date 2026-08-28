@@ -22,6 +22,22 @@ export interface ValeBatchAppointmentReferenceSnapshot {
   readonly medicoNumeroEmpleado: string;
 }
 
+export interface ValeBatchGroupKey {
+  readonly agendaDate: string;
+  readonly servicioCodigo: string;
+  readonly medicoNumeroEmpleado: string;
+}
+
+export interface ValeBatchResolvedConflictSnapshot {
+  readonly expedienteNumero: string;
+  readonly ownerValeItemId: string;
+  readonly ownerGroup: ValeBatchGroupKey;
+  readonly alternatives: readonly {
+    readonly group: ValeBatchGroupKey;
+    readonly appointmentReferences: readonly ValeBatchAppointmentReferenceSnapshot[];
+  }[];
+}
+
 export interface ValeBatchItemTraceSnapshot {
   readonly valeItemId: string;
   readonly expedienteNumero: string;
@@ -39,6 +55,7 @@ export interface ValeBatchTraceSnapshot {
   readonly medicoNumeroEmpleado: string;
   readonly medicoNombre: string;
   readonly items: readonly ValeBatchItemTraceSnapshot[];
+  readonly resolvedConflicts: readonly ValeBatchResolvedConflictSnapshot[];
 }
 
 export interface ExistingGeneratedVale {

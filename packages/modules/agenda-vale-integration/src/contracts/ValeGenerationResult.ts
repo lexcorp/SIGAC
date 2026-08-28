@@ -23,6 +23,15 @@ export interface ValeGenerationGroup {
   readonly items: readonly ValePhysicalDemand[];
 }
 
+export interface ResolvedValeGenerationConflict {
+  readonly expedienteReference: string;
+  readonly ownerGroup: ValeGroupKey;
+  readonly alternatives: readonly {
+    readonly group: ValeGroupKey;
+    readonly references: readonly ValeAppointmentReference[];
+  }[];
+}
+
 export interface ValeGenerationBatchCommand {
   readonly agendaDate: string;
   readonly sourceImportacionId: string;
@@ -30,6 +39,7 @@ export interface ValeGenerationBatchCommand {
   readonly generationSnapshotHash: string;
   readonly header: ValeHeaderInput;
   readonly groups: readonly ValeGenerationGroup[];
+  readonly resolvedConflicts: readonly ResolvedValeGenerationConflict[];
 }
 
 export type ValeGenerationOutcome = 'GENERATED' | 'ALREADY_GENERATED';

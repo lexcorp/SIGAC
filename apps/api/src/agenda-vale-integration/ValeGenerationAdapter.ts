@@ -45,6 +45,14 @@ export class ValeGenerationAdapter implements ValeGenerationPort {
           appointmentReferences: item.references.map((reference) => ({ ...reference })),
         })),
       })),
+      resolvedConflicts: batch.resolvedConflicts.map((conflict) => ({
+        expedienteNumero: conflict.expedienteReference,
+        ownerGroup: { ...conflict.ownerGroup },
+        alternatives: conflict.alternatives.map((alternative) => ({
+          group: { ...alternative.group },
+          appointmentReferences: alternative.references.map((reference) => ({ ...reference })),
+        })),
+      })),
       context,
     }).then((result) => ({
       generatedVales: result.generatedVales.map((vale) => ({

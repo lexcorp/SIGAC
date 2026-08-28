@@ -30,6 +30,7 @@ import type {
   UnresolvedAgendaItem,
   GeneratedValeReference,
   ValeHeaderInput,
+  ResolvedValeGenerationConflict,
 } from '../contracts/index.js';
 import type {
   AgendaPreparationReadPort,
@@ -180,18 +181,21 @@ export class GenerateValesFromAgenda {
 
     // ── 5. Detect cross-group conflicts ───────────────────────────────────────
     // An expedienteReference appearing in more than one group is a conflict.
-    const expToGroups = new Map<string, { key: ValeGroupKey; folios: string[] }[]>();
+    const expToGroups = new Map<string, {
+      key: ValeGroupKey;
+      references: readonly ValeAppointmentReference[];
+    }[]>();
 
     for (const g of groups.values()) {
-      for (const [expRef, { folios }] of g.demands) {
+      for (const [expRef, { demand }] of g.demands) {
         const entry = expToGroups.get(expRef) ?? [];
-        entry.push({ key: g.key, folios });
+        entry.push({ key: g.key, references: demand.references });
         expToGroups.set(expRef, entry);
       }
     }
 
     const conflicts: ValeGenerationConflict[] = [];
-    const conflictedExpedientes = new Set<string>();
+    const resolvedConflicts: ResolvedValeGenerationConflict[] = [];
 
     for (const [expRef, groupEntries] of expToGroups) {
       if (groupEntries.length <= 1) continue;
@@ -201,7 +205,19 @@ export class GenerateValesFromAgenda {
         (r) => r.expedienteReference === expRef,
       );
 
-      if (resolution !== null && resolution !== undefined) {
+      const ownerIsCandidate = resolution !== undefined && groupEntries.some(
+        ({ key }) => groupKeysEqual(key, resolution.ownerGroup),
+      );
+
+      if (resolution !== undefined && ownerIsCandidate) {
+        resolvedConflicts.push({
+          expedienteReference: expRef,
+          ownerGroup: resolution.ownerGroup,
+          alternatives: groupEntries.map((entry) => ({
+            group: entry.key,
+            references: entry.references,
+          })),
+        });
         // Remove from all non-owner groups; keep in owner group
         const ownerStr = groupKeyStr(resolution.ownerGroup);
         for (const g of groups.values()) {
@@ -210,15 +226,14 @@ export class GenerateValesFromAgenda {
           }
         }
       } else {
-        // No resolution: remove from all groups, report conflict
-        conflictedExpedientes.add(expRef);
+        // Missing or invalid owner: fail-closed, remove from generation and report conflict.
         for (const g of groups.values()) {
           g.demands.delete(expRef);
         }
         conflicts.push({
           expedienteReference: expRef,
           candidateGroups:     groupEntries.map((e) => e.key),
-          folios:              groupEntries.flatMap((e) => e.folios),
+          folios:              groupEntries.flatMap((e) => e.references.map((ref) => ref.folio)),
         });
       }
     }
@@ -262,6 +277,7 @@ export class GenerateValesFromAgenda {
       sourceImportacionId,
       sourceVersion,
       groups: sortedGroups,
+      resolvedConflicts,
     });
 
     // ── 9. Verify source version is still current ─────────────────────────────
@@ -287,6 +303,7 @@ export class GenerateValesFromAgenda {
         generationSnapshotHash,
         header,
         groups: sortedGroups,
+        resolvedConflicts,
       },
       context,
     );
@@ -298,4 +315,10 @@ export class GenerateValesFromAgenda {
 
     return { generatedVales, conflicts, unresolvedItems };
   }
+}
+
+function groupKeysEqual(left: ValeGroupKey, right: ValeGroupKey): boolean {
+  return left.agendaDate === right.agendaDate &&
+    left.servicioCodigo === right.servicioCodigo &&
+    left.medicoNumeroEmpleado === right.medicoNumeroEmpleado;
 }

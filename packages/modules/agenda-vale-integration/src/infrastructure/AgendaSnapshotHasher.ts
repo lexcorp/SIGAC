@@ -3,7 +3,10 @@ import type {
   GenerationSnapshotHasherPort,
   GenerationSnapshotInput,
 } from '../ports/GenerationSnapshotHasherPort.js';
-import type { ValeGenerationGroup } from '../contracts/ValeGenerationResult.js';
+import type {
+  ResolvedValeGenerationConflict,
+  ValeGenerationGroup,
+} from '../contracts/ValeGenerationResult.js';
 
 /** Hasher puro ADR-0041: SHA-256 lowercase hex sobre RFC 8785/JCS. */
 export class AgendaSnapshotHasher implements GenerationSnapshotHasherPort {
@@ -22,12 +25,38 @@ export class AgendaSnapshotHasher implements GenerationSnapshotHasherPort {
           references: sortReferences(item.references).map((reference) => ({ ...reference })),
         })),
       })),
+      resolvedConflicts: sortResolvedConflicts(input.resolvedConflicts).map((conflict) => ({
+        expedienteReference: conflict.expedienteReference,
+        ownerGroup: { ...conflict.ownerGroup },
+        alternatives: sortAlternatives(conflict.alternatives).map((alternative) => ({
+          group: { ...alternative.group },
+          references: sortReferences(alternative.references).map((reference) => ({ ...reference })),
+        })),
+      })),
     };
 
     return createHash('sha256')
       .update(canonicalizeJson(snapshot), 'utf8')
       .digest('hex');
   }
+}
+
+function sortResolvedConflicts(
+  conflicts: readonly ResolvedValeGenerationConflict[],
+): readonly ResolvedValeGenerationConflict[] {
+  return [...conflicts].sort((left, right) => compareCodePoints(
+    left.expedienteReference,
+    right.expedienteReference,
+  ));
+}
+
+function sortAlternatives(
+  alternatives: readonly ResolvedValeGenerationConflict['alternatives'][number][],
+) {
+  return [...alternatives].sort((left, right) => compareTuple(
+    [left.group.agendaDate, left.group.servicioCodigo, left.group.medicoNumeroEmpleado],
+    [right.group.agendaDate, right.group.servicioCodigo, right.group.medicoNumeroEmpleado],
+  ));
 }
 
 function sortGroups(groups: readonly ValeGenerationGroup[]): readonly ValeGenerationGroup[] {
