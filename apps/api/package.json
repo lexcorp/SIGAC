@@ -15,6 +15,7 @@
     "@nestjs/core": "11.1.29",
     "@nestjs/platform-express": "11.1.29",
     "@sigac/agenda-preparation": "workspace:*",
+    "@sigac/agenda-vale-integration": "workspace:*",
     "@sigac/archive-operations": "workspace:*",
     "@sigac/database": "workspace:*",
     "@sigac/domain-kernel": "workspace:*",

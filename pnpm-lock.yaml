@@ -50,6 +50,9 @@ importers:
       '@sigac/agenda-preparation':
         specifier: workspace:*
         version: link:../../packages/modules/agenda-preparation
+      '@sigac/agenda-vale-integration':
+        specifier: workspace:*
+        version: link:../../packages/modules/agenda-vale-integration
       '@sigac/archive-operations':
         specifier: workspace:*
         version: link:../../packages/modules/archive-operations
@@ -197,6 +200,22 @@ importers:
       iconv-lite:
         specifier: 0.6.3
         version: 0.6.3
+    devDependencies:
+      '@types/node':
+        specifier: latest
+        version: 26.3.0
+      typescript:
+        specifier: latest
+        version: 7.0.2
+      vitest:
+        specifier: 4.1.10
+        version: 4.1.10(@types/node@26.3.0)(jsdom@30.0.1)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(tsx@4.23.12)(yaml@2.9.0))
+
+  packages/modules/agenda-vale-integration:
+    dependencies:
+      '@sigac/tenant':
+        specifier: workspace:*
+        version: link:../../platform/tenant
     devDependencies:
       '@types/node':
         specifier: latest
@@ -1150,9 +1169,6 @@ packages:
 
   '@types/estree@1.0.9':
     resolution: {integrity: sha512-GhdPgy1el4/ImP05X05Uw4cw2/M93BCUmnEvWZNStlCzEKME4Fkk+YpoA5OiHNQmoS7Cafb8Xa3Pya8m1Qrzeg==}
-
-  '@types/node@26.2.0':
-    resolution: {integrity: sha512-5IviulTZeRNp2vAJ514cc/HUlY5nZ9fCbq9DMyC52BrhFZACo3nI0R7qBxhQmo/d27NFe96ur/b7Wwxklda+kg==}
 
   '@types/node@26.3.0':
     resolution: {integrity: sha512-L3fgrnchriRC2ExBflb8j4uZZURHZfQsmQeyVzhjcHW4kkwVyo8/0h1B2MVzMTrYUJYu6G7EWs14hW/L9putqw==}
@@ -3458,17 +3474,13 @@ snapshots:
 
   '@types/estree@1.0.9': {}
 
-  '@types/node@26.2.0':
-    dependencies:
-      undici-types: 8.3.0
-
   '@types/node@26.3.0':
     dependencies:
       undici-types: 8.3.0
 
   '@types/pdfkit@0.13.9':
     dependencies:
-      '@types/node': 26.2.0
+      '@types/node': 26.3.0
 
   '@types/pg@8.23.1':
     dependencies:

@@ -1,4 +1,5 @@
 export * from './AgendaFileInterpreterPort.js';
+export * from './AgendaGenerationSourceQueryPort.js';
 export * from './AgendaPreparationUnitOfWork.js';
 export * from './ExpedienteReferenceQueryPort.js';
 export * from './IdempotencyKeyRepository.js';

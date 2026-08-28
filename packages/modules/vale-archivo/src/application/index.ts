@@ -12,6 +12,15 @@ export { ApplicationError, type ApplicationErrorCode } from './ApplicationError.
 // Ports
 export type { ValeArchivoRepository } from './ports/ValeArchivoRepository.js';
 export type {
+  ValeBatchUnitOfWork,
+  ValeBatchTransaction,
+  ValeBatchSourceIdentity,
+  ValeBatchIdempotencyKey,
+  ValeBatchTraceSnapshot,
+  ValeBatchItemTraceSnapshot,
+  ExistingGeneratedVale,
+} from './ports/ValeBatchUnitOfWork.js';
+export type {
   ValeArchivoQueryPort,
   ValeArchivoSummary,
   ValeArchivoPage,
@@ -26,6 +35,14 @@ export {
   type RegistrarValeResult,
   type RegistrarValeDeps,
 } from './use-cases/RegistrarVale.js';
+
+export {
+  GenerateValeBatch,
+  type GenerateValeBatchCommand,
+  type GenerateValeBatchGroup,
+  type GenerateValeBatchResult,
+  type GenerateValeBatchDependencies,
+} from './use-cases/GenerateValeBatch.js';
 
 export {
   ConsultarVale,

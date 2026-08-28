@@ -1,0 +1,18 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "../../../dist/packages/modules/agenda-vale-integration",
+    "types": [
+      "node"
+    ],
+    "paths": {
+      "@sigac/tenant": [
+        "../../../dist/packages/platform/tenant/index.d.ts"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
+}
