@@ -17,6 +17,7 @@ import {
   buildDemoRouter,
   buildExpedienteApiModule,
   buildAgendaApiModule,
+  buildValeArchivoApiModule,
 } from './dev-composition-root.js';
 import { TenantDatabaseRouter } from '@sigac/database';
 
@@ -34,6 +35,7 @@ export class AppDevModule implements OnModuleDestroy {
       imports: [
         buildExpedienteApiModule(router),
         buildAgendaApiModule(router),
+        buildValeArchivoApiModule(router),
       ],
     };
   }

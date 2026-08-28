@@ -16,12 +16,14 @@
     "@nestjs/platform-express": "11.1.29",
     "@sigac/agenda-preparation": "workspace:*",
     "@sigac/archive-operations": "workspace:*",
-    "@sigac/tenant": "workspace:*",
     "@sigac/database": "workspace:*",
+    "@sigac/domain-kernel": "workspace:*",
+    "@sigac/pdf": "workspace:*",
+    "@sigac/tenant": "workspace:*",
+    "@sigac/vale-archivo": "workspace:*",
     "reflect-metadata": "latest",
     "rxjs": "latest",
-    "zod": "4.4.3",
-    "@sigac/pdf": "workspace:*"
+    "zod": "4.4.3"
   },
   "devDependencies": {
     "tsx": "latest",

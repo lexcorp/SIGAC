@@ -15,6 +15,9 @@
       ],
       "@sigac/tenant": [
         "../../../dist/packages/platform/tenant/index.d.ts"
+      ],
+      "@sigac/vale-archivo": [
+        "../../../dist/packages/modules/vale-archivo/index.d.ts"
       ]
     }
   },

@@ -121,3 +121,74 @@ describe('useExpedienteCommands', () => {
     expect(invalidate).toHaveBeenCalledWith({ queryKey: expedienteQueryKey('exp-1') });
   });
 });
+
+// ── Regresión Fix 1: segundo clic en "Buscar" no limpia los resultados ────────
+// El hook debe devolver los mismos items si el número no cambió.
+// React Query devuelve datos del caché mientras refetcha.
+
+describe('useExpedienteSearch — regresión segundo clic (Fix 1)', () => {
+  beforeEach(() => vi.restoreAllMocks());
+
+  it('misma queryKey → mismos datos del caché en segunda llamada', async () => {
+    const api = new ExpedienteApi();
+    const item = searchItem('PERR-001');
+    const search = vi.spyOn(api, 'searchByNumero').mockResolvedValue({ items: [item] });
+    const onSingle = vi.fn();
+    const { wrapper, client } = harness();
+
+    // Primera búsqueda
+    const { result, rerender } = renderHook(
+      ({ numero }: { numero: string }) => useExpedienteSearch(numero, onSingle, api),
+      { wrapper, initialProps: { numero: 'PERR810604/10' } },
+    );
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.items).toHaveLength(1);
+    const firstItems = result.current.items;
+
+    // Segunda búsqueda con el mismo número — simula el segundo clic
+    // React Query retorna los datos del caché (staleWhileRevalidate)
+    rerender({ numero: 'PERR810604/10' });
+    // Datos deben seguir disponibles (no undefined, no vacíos)
+    expect(result.current.items).toHaveLength(1);
+    expect(result.current.items[0]!.expedienteId).toBe(firstItems[0]!.expedienteId);
+
+    // La API puede llamarse 1 o 2 veces (caché stale), pero el resultado es el mismo
+    expect(search).toHaveBeenCalledWith('PERR810604/10');
+
+    void client; // lint: used in harness
+  });
+
+  it('cambiar el número sí produce resultados distintos', async () => {
+    const api = new ExpedienteApi();
+    const item1 = searchItem('DEMO-001');
+    const item2 = searchItem('DEMO-002');
+    vi.spyOn(api, 'searchByNumero')
+      .mockResolvedValueOnce({ items: [item1] })
+      .mockResolvedValueOnce({ items: [item2] });
+    const { wrapper } = harness();
+
+    const { result, rerender } = renderHook(
+      ({ numero }: { numero: string }) => useExpedienteSearch(numero, undefined, api),
+      { wrapper, initialProps: { numero: 'DEMO010101/10' } },
+    );
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.items[0]!.expedienteId).toBe('DEMO-001');
+
+    rerender({ numero: 'DEMO020202/20' });
+    await waitFor(() => expect(result.current.items[0]!.expedienteId).toBe('DEMO-002'));
+  });
+
+  it('búsqueda que no existe devuelve array vacío (no regresión)', async () => {
+    const api = new ExpedienteApi();
+    vi.spyOn(api, 'searchByNumero').mockResolvedValue({ items: [] });
+    const { wrapper } = harness();
+
+    const { result } = renderHook(
+      () => useExpedienteSearch('XXXX999999/10', undefined, api),
+      { wrapper },
+    );
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.items).toHaveLength(0);
+    expect(result.current.isDisambiguating).toBe(false);
+  });
+});

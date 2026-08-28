@@ -1,0 +1,24 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "../../../dist/packages/modules/vale-archivo",
+    "types": [
+      "node"
+    ],
+    "paths": {
+      "@sigac/audit": [
+        "../../../dist/packages/platform/audit/index.d.ts"
+      ],
+      "@sigac/domain-kernel": [
+        "../../../dist/packages/domain-kernel/index.d.ts"
+      ],
+      "@sigac/tenant": [
+        "../../../dist/packages/platform/tenant/index.d.ts"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
+}

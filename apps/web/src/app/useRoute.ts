@@ -8,6 +8,7 @@
  *   /           → 'dashboard'
  *   /expedientes → 'expedientes'
  *   /preparacion → 'preparacion'
+ *   /vale-archivo → 'vale-archivo'
  *   <anything else> → 'not-found'
  *
  * Navigation is done via the exported `navigate(path)` helper, which calls
@@ -20,7 +21,7 @@
 
 import { useEffect, useState } from 'react';
 
-export type Route = 'dashboard' | 'expedientes' | 'preparacion' | 'not-found';
+export type Route = 'dashboard' | 'expedientes' | 'preparacion' | 'vale-archivo' | 'not-found';
 
 function parsePathname(pathname: string): Route {
   switch (pathname) {
@@ -31,6 +32,8 @@ function parsePathname(pathname: string): Route {
       return 'expedientes';
     case '/preparacion':
       return 'preparacion';
+    case '/vale-archivo':
+      return 'vale-archivo';
     default:
       return 'not-found';
   }

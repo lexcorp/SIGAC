@@ -131,6 +131,9 @@ const DEMO_SEED = {
   expediente1: '22222222-0001-4000-8000-000000000001',
   expediente2: '22222222-0002-4000-8000-000000000001',
   expediente3: '22222222-0003-4000-8000-000000000001',
+  // T-38 DEMO additions: allow testing PERR/PERE format in ExpedienteWorkspace
+  expediente4: '22222222-0004-4000-8000-000000000001',
+  expediente5: '22222222-0005-4000-8000-000000000001',
 } as const;
 
 async function seedDemoData(client: import('pg').Client): Promise<void> {
@@ -178,6 +181,29 @@ async function seedDemoData(client: import('pg').Client): Promise<void> {
       nombre:        'PACIENTE DEMO TRES',
       issste:        'ISSSTE-DEMO-003',
       estado:        'APARTADO',
+      ubicacion:     DEMO_SEED.locationArchive,
+    },
+    // T-38: PERR/PERE format expedientes for ExpedienteWorkspace manual testing
+    {
+      id:            DEMO_SEED.expediente4,
+      numero:        'PERR810604/10',
+      normalizado:   'PERR81060410',
+      idInst:        'INST-DEMO-004',
+      curp:          'DEMO000000HDEMOP00',
+      nombre:        'PACIENTE DEMO CUATRO',
+      issste:        'ISSSTE-DEMO-004',
+      estado:        'DISPONIBLE',
+      ubicacion:     DEMO_SEED.locationArchive,
+    },
+    {
+      id:            DEMO_SEED.expediente5,
+      numero:        'PERE850215/20',
+      normalizado:   'PERE85021520',
+      idInst:        'INST-DEMO-005',
+      curp:          'DEMO000000MDEMOD00',
+      nombre:        'PACIENTE DEMO CINCO',
+      issste:        'ISSSTE-DEMO-005',
+      estado:        'DISPONIBLE',
       ubicacion:     DEMO_SEED.locationArchive,
     },
   ];

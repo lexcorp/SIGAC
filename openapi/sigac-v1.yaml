@@ -369,6 +369,315 @@ paths:
         '403': { $ref: '#/components/responses/AgendaPermissionDenied' }
         '422': { $ref: '#/components/responses/NoActiveAppointments' }
         '500': { $ref: '#/components/responses/AgendaImportFailed' }
+
+  # ── Vale Archivo (SM 1-14) — T-34 ──────────────────────────────────────────
+  /vale-archivo:
+    post:
+      operationId: crearValeArchivo
+      summary: Registra un nuevo ValeArchivo (formato SM 1-14)
+      tags: [ValeArchivo]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateValeArchivoRequest' }
+      responses:
+        '201':
+          description: Vale creado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValeArchivoCreatedResponse' }
+        '400': { $ref: '#/components/responses/HttpValidationError' }
+        '401': { $ref: '#/components/responses/AuthenticationRequired' }
+        '403': { $ref: '#/components/responses/PermissionDenied' }
+        '409':
+          description: Conflict — ya existe un ValeArchivo con ese número en este tenant
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/ProblemDetails' }
+                  - type: object
+                    properties:
+                      status: { const: 409 }
+                      code: { const: VALE_NUMERO_DUPLICADO }
+        '422':
+          description: Unprocessable — vale requiere al menos un ítem o transición inválida
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/ProblemDetails' }
+                  - type: object
+                    properties:
+                      status: { const: 422 }
+                      code: { const: VALE_REQUIERE_ITEMS }
+    get:
+      operationId: listarValesArchivo
+      summary: Lista ValeArchivos con paginación cursor-based y filtros opcionales
+      tags: [ValeArchivo]
+      parameters:
+        - name: estado
+          in: query
+          schema:
+            type: string
+            enum: [RECIBIDA, EN_BUSQUEDA, COMPLETA, PARCIAL, NO_LOCALIZADA, ENTREGADA, CERRADA]
+        - name: fecha
+          in: query
+          schema: { type: string, format: date }
+        - name: unidad
+          in: query
+          schema: { type: string }
+        - name: cursor
+          in: query
+          schema: { type: string }
+          description: Opaque cursor returned by the preceding page.
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        '200':
+          description: Lista paginada de vales
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValeArchivoPage' }
+        '400': { $ref: '#/components/responses/HttpValidationError' }
+        '401': { $ref: '#/components/responses/AuthenticationRequired' }
+        '403': { $ref: '#/components/responses/PermissionDenied' }
+  /vale-archivo/{id}:
+    get:
+      operationId: consultarValeArchivo
+      summary: Devuelve el detalle completo de un ValeArchivo
+      tags: [ValeArchivo]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Detalle del vale
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValeArchivoDetail' }
+        '401': { $ref: '#/components/responses/AuthenticationRequired' }
+        '403': { $ref: '#/components/responses/PermissionDenied' }
+        '404':
+          description: Vale no encontrado
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/ProblemDetails' }
+                  - type: object
+                    properties:
+                      status: { const: 404 }
+                      code: { const: VALE_ARCHIVO_NOT_FOUND }
+  /vale-archivo/{id}/iniciar-busqueda:
+    post:
+      operationId: iniciarBusquedaValeArchivo
+      summary: Transiciona el vale de RECIBIDA a EN_BUSQUEDA
+      tags: [ValeArchivo]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Búsqueda iniciada correctamente.
+        '401': { $ref: '#/components/responses/AuthenticationRequired' }
+        '403': { $ref: '#/components/responses/PermissionDenied' }
+        '404':
+          description: Vale no encontrado
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/ProblemDetails' }
+                  - type: object
+                    properties:
+                      status: { const: 404 }
+                      code: { const: VALE_ARCHIVO_NOT_FOUND }
+        '422':
+          description: Transición de estado inválida
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/ProblemDetails' }
+                  - type: object
+                    properties:
+                      status: { const: 422 }
+                      code: { const: INVALID_STATE_TRANSITION }
+  /vale-archivo/{id}/items/{itemId}:
+    patch:
+      operationId: registrarLocalizacionValeArchivo
+      summary: Registra el resultado de búsqueda de un ítem (LOCALIZADO / NO_LOCALIZADO)
+      tags: [ValeArchivo]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: itemId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegistrarLocalizacionRequest' }
+      responses:
+        '200':
+          description: Localización registrada correctamente.
+        '400': { $ref: '#/components/responses/HttpValidationError' }
+        '401': { $ref: '#/components/responses/AuthenticationRequired' }
+        '403': { $ref: '#/components/responses/PermissionDenied' }
+        '404':
+          description: Vale o ítem no encontrado
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/ProblemDetails' }
+                  - type: object
+                    properties:
+                      status: { const: 404 }
+        '422':
+          description: Transición de estado inválida
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/ProblemDetails' }
+                  - type: object
+                    properties:
+                      status: { const: 422 }
+                      code: { const: INVALID_STATE_TRANSITION }
+  /vale-archivo/{id}/entrega:
+    post:
+      operationId: registrarEntregaValeArchivo
+      summary: Registra la entrega de expedientes al receptor final (COMPLETA|PARCIAL → ENTREGADA)
+      tags: [ValeArchivo]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegistrarEntregaRequest' }
+      responses:
+        '200':
+          description: Entrega registrada correctamente.
+        '400': { $ref: '#/components/responses/HttpValidationError' }
+        '401': { $ref: '#/components/responses/AuthenticationRequired' }
+        '403': { $ref: '#/components/responses/PermissionDenied' }
+        '404':
+          description: Vale no encontrado
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/ProblemDetails' }
+                  - type: object
+                    properties:
+                      status: { const: 404 }
+                      code: { const: VALE_ARCHIVO_NOT_FOUND }
+        '422':
+          description: Transición de estado inválida
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/ProblemDetails' }
+                  - type: object
+                    properties:
+                      status: { const: 422 }
+                      code: { const: INVALID_STATE_TRANSITION }
+  /vale-archivo/{id}/cerrar:
+    post:
+      operationId: cerrarValeArchivoAdministrativo
+      summary: Cierre administrativo de un vale en estado NO_LOCALIZADA → CERRADA
+      tags: [ValeArchivo]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                motivo: { type: string, description: 'Motivo de cierre administrativo (opcional).' }
+      responses:
+        '200':
+          description: Vale cerrado administrativamente.
+        '401': { $ref: '#/components/responses/AuthenticationRequired' }
+        '403': { $ref: '#/components/responses/PermissionDenied' }
+        '404':
+          description: Vale no encontrado
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/ProblemDetails' }
+                  - type: object
+                    properties:
+                      status: { const: 404 }
+                      code: { const: VALE_ARCHIVO_NOT_FOUND }
+        '422':
+          description: Transición de estado inválida
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/ProblemDetails' }
+                  - type: object
+                    properties:
+                      status: { const: 422 }
+                      code: { const: INVALID_STATE_TRANSITION }
+  /vale-archivo/{id}/pdf:
+    get:
+      operationId: generarPdfValeArchivo
+      summary: Genera y descarga el PDF SM 1-14 del vale
+      tags: [ValeArchivo]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: PDF SM 1-14 generado en memoria
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+                example: 'attachment; filename="sm1-14-VA-2026-00142-2026-08-26.pdf"'
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        '401': { $ref: '#/components/responses/AuthenticationRequired' }
+        '403': { $ref: '#/components/responses/PermissionDenied' }
+        '404':
+          description: Vale no encontrado
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/ProblemDetails' }
+                  - type: object
+                    properties:
+                      status: { const: 404 }
+                      code: { const: VALE_ARCHIVO_NOT_FOUND }
 components:
   parameters:
     ExpedienteId:
@@ -377,9 +686,158 @@ components:
       required: true
       schema: { type: string, format: uuid }
   schemas:
+
+    # ── Vale Archivo schemas ─────────────────────────────────────────────────
+    EstadoVale:
+      type: string
+      enum: [RECIBIDA, EN_BUSQUEDA, COMPLETA, PARCIAL, NO_LOCALIZADA, ENTREGADA, CERRADA]
+
+    EstadoBusqueda:
+      type: string
+      enum: [PENDIENTE, LOCALIZADO, NO_LOCALIZADO]
+
+    SolicitanteReferencia:
+      type: object
+      required: [nombre, cargo]
+      properties:
+        nombre: { type: string }
+        cargo:  { type: string }
+
+    ValeArchivoItemInput:
+      type: object
+      required: [expedienteNumero, pacienteNombre, especialidad]
+      properties:
+        expedienteNumero: { type: string }
+        pacienteNombre:   { type: string }
+        especialidad:     { type: string }
+
+    CreateValeArchivoRequest:
+      type: object
+      required:
+        - numeroVale
+        - fechaSolicitud
+        - fechaRecepcion
+        - unidadSolicitante
+        - solicitanteNombre
+        - solicitanteCargo
+        - autorizadorNombre
+        - autorizadorCargo
+        - items
+      properties:
+        numeroVale:        { type: string }
+        fechaSolicitud:    { type: string, format: date }
+        fechaRecepcion:    { type: string, format: date }
+        unidadSolicitante: { type: string }
+        solicitanteNombre: { type: string }
+        solicitanteCargo:  { type: string }
+        autorizadorNombre: { type: string }
+        autorizadorCargo:  { type: string }
+        items:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/ValeArchivoItemInput' }
+
+    ValeArchivoCreatedResponse:
+      type: object
+      required: [id, numeroVale, estado]
+      properties:
+        id:         { type: string, format: uuid }
+        numeroVale: { type: string }
+        estado:     { $ref: '#/components/schemas/EstadoVale' }
+
+    ValeArchivoSummary:
+      type: object
+      required: [id, numeroVale, fechaSolicitud, unidadSolicitante, solicitanteNombre, estado, itemCount]
+      properties:
+        id:                { type: string, format: uuid }
+        numeroVale:        { type: string }
+        fechaSolicitud:    { type: string, format: date }
+        unidadSolicitante: { type: string }
+        solicitanteNombre: { type: string }
+        estado:            { $ref: '#/components/schemas/EstadoVale' }
+        itemCount:         { type: integer, minimum: 1 }
+
+    ValeArchivoPage:
+      type: object
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/ValeArchivoSummary' }
+        nextCursor:
+          type: string
+          nullable: true
+          description: Opaque cursor returned by the preceding page.
+
+    ValeArchivoItemDetail:
+      type: object
+      required: [id, expedienteNumero, pacienteNombre, especialidad, estadoBusqueda]
+      properties:
+        id:                  { type: string, format: uuid }
+        expedienteNumero:    { type: string }
+        pacienteNombre:      { type: string }
+        especialidad:        { type: string }
+        estadoBusqueda:      { $ref: '#/components/schemas/EstadoBusqueda' }
+        ubicacionEncontrada: { type: string, nullable: true }
+        observaciones:       { type: string, nullable: true }
+
+    ValeArchivoDetail:
+      type: object
+      required:
+        - id
+        - numeroVale
+        - fechaSolicitud
+        - fechaRecepcion
+        - unidadSolicitante
+        - solicitante
+        - autorizador
+        - estado
+        - creadoPor
+        - items
+        - createdAt
+        - actualizadoEn
+      properties:
+        id:                  { type: string, format: uuid }
+        numeroVale:          { type: string }
+        fechaSolicitud:      { type: string, format: date }
+        fechaRecepcion:      { type: string, format: date }
+        unidadSolicitante:   { type: string }
+        solicitante:         { $ref: '#/components/schemas/SolicitanteReferencia' }
+        autorizador:         { $ref: '#/components/schemas/SolicitanteReferencia' }
+        estado:              { $ref: '#/components/schemas/EstadoVale' }
+        creadoPor:           { type: string }
+        busquedaIniciadaPor: { type: string, nullable: true }
+        busquedaIniciadaAt:  { type: string, format: date-time, nullable: true }
+        entregadoPor:        { type: string, nullable: true }
+        entregadoAt:         { type: string, format: date-time, nullable: true }
+        receptorEntrega:     { type: string, nullable: true }
+        createdAt:           { type: string, format: date-time }
+        actualizadoEn:        { type: string, format: date-time }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/ValeArchivoItemDetail' }
+
+    RegistrarLocalizacionRequest:
+      type: object
+      required: [estadoBusqueda]
+      properties:
+        estadoBusqueda:      { type: string, enum: [LOCALIZADO, NO_LOCALIZADO] }
+        ubicacionEncontrada: { type: string }
+        observaciones:       { type: string, maxLength: 500 }
+
+    RegistrarEntregaRequest:
+      type: object
+      required: [receptorEntrega, entregadoAt, itemsEntregados]
+      properties:
+        receptorEntrega:  { type: string }
+        entregadoAt:      { type: string, format: date-time }
+        itemsEntregados:
+          type: array
+          items: { type: string, format: uuid }
+
     Permission:
       type: string
-      enum: [REQUEST_CREATE, REQUEST_ASSIGN, SEARCH_START, SEARCH_MARK_LOCATED, SEARCH_MARK_NOT_LOCATED, PREPARATION_MARK_READY, CUSTODY_TRANSFER, EXPEDIENT_DISPATCH, CUSTODY_ACCEPT, LOAN_OPEN, LOAN_RENEW, RETURN_RECEIVE, REARCHIVE_CONFIRM, INCIDENT_OPEN, INCIDENT_RESOLVE, EXPEDIENT_VIEW, EXPEDIENT_AUDIT_VIEW, LOCATION_VIEW, REPORT_VIEW, ADMIN_CONFIGURE, AGENDA_IMPORT, AGENDA_VIEW, AGENDA_INCIDENT_VIEW, AGENDA_PRINT]
+      enum: [REQUEST_CREATE, REQUEST_ASSIGN, SEARCH_START, SEARCH_MARK_LOCATED, SEARCH_MARK_NOT_LOCATED, PREPARATION_MARK_READY, CUSTODY_TRANSFER, EXPEDIENT_DISPATCH, CUSTODY_ACCEPT, LOAN_OPEN, LOAN_RENEW, RETURN_RECEIVE, REARCHIVE_CONFIRM, INCIDENT_OPEN, INCIDENT_RESOLVE, EXPEDIENT_VIEW, EXPEDIENT_AUDIT_VIEW, LOCATION_VIEW, REPORT_VIEW, ADMIN_CONFIGURE, AGENDA_IMPORT, AGENDA_VIEW, AGENDA_INCIDENT_VIEW, AGENDA_PRINT, ARCHIVE_REQUEST_VIEW, ARCHIVE_REQUEST_PROCESS, ARCHIVE_REQUEST_DELIVER]
     SessionAuthorizationReadModel:
       type: object
       additionalProperties: false

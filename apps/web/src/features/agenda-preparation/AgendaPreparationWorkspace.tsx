@@ -13,19 +13,55 @@ import { agendaApi } from './api/agendaApi';
 import { useAgendaDay } from './hooks/useAgendaDay';
 import { useAgendaImportHistory } from './hooks/useAgendaImportHistory';
 import { useAgendaImportIncidents } from './hooks/useAgendaImportIncidents';
-import { useAgendaPreparationList } from './hooks/useAgendaPreparationList';
 import { AgendaSummary } from './components/AgendaSummary';
 import { ImportAgendaWizard } from './components/ImportAgendaWizard';
 import { IncidentList } from './components/IncidentList';
 import { ImportHistory } from './components/ImportHistory';
 import { PreparationTable } from './components/PreparationTable';
 import { ReportWizard } from './components/ReportWizard';
+import { useAgendaPreparationList, useAgendaPreparationPrint, type PageSize } from './hooks/useAgendaPreparationList';
 import type { PreparationOrder } from './types/agenda.types';
 
 type ActiveTab = 'agenda' | 'lista' | 'incidencias' | 'importaciones' | 'paquetes';
 
 interface Props {
   readonly permissions: ReadonlySet<string>;
+}
+
+
+/**
+ * ReportWizardContainer — carga la lista completa de servicios de forma
+ * independiente de la paginación de la tabla Lista.
+ *
+ * Fix T-P2: la pestaña Paquetes ya no depende de los ítems parcialmente
+ * cargados de la tabla. Usa useAgendaPreparationPrint para obtener todos
+ * los registros y derivar los servicios disponibles.
+ */
+function ReportWizardContainer({
+  date,
+  order,
+  canPrint,
+  canView,
+}: {
+  readonly date: string;
+  readonly order: PreparationOrder;
+  readonly canPrint: boolean;
+  readonly canView: boolean;
+}) {
+  const printQuery = useAgendaPreparationPrint(
+    canView ? date : null,
+    order,
+    true, // always enabled when this tab is active
+  );
+  const allItems = printQuery.data?.items ?? [];
+  return (
+    <ReportWizard
+      date={date}
+      items={allItems}
+      order={order}
+      canPrint={canPrint}
+    />
+  );
 }
 
 export function AgendaPreparationWorkspace({ permissions }: Props) {
@@ -39,21 +75,45 @@ export function AgendaPreparationWorkspace({ permissions }: Props) {
   const [activeTab, setActiveTab] = useState<ActiveTab>('agenda');
   const [showWizard, setShowWizard] = useState(false);
   const [preparationOrder, setPreparationOrder] = useState<PreparationOrder>(
-    'APPOINTMENT_TIME_ASC',
+    'SERVICE_MEDICO_HORA_ASC',
   );
+  const [pageSize,      setPageSize]      = useState<PageSize>(50);
+  const [pageCursor,    setPageCursor]    = useState<string | undefined>(undefined);
+  const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([undefined]);
   const [selectedImportId, setSelectedImportId] = useState<string | null>(null);
 
   const dayQuery = useAgendaDay(canView ? date : null);
   const latestImportId = dayQuery.data?.latestImportacionId ?? null;
   const incidentImportId = selectedImportId ?? latestImportId;
 
-  // Preparation list — loaded when on lista OR paquetes tab (paquetes needs the items for wizard)
+  // Preparation list — server-side paginated (T-P1: useQuery with explicit cursor)
   const prepQuery = useAgendaPreparationList(
-    (activeTab === 'lista' || activeTab === 'paquetes') && canView ? date : null,
+    activeTab === 'lista' && canView ? date : null,
     preparationOrder,
+    pageSize,
+    pageCursor,
   );
-  const prepItems = prepQuery.data?.pages.flatMap((p) => p.items) ?? [];
-  const prepNextCursor = prepQuery.data?.pages.at(-1)?.nextCursor ?? null;
+  const prepItems      = prepQuery.data?.items ?? [];
+  const prepNextCursor = prepQuery.data?.nextCursor ?? null;
+  const currentPage    = cursorHistory.length; // 1-based
+
+  function resetPagination() {
+    setPageCursor(undefined);
+    setCursorHistory([undefined]);
+  }
+
+  function handlePrevPage() {
+    if (cursorHistory.length <= 1) return;
+    const prev = cursorHistory.slice(0, -1);
+    setCursorHistory(prev);
+    setPageCursor(prev[prev.length - 1]);
+  }
+
+  function handleNextPage() {
+    if (!prepNextCursor) return;
+    setCursorHistory((h) => [...h, prepNextCursor]);
+    setPageCursor(prepNextCursor);
+  }
 
   const historyQuery = useAgendaImportHistory(
     activeTab === 'importaciones' ? date : undefined,
@@ -80,6 +140,7 @@ export function AgendaPreparationWorkspace({ permissions }: Props) {
 
   return (
     <main className="agenda-preparation-workspace">
+      {/* Encabezado: título + selector de fecha */}
       <div className="agenda-toolbar">
         <h1>Preparación de Agenda</h1>
         <div className="date-selector">
@@ -91,51 +152,60 @@ export function AgendaPreparationWorkspace({ permissions }: Props) {
             onChange={(e) => {
               setDate(e.target.value);
               setSelectedImportId(null);
+              resetPagination();
             }}
             aria-label="Fecha de la Agenda"
           />
         </div>
+      </div>
+
+      {/* Barra de pestañas + acciones de agenda en la misma fila.
+          <nav> contiene navegación entre secciones (semántica correcta).
+          El botón de importar es una acción, no navegación: queda fuera del
+          <nav> como hermano, visualmente alineado a la derecha. */}
+      <div className="agenda-tab-bar">
+        <nav aria-label="Secciones de Agenda">
+          <button type="button" onClick={() => setActiveTab('agenda')}
+            aria-current={activeTab === 'agenda' ? 'page' : undefined}
+            className={activeTab === 'agenda' ? 'tab active' : 'tab'}>
+            Agenda
+          </button>
+          <button type="button" onClick={() => setActiveTab('lista')}
+            aria-current={activeTab === 'lista' ? 'page' : undefined}
+            className={activeTab === 'lista' ? 'tab active' : 'tab'}>
+            Lista de preparación
+          </button>
+          {canViewIncidents && (
+            <button type="button" onClick={() => setActiveTab('incidencias')}
+              aria-current={activeTab === 'incidencias' ? 'page' : undefined}
+              className={activeTab === 'incidencias' ? 'tab active' : 'tab'}>
+              Incidencias
+            </button>
+          )}
+          <button type="button" onClick={() => setActiveTab('importaciones')}
+            aria-current={activeTab === 'importaciones' ? 'page' : undefined}
+            className={activeTab === 'importaciones' ? 'tab active' : 'tab'}>
+            Importaciones
+          </button>
+          {/* Tab "Paquetes" visible to all with AGENDA_VIEW */}
+          <button type="button" onClick={() => setActiveTab('paquetes')}
+            aria-current={activeTab === 'paquetes' ? 'page' : undefined}
+            className={activeTab === 'paquetes' ? 'tab active' : 'tab'}>
+            Paquetes
+          </button>
+        </nav>
+        {/* Acción de importar: fuera del <nav>, alineada a la derecha */}
         {canImport && (
           <button
             type="button"
             onClick={() => setShowWizard(true)}
             aria-label="Importar o actualizar Agenda"
+            className="agenda-action-import"
           >
             Importar / actualizar
           </button>
         )}
       </div>
-
-      <nav aria-label="Secciones de Agenda">
-        <button type="button" onClick={() => setActiveTab('agenda')}
-          aria-current={activeTab === 'agenda' ? 'page' : undefined}
-          className={activeTab === 'agenda' ? 'tab active' : 'tab'}>
-          Agenda
-        </button>
-        <button type="button" onClick={() => setActiveTab('lista')}
-          aria-current={activeTab === 'lista' ? 'page' : undefined}
-          className={activeTab === 'lista' ? 'tab active' : 'tab'}>
-          Lista de preparación
-        </button>
-        {canViewIncidents && (
-          <button type="button" onClick={() => setActiveTab('incidencias')}
-            aria-current={activeTab === 'incidencias' ? 'page' : undefined}
-            className={activeTab === 'incidencias' ? 'tab active' : 'tab'}>
-            Incidencias
-          </button>
-        )}
-        <button type="button" onClick={() => setActiveTab('importaciones')}
-          aria-current={activeTab === 'importaciones' ? 'page' : undefined}
-          className={activeTab === 'importaciones' ? 'tab active' : 'tab'}>
-          Importaciones
-        </button>
-        {/* Tab "Paquetes" visible to all with AGENDA_VIEW; button disabled if no AGENDA_PRINT */}
-        <button type="button" onClick={() => setActiveTab('paquetes')}
-          aria-current={activeTab === 'paquetes' ? 'page' : undefined}
-          className={activeTab === 'paquetes' ? 'tab active' : 'tab'}>
-          Paquetes
-        </button>
-      </nav>
 
       {activeTab === 'agenda' && (
         <AgendaSummary
@@ -147,23 +217,28 @@ export function AgendaPreparationWorkspace({ permissions }: Props) {
 
       {activeTab === 'lista' && (
         <PreparationTable
-          loading={prepQuery.isLoading}
+          loading={prepQuery.isLoading || prepQuery.isPlaceholderData}
           error={prepQuery.isError ? prepQuery.error : undefined}
           items={prepItems}
           order={preparationOrder}
-          onOrderChange={(o) => setPreparationOrder(o)}
-          nextCursor={prepNextCursor}
-          loadingMore={prepQuery.isFetchingNextPage}
-          onLoadMore={() => { void prepQuery.fetchNextPage(); }}
+          onOrderChange={(o) => { setPreparationOrder(o); resetPagination(); }}
+          pageSize={pageSize}
+          onPageSizeChange={(s) => { setPageSize(s); resetPagination(); }}
+          currentPage={currentPage}
+          hasPrevPage={currentPage > 1}
+          hasNextPage={prepNextCursor !== null}
+          onPrevPage={handlePrevPage}
+          onNextPage={handleNextPage}
+          totalLoaded={prepItems.length}
         />
       )}
 
       {activeTab === 'paquetes' && (
-        <ReportWizard
+        <ReportWizardContainer
           date={date}
-          items={prepItems}
           order={preparationOrder}
           canPrint={canPrint}
+          canView={canView}
         />
       )}
 

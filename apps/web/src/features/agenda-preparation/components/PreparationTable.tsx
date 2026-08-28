@@ -1,21 +1,22 @@
 /**
- * PreparationTable — T-24 preparation-reports REQ-PR-001
+ * PreparationTable — T-24 / T-P1
  *
- * Replaces the accordion-based PreparationList with a flat, paginable table
- * oriented for quick lookup. Filters operate on the already-loaded page of
- * items from the backend; no additional API calls are made for filtering.
+ * Paginación server-side con selector de tamaño (50/100/200).
+ * Cada página hace un request independiente al backend — sin acumulación.
+ * No existe botón "Cargar más del servidor".
  *
- * Design decisions:
- * - Pagination is offset-based in the client (50 rows/page) over whatever
- *   the backend cursor-page returned.
- * - No turno column (ADR-0031: turno is a PDF-only concern).
- * - No window.print() (replaced by ReportWizard in the Paquetes tab).
+ * Filtros (servicio, médico, búsqueda texto) operan sobre los ítems de la
+ * página actual. Cualquier cambio de filtro, orden, tamaño o fecha reinicia
+ * al cursor undefined (primera página).
+ *
+ * El turno NO aparece en la tabla (ADR-0031: es un concern del PDF).
  */
-
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import type { PreparationItem, PreparationOrder } from '../types/agenda.types';
+import type { PageSize } from '../hooks/useAgendaPreparationList';
 
-const PAGE_SIZE = 50;
+// Defined locally so this component has no runtime dependency on the hook module
+const PAGE_SIZE_OPTIONS: readonly PageSize[] = [50, 100, 200] as const;
 
 function consultaLabel(kind: PreparationItem['tipoConsulta']): string {
   return kind === 'FIRST_TIME' ? '1ª vez' : 'Subsecuente';
@@ -27,9 +28,15 @@ interface Props {
   readonly items: readonly PreparationItem[];
   readonly order: PreparationOrder;
   readonly onOrderChange: (order: PreparationOrder) => void;
-  readonly nextCursor: string | null;
-  readonly loadingMore?: boolean;
-  readonly onLoadMore: () => void;
+  // Server-side pagination
+  readonly pageSize: PageSize;
+  readonly onPageSizeChange: (size: PageSize) => void;
+  readonly currentPage: number;           // 1-based display page
+  readonly hasPrevPage: boolean;
+  readonly hasNextPage: boolean;
+  readonly onPrevPage: () => void;
+  readonly onNextPage: () => void;
+  readonly totalLoaded: number;           // items on this page (for "Mostrando X–Y")
 }
 
 export function PreparationTable({
@@ -38,16 +45,26 @@ export function PreparationTable({
   items,
   order,
   onOrderChange,
-  nextCursor,
-  loadingMore,
-  onLoadMore,
+  pageSize,
+  onPageSizeChange,
+  currentPage,
+  hasPrevPage,
+  hasNextPage,
+  onPrevPage,
+  onNextPage,
+  totalLoaded,
 }: Props) {
   const [filterServicio, setFilterServicio] = useState('');
-  const [filterMedico, setFilterMedico]    = useState('');
-  const [searchText, setSearchText]        = useState('');
-  const [page, setPage]                    = useState(0);
+  const [filterMedico,   setFilterMedico]   = useState('');
+  const [searchText,     setSearchText]     = useState('');
 
-  // Derive available service / physician options from loaded items
+  // Reset client-side filters when items change (new page or date)
+  useEffect(() => {
+    setFilterServicio('');
+    setFilterMedico('');
+    setSearchText('');
+  }, [items]);
+
   const servicios = useMemo(
     () =>
       [...new Map(
@@ -71,38 +88,39 @@ export function PreparationTable({
     return items.filter((i) => {
       if (filterServicio && i.servicioEspecialidad.codigo !== filterServicio) return false;
       if (filterMedico   && i.medico.numeroEmpleado          !== filterMedico)   return false;
-      if (q && !i.folio.toLowerCase().includes(q) && !i.expediente.original.toLowerCase().includes(q)) return false;
+      if (q && !i.folio.toLowerCase().includes(q) &&
+          !i.expediente.original.toLowerCase().includes(q)) return false;
       return true;
     });
   }, [items, filterServicio, filterMedico, searchText]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const safePage   = Math.min(page, totalPages - 1);
-  const pageItems  = filtered.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
-
-  function handleFilterChange(setter: (v: string) => void) {
-    return (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
-      setter(e.target.value);
-      setPage(0);
-    };
-  }
+  // First item on this server page (1-based)
+  const firstItem = (currentPage - 1) * pageSize + 1;
+  // Last item shown depends on client-side filter
+  const lastItem  = firstItem + filtered.length - 1;
 
   return (
     <section className="preparation-table-section" aria-label="Lista de preparación">
+
       {/* ── Controls ──────────────────────────────────────────────────────── */}
       <div className="preparation-table-controls" role="group" aria-label="Filtros de lista de preparación">
         <label htmlFor="prep-order">Orden</label>
         <select
           id="prep-order"
           value={order}
-          onChange={(e) => { onOrderChange(e.target.value as PreparationOrder); setPage(0); }}
+          onChange={(e) => onOrderChange(e.target.value as PreparationOrder)}
         >
+          <option value="SERVICE_MEDICO_HORA_ASC">Servicio → Médico → Hora (operativo)</option>
           <option value="APPOINTMENT_TIME_ASC">Hora de cita</option>
           <option value="PATIENT_NAME_ASC">Nombre del paciente</option>
         </select>
 
         <label htmlFor="prep-servicio">Servicio</label>
-        <select id="prep-servicio" value={filterServicio} onChange={handleFilterChange(setFilterServicio)}>
+        <select
+          id="prep-servicio"
+          value={filterServicio}
+          onChange={(e) => setFilterServicio(e.target.value)}
+        >
           <option value="">Todos</option>
           {servicios.map((s) => (
             <option key={s.codigo} value={s.codigo}>
@@ -112,7 +130,11 @@ export function PreparationTable({
         </select>
 
         <label htmlFor="prep-medico">Médico</label>
-        <select id="prep-medico" value={filterMedico} onChange={handleFilterChange(setFilterMedico)}>
+        <select
+          id="prep-medico"
+          value={filterMedico}
+          onChange={(e) => setFilterMedico(e.target.value)}
+        >
           <option value="">Todos</option>
           {medicos.map((m) => (
             <option key={m.numeroEmpleado} value={m.numeroEmpleado}>
@@ -128,8 +150,21 @@ export function PreparationTable({
           placeholder="Folio o expediente…"
           value={searchText}
           aria-label="Buscar por folio o expediente"
-          onChange={handleFilterChange(setSearchText)}
+          onChange={(e) => setSearchText(e.target.value)}
         />
+
+        {/* Selector de tamaño de página */}
+        <label htmlFor="prep-page-size">Mostrar</label>
+        <select
+          id="prep-page-size"
+          value={pageSize}
+          onChange={(e) => onPageSizeChange(Number(e.target.value) as PageSize)}
+          aria-label="Registros por página"
+        >
+          {PAGE_SIZE_OPTIONS.map((n) => (
+            <option key={n} value={n}>{n}</option>
+          ))}
+        </select>
       </div>
 
       {/* ── States ────────────────────────────────────────────────────────── */}
@@ -143,26 +178,25 @@ export function PreparationTable({
           No fue posible cargar la lista de preparación.
         </p>
       )}
-      {!loading && !error && filtered.length === 0 && (
-        <p className="empty-state">
-          {items.length === 0
-            ? 'No hay citas activas para esta fecha.'
-            : 'Sin resultados para los filtros seleccionados.'}
-        </p>
+      {!loading && !error && filtered.length === 0 && items.length === 0 && (
+        <p className="empty-state">No hay citas activas para esta fecha.</p>
+      )}
+      {!loading && !error && filtered.length === 0 && items.length > 0 && (
+        <p className="empty-state">Sin resultados para los filtros seleccionados.</p>
       )}
 
       {/* ── Table ─────────────────────────────────────────────────────────── */}
-      {pageItems.length > 0 && (
+      {filtered.length > 0 && (
         <>
           <p className="preparation-count" aria-live="polite">
-            Mostrando {safePage * PAGE_SIZE + 1}–{safePage * PAGE_SIZE + pageItems.length} de{' '}
-            {filtered.length} registros
+            {filtered.length < items.length
+              ? `${filtered.length} registros filtrados de ${totalLoaded} en esta página`
+              : `Mostrando ${firstItem}–${lastItem} de al menos ${lastItem} registros`}
           </p>
           <div className="table-responsive">
             <table
               className="preparation-table"
               aria-label="Lista de preparación"
-              aria-rowcount={filtered.length}
             >
               <thead>
                 <tr>
@@ -170,18 +204,20 @@ export function PreparationTable({
                   <th scope="col">Expediente</th>
                   <th scope="col">Folio</th>
                   <th scope="col">Derechohabiente</th>
-                  <th scope="col">Tipo</th>
+                  <th scope="col">Tipo DH</th>
+                  <th scope="col">Cita</th>
                   <th scope="col">Médico</th>
                   <th scope="col">Servicio</th>
                 </tr>
               </thead>
               <tbody>
-                {pageItems.map((item) => (
+                {filtered.map((item) => (
                   <tr key={`${item.folio}-${item.appointmentTime}`}>
                     <td>{item.appointmentTime}</td>
                     <td>{item.expediente.original}</td>
                     <td>{item.folio}</td>
                     <td>{item.nombrePaciente}</td>
+                    <td>{item.tipoDerechohabiente}</td>
                     <td>{consultaLabel(item.tipoConsulta)}</td>
                     <td>{item.medico.nombre}</td>
                     <td>{item.servicioEspecialidad.nombre}</td>
@@ -191,23 +227,23 @@ export function PreparationTable({
             </table>
           </div>
 
-          {/* ── Pagination ──────────────────────────────────────────────── */}
+          {/* ── Server-side pagination (NO "Cargar más") ──────────────────── */}
           <nav aria-label="Paginación de lista de preparación" className="preparation-pagination">
             <button
               type="button"
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              disabled={safePage === 0}
+              onClick={onPrevPage}
+              disabled={!hasPrevPage || loading}
               aria-label="Página anterior"
             >
               ← Anterior
             </button>
-            <span aria-current="page">
-              Página {safePage + 1} de {totalPages}
+            <span aria-live="polite">
+              Página {currentPage}
             </span>
             <button
               type="button"
-              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-              disabled={safePage >= totalPages - 1}
+              onClick={onNextPage}
+              disabled={!hasNextPage || loading}
               aria-label="Página siguiente"
             >
               Siguiente →
@@ -215,19 +251,7 @@ export function PreparationTable({
           </nav>
         </>
       )}
-
-      {/* ── Load more from backend ────────────────────────────────────────── */}
-      {nextCursor && (
-        <button
-          type="button"
-          onClick={onLoadMore}
-          disabled={loadingMore}
-          aria-label="Cargar más registros del servidor"
-          className="load-more-button"
-        >
-          {loadingMore ? 'Cargando…' : 'Cargar más del servidor'}
-        </button>
-      )}
+      {/* No "Cargar más del servidor" button — paginación server-side real */}
     </section>
   );
 }

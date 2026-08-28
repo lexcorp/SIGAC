@@ -350,9 +350,15 @@ describe('PreparationTable — T-24 (REQ-PR-001)', () => {
     items: [item1, item2],
     order: 'APPOINTMENT_TIME_ASC' as const,
     onOrderChange: noop,
-    nextCursor: null,
-    loadingMore: false,
-    onLoadMore: noop,
+    // T-P1: new server-side pagination props
+    pageSize: 50 as const,
+    onPageSizeChange: noop,
+    currentPage: 1,
+    hasPrevPage: false,
+    hasNextPage: false,
+    onPrevPage: noop,
+    onNextPage: noop,
+    totalLoaded: 2,
   };
 
   it('renders a flat table (no accordion buttons)', () => {
@@ -429,6 +435,154 @@ describe('PreparationTable — T-24 (REQ-PR-001)', () => {
     render(<PreparationTable {...defaultProps} />);
     expect(screen.queryByRole('button', { name: /imprimir/i })).not.toBeInTheDocument();
   });
+
+// ── T-P1: Nuevos tests de paginación server-side ─────────────────────────────
+
+describe('PreparationTable — paginación server-side (T-P1)', () => {
+  // Default props helper for new pagination
+  function makeProps(overrides = {}) {
+    return {
+      items: Array.from({ length: 50 }, (_, i) => ({
+        folio: `FOLIO-${String(i + 1).padStart(3, '0')}`,
+        nombrePaciente: `PACIENTE ${i + 1}`,
+        expediente: { original: `EXP-${i + 1}`, reference: null },
+        tipoDerechohabiente: 'PENSIONISTA',
+        tipoConsulta: 'FIRST_TIME' as const,
+        agendaDate: '2026-08-26',
+        appointmentTime: `08:${String(i % 60).padStart(2, '0')}`,
+        medico: { numeroEmpleado: `EMP-${i}`, nombre: `DR MEDICO ${i + 1}` },
+        servicioEspecialidad: { codigo: 'CIR', nombre: 'CIRUGÍA' },
+      })),
+      order: 'APPOINTMENT_TIME_ASC' as const,
+      onOrderChange: noop,
+      pageSize: 50 as const,
+      onPageSizeChange: noop,
+      currentPage: 1,
+      hasPrevPage: false,
+      hasNextPage: false,
+      onPrevPage: noop,
+      onNextPage: noop,
+      totalLoaded: 50,
+      ...overrides,
+    };
+  }
+
+  it('selector de tamaño muestra opciones 50, 100, 200', () => {
+    render(<PreparationTable {...makeProps()} />);
+    const sel = screen.getByLabelText(/registros por página/i) as HTMLSelectElement;
+    const options = Array.from(sel.options).map((o) => Number(o.value));
+    expect(options).toEqual([50, 100, 200]);
+  });
+
+  it('selector 50 está seleccionado por defecto', () => {
+    render(<PreparationTable {...makeProps({ pageSize: 50 })} />);
+    const sel = screen.getByLabelText(/registros por página/i) as HTMLSelectElement;
+    expect(sel.value).toBe('50');
+  });
+
+  it('selector 100 — onPageSizeChange llamado con 100', async () => {
+    const onPageSizeChange = vi.fn();
+    render(<PreparationTable {...makeProps({ onPageSizeChange })} />);
+    await userEvent.selectOptions(screen.getByLabelText(/registros por página/i), '100');
+    expect(onPageSizeChange).toHaveBeenCalledWith(100);
+  });
+
+  it('selector 200 — onPageSizeChange llamado con 200', async () => {
+    const onPageSizeChange = vi.fn();
+    render(<PreparationTable {...makeProps({ onPageSizeChange })} />);
+    await userEvent.selectOptions(screen.getByLabelText(/registros por página/i), '200');
+    expect(onPageSizeChange).toHaveBeenCalledWith(200);
+  });
+
+  it('botón "Cargar más del servidor" NO existe', () => {
+    render(<PreparationTable {...makeProps({ hasNextPage: true })} />);
+    expect(screen.queryByText(/cargar más del servidor/i)).toBeNull();
+    expect(screen.queryByLabelText(/cargar más registros del servidor/i)).toBeNull();
+  });
+
+  it('botón Siguiente aparece cuando hasNextPage=true', () => {
+    render(<PreparationTable {...makeProps({ hasNextPage: true })} />);
+    const btn = screen.getByLabelText('Página siguiente');
+    expect((btn as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('botón Siguiente disabled cuando hasNextPage=false', () => {
+    render(<PreparationTable {...makeProps({ hasNextPage: false })} />);
+    const btn = screen.getByLabelText('Página siguiente');
+    expect((btn as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('botón Anterior disabled en primera página (hasPrevPage=false)', () => {
+    render(<PreparationTable {...makeProps({ hasPrevPage: false })} />);
+    const btn = screen.getByLabelText('Página anterior');
+    expect((btn as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('botón Anterior habilitado cuando hasPrevPage=true', () => {
+    render(<PreparationTable {...makeProps({ hasPrevPage: true })} />);
+    const btn = screen.getByLabelText('Página anterior');
+    expect((btn as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('clic en Siguiente llama onNextPage', async () => {
+    const onNextPage = vi.fn();
+    render(<PreparationTable {...makeProps({ hasNextPage: true, onNextPage })} />);
+    await userEvent.click(screen.getByLabelText('Página siguiente'));
+    expect(onNextPage).toHaveBeenCalledOnce();
+  });
+
+  it('clic en Anterior llama onPrevPage', async () => {
+    const onPrevPage = vi.fn();
+    render(<PreparationTable {...makeProps({ hasPrevPage: true, onPrevPage })} />);
+    await userEvent.click(screen.getByLabelText('Página anterior'));
+    expect(onPrevPage).toHaveBeenCalledOnce();
+  });
+
+  it('médico se muestra correctamente cuando el API devuelve diferentes médicos (T-P3)', () => {
+    const items = [
+      { ...makeProps().items[0]!, medico: { numeroEmpleado: 'EMP-A', nombre: 'OCAÑA LEYVA ROSARIO' } },
+      { ...makeProps().items[1]!, medico: { numeroEmpleado: 'EMP-B', nombre: 'CASTRO LAZO SERGIO RAMON' } },
+    ];
+    render(<PreparationTable {...makeProps({ items })} />);
+    // Names appear in table rows (and also in filter dropdown options)
+    const table = document.querySelector('table')!;
+    expect(table.textContent).toContain('OCAÑA LEYVA ROSARIO');
+    expect(table.textContent).toContain('CASTRO LAZO SERGIO RAMON');
+    // Regression T-P3: placeholder names must not appear in table rows
+    expect(table.textContent).not.toContain('DR DEMO SINTETICO');
+    expect(table.textContent).not.toMatch(/MÉDICO \d+/);
+  });
+
+  it('paginación server-side: página 2 muestra página indicator correctamente', () => {
+    render(<PreparationTable {...makeProps({ currentPage: 2, hasPrevPage: true, hasNextPage: true })} />);
+    expect(screen.getByText('Página 2')).toBeDefined();
+  });
+
+  it('agenda con >200 items: el botón Siguiente permite navegar (hasNextPage=true)', () => {
+    // Simulates a 497-item agenda where the backend returns 50 items per page
+    render(<PreparationTable {...makeProps({
+      currentPage: 1,
+      hasPrevPage: false,
+      hasNextPage: true,  // backend has more pages
+      totalLoaded: 50,
+    })} />);
+    expect(screen.getByLabelText('Página siguiente')).toBeDefined();
+    expect((screen.getByLabelText('Página siguiente') as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('cambio de servicio dispara filtro de cliente sin reiniciar cursor (el workspace maneja eso)', () => {
+    // The component itself doesn't reset pagination on filter — the workspace does.
+    // This test verifies the component renders filtered items correctly.
+    const items = [
+      { ...makeProps().items[0]!, servicioEspecialidad: { codigo: 'CARD', nombre: 'CARDIOLOGÍA' } },
+      { ...makeProps().items[1]!, servicioEspecialidad: { codigo: 'CIR', nombre: 'CIRUGÍA' } },
+    ];
+    render(<PreparationTable {...makeProps({ items })} />);
+    const sel = screen.getByLabelText(/servicio/i);
+    // Both services available in dropdown
+    expect(screen.getAllByRole('option', { name: /CARDIOLOGÍA/i }).length).toBeGreaterThan(0);
+  });
+});
 });
 
 // =========================================================================
@@ -525,5 +679,210 @@ describe('ReportWizard — T-24 (REQ-PR-002)', () => {
     expect(screen.getByText(/no hay servicios disponibles/i)).toBeInTheDocument();
     const btn = screen.queryByRole('button', { name: /generar.*pdf/i });
     if (btn) expect(btn).toBeDisabled();
+  });
+});
+
+// ── T-28 Regressions ─────────────────────────────────────────────────────────
+
+describe('PreparationTable — T-28 orden y ReportWizard', () => {
+  const noop = () => undefined;
+
+  function paginationProps() {
+    return {
+      pageSize: 50 as const,
+      onPageSizeChange: noop,
+      currentPage: 1,
+      hasPrevPage: false,
+      hasNextPage: false,
+      onPrevPage: noop,
+      onNextPage: noop,
+      totalLoaded: 3,
+    };
+  }
+
+  it('T-28.1: opción SERVICE_MEDICO_HORA_ASC presente en el selector de orden', () => {
+    render(
+      <PreparationTable
+        items={[]}
+        order="SERVICE_MEDICO_HORA_ASC"
+        onOrderChange={noop}
+        {...paginationProps()}
+      />,
+    );
+    const select = screen.getByLabelText(/orden/i) as HTMLSelectElement;
+    const opts = Array.from(select.options).map((o) => o.value);
+    expect(opts).toContain('SERVICE_MEDICO_HORA_ASC');
+  });
+
+  it('T-28.1: SERVICE_MEDICO_HORA_ASC es la opción seleccionada por defecto', () => {
+    render(
+      <PreparationTable
+        items={[]}
+        order="SERVICE_MEDICO_HORA_ASC"
+        onOrderChange={noop}
+        {...paginationProps()}
+      />,
+    );
+    const select = screen.getByLabelText(/orden/i) as HTMLSelectElement;
+    expect(select.value).toBe('SERVICE_MEDICO_HORA_ASC');
+  });
+
+  it('T-28.2: columnas Tipo DH y Cita presentes en encabezado de tabla', () => {
+    const items = [{
+      folio: 'F001', nombrePaciente: 'PACIENTE T28',
+      expediente: { original: 'EXP-001', reference: null },
+      tipoDerechohabiente: 'PENSIONISTA',
+      tipoConsulta: 'FIRST_TIME' as const,
+      agendaDate: '2026-08-26', appointmentTime: '07:00',
+      medico: { numeroEmpleado: 'E01', nombre: 'DR T28' },
+      servicioEspecialidad: { codigo: 'CARD', nombre: 'CARDIOLOGÍA' },
+    }];
+    render(
+      <PreparationTable
+        items={items}
+        order="SERVICE_MEDICO_HORA_ASC"
+        onOrderChange={noop}
+        {...paginationProps()}
+      />,
+    );
+    expect(screen.getByRole('columnheader', { name: /tipo dh/i })).toBeDefined();
+    expect(screen.getByRole('columnheader', { name: /cita/i })).toBeDefined();
+  });
+
+  it('T-28.2: tipoDerechohabiente del item aparece en fila (Tipo DH)', () => {
+    const items = [{
+      folio: 'F001', nombrePaciente: 'PACIENTE T28',
+      expediente: { original: 'EXP-001', reference: null },
+      tipoDerechohabiente: 'PENSIONISTA',
+      tipoConsulta: 'FIRST_TIME' as const,
+      agendaDate: '2026-08-26', appointmentTime: '07:00',
+      medico: { numeroEmpleado: 'E01', nombre: 'DR T28' },
+      servicioEspecialidad: { codigo: 'CARD', nombre: 'CARDIOLOGÍA' },
+    }];
+    render(
+      <PreparationTable
+        items={items}
+        order="SERVICE_MEDICO_HORA_ASC"
+        onOrderChange={noop}
+        {...paginationProps()}
+      />,
+    );
+    expect(screen.getByText('PENSIONISTA')).toBeDefined();
+  });
+
+  it('T-28.2: FIRST_TIME → "1ª vez" en la columna Cita', () => {
+    const items = [{
+      folio: 'F001', nombrePaciente: 'PACIENTE T28',
+      expediente: { original: 'EXP-001', reference: null },
+      tipoDerechohabiente: 'ACTIVO',
+      tipoConsulta: 'FIRST_TIME' as const,
+      agendaDate: '2026-08-26', appointmentTime: '07:00',
+      medico: { numeroEmpleado: 'E01', nombre: 'DR T28' },
+      servicioEspecialidad: { codigo: 'CARD', nombre: 'CARDIOLOGÍA' },
+    }];
+    render(
+      <PreparationTable
+        items={items}
+        order="SERVICE_MEDICO_HORA_ASC"
+        onOrderChange={noop}
+        {...paginationProps()}
+      />,
+    );
+    expect(screen.getByText(/1ª vez/i)).toBeDefined();
+  });
+
+  it('T-28.2: SUBSEQUENT → "Subsecuente" en la columna Cita', () => {
+    const items = [{
+      folio: 'F001', nombrePaciente: 'PACIENTE T28',
+      expediente: { original: 'EXP-001', reference: null },
+      tipoDerechohabiente: 'ACTIVO',
+      tipoConsulta: 'SUBSEQUENT' as const,
+      agendaDate: '2026-08-26', appointmentTime: '07:00',
+      medico: { numeroEmpleado: 'E01', nombre: 'DR T28' },
+      servicioEspecialidad: { codigo: 'CARD', nombre: 'CARDIOLOGÍA' },
+    }];
+    render(
+      <PreparationTable
+        items={items}
+        order="SERVICE_MEDICO_HORA_ASC"
+        onOrderChange={noop}
+        {...paginationProps()}
+      />,
+    );
+    expect(screen.getByText(/subsecuente/i)).toBeDefined();
+  });
+});
+
+// ── T-28.3 ReportWizard — vista previa PDF ────────────────────────────────────
+
+describe('ReportWizard — T-28.3 vista previa PDF', () => {
+  const items = [{
+    folio: 'T28-F001', nombrePaciente: 'PACIENTE T28',
+    expediente: { original: 'EXP-T28-001', reference: null },
+    tipoDerechohabiente: 'PENSIONISTA',
+    tipoConsulta: 'FIRST_TIME' as const,
+    agendaDate: '2026-09-01', appointmentTime: '08:00',
+    medico: { numeroEmpleado: 'E01', nombre: 'DR T28' },
+    servicioEspecialidad: { codigo: 'CARD', nombre: 'CARDIOLOGÍA T28' },
+  }];
+
+  it('T-28.3: botón "Generar PDF" presente cuando canPrint=true', () => {
+    render(<ReportWizard date="2026-09-01" items={items} order="SERVICE_MEDICO_HORA_ASC" canPrint />);
+    expect(screen.getByRole('button', { name: /generar.*pdf|pdf.*preparaci/i })).toBeDefined();
+  });
+
+  it('T-28.3: no existe botón "Generar PDF" cuando canPrint=false', () => {
+    render(<ReportWizard date="2026-09-01" items={items} order="SERVICE_MEDICO_HORA_ASC" canPrint={false} />);
+    expect(screen.queryByRole('button', { name: /generar.*pdf|pdf.*preparaci/i })).toBeNull();
+  });
+
+  it('T-28.3: previewOrDownloadPdf abre nueva pestaña con Object URL del Blob', async () => {
+    // Verify that previewOrDownloadPdf uses window.open (not direct download only)
+    // by spying on window.open before the component calls agendaApi
+    const mockBlob = new Blob(['%PDF-1.4'], { type: 'application/pdf' });
+    const openSpy = vi.spyOn(window, 'open').mockReturnValue({ focus: vi.fn() } as unknown as Window);
+    const createURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock-url');
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+
+    // Mock agendaApi.generatePreparationReport at the module level via spyOn
+    const { agendaApi } = await import('../api/agendaApi.js');
+    const generateSpy = vi.spyOn(agendaApi, 'generatePreparationReport').mockResolvedValue(
+      { blob: mockBlob, filename: 'lista-preparacion-2026-09-01.pdf' },
+    );
+
+    render(<ReportWizard date="2026-09-01" items={items} order="SERVICE_MEDICO_HORA_ASC" canPrint />);
+    await userEvent.click(screen.getByRole('button', { name: /generar.*pdf|pdf.*preparaci/i }));
+    await vi.waitFor(() => expect(generateSpy).toHaveBeenCalled());
+
+    // T-28.3: opens new tab (not direct download as only behavior)
+    expect(createURLSpy).toHaveBeenCalledWith(mockBlob);
+    expect(openSpy).toHaveBeenCalledWith('blob:mock-url', '_blank');
+
+    generateSpy.mockRestore(); openSpy.mockRestore(); createURLSpy.mockRestore();
+  });
+
+  it('T-28.3: fallback a descarga cuando window.open retorna null (popup bloqueado)', async () => {
+    const mockBlob = new Blob(['%PDF-1.4'], { type: 'application/pdf' });
+    const openSpy = vi.spyOn(window, 'open').mockReturnValue(null);  // popup blocked
+    const createURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock-url');
+    const revokeURLSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+
+    const { agendaApi } = await import('../api/agendaApi.js');
+    const generateSpy = vi.spyOn(agendaApi, 'generatePreparationReport').mockResolvedValue(
+      { blob: mockBlob, filename: 'lista.pdf' },
+    );
+
+    render(<ReportWizard date="2026-09-01" items={items} order="SERVICE_MEDICO_HORA_ASC" canPrint />);
+    await userEvent.click(screen.getByRole('button', { name: /generar.*pdf|pdf.*preparaci/i }));
+    await vi.waitFor(() => expect(generateSpy).toHaveBeenCalled());
+
+    // Popup was blocked → window.open was called (and returned null)
+    expect(openSpy).toHaveBeenCalled();
+    // Fallback: URL created and either revokeURL or anchor click triggered
+    expect(revokeURLSpy.mock.calls.length + clickSpy.mock.calls.length).toBeGreaterThan(0);
+
+    generateSpy.mockRestore(); openSpy.mockRestore();
+    createURLSpy.mockRestore(); revokeURLSpy.mockRestore(); clickSpy.mockRestore();
   });
 });

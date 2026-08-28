@@ -224,8 +224,10 @@ interface PreparationRow {
 
 function orderClause(order: PreparationOrder): string {
   switch (order) {
-    case 'APPOINTMENT_TIME_ASC': return 'hora ASC, folio ASC';
-    case 'PATIENT_NAME_ASC':     return 'nombre_paciente ASC, folio ASC';
+    case 'APPOINTMENT_TIME_ASC':    return 'hora ASC, folio ASC';
+    case 'PATIENT_NAME_ASC':        return 'nombre_paciente ASC, folio ASC';
+    // T-28.1 operational default: service → physician → time → folio (deterministic)
+    case 'SERVICE_MEDICO_HORA_ASC': return 'servicio_codigo ASC, medico_nombre ASC, hora ASC, folio ASC';
   }
 }
 

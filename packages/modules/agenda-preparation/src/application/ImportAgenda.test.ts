@@ -329,6 +329,60 @@ describe('ImportAgenda', () => {
     });
   });
 
+  describe('fallback controlado del nombre de médico', () => {
+    it('conserva orig_physician_name en la Cita cuando el número no existe en el catálogo', async () => {
+      const mocks = makeMocks();
+      const numeroEmpleado = NumeroEmpleado.parse('00437054');
+      const nombreReal = 'GALVAN DOMINGUEZ MANUEL ALEJANDRO';
+      const row = makeValidRow('FOLIO-MEDICO-REAL', 1);
+
+      mocks.interpreter.interpret.mockResolvedValue(makeInterpretedFile([{
+        ...row,
+        originalValues: {
+          ...row.originalValues,
+          physicianEmployeeNumber: numeroEmpleado.value,
+          physicianName: nombreReal,
+        },
+        interpretedValues: {
+          ...row.interpretedValues,
+          numeroEmpleado,
+        },
+      }]));
+      mocks.medicoQuery.findByEmployeeNumber.mockResolvedValue({ kind: 'NOT_FOUND' });
+      mocks.medicoQuery.findControlledFallback.mockResolvedValue({
+        kind: 'RESOLVED',
+        medico: MedicoReferencia.create({ numeroEmpleado, nombre: nombreReal }),
+      });
+
+      await mocks.useCase.execute(makeInput({ idempotencyKey: 'key-medico-real' }));
+
+      expect(mocks.medicoQuery.findByEmployeeNumber).toHaveBeenCalledWith(numeroEmpleado, tenant);
+      expect(mocks.medicoQuery.findControlledFallback).toHaveBeenCalledWith(nombreReal, tenant);
+      const savedAgenda = (mocks.tx.agendaRepository.save as Mock).mock.calls[0]?.[0] as Agenda;
+      expect(savedAgenda.citas[0]?.medico.nombre).toBe(nombreReal);
+      expect(savedAgenda.citas[0]?.medico.nombre).not.toBe('MÉDICO 00437054');
+      expect(savedAgenda.citas[0]?.medico.numeroEmpleado.value).toBe('00437054');
+    });
+
+    it('sin orig_physician_name queda PENDING_REVIEW y no ejecuta fallback ni inventa nombre', async () => {
+      const mocks = makeMocks();
+      const row = makeValidRow('FOLIO-SIN-NOMBRE', 1);
+
+      mocks.interpreter.interpret.mockResolvedValue(makeInterpretedFile([{
+        ...row,
+        originalValues: { ...row.originalValues, physicianName: null },
+      }]));
+      mocks.medicoQuery.findByEmployeeNumber.mockResolvedValue({ kind: 'NOT_FOUND' });
+
+      const result = await mocks.useCase.execute(makeInput({ idempotencyKey: 'key-sin-nombre' }));
+
+      expect(result.metrics.pendingReview).toBe(1);
+      expect(mocks.medicoQuery.findControlledFallback).not.toHaveBeenCalled();
+      const savedAgenda = (mocks.tx.agendaRepository.save as Mock).mock.calls[0]?.[0] as Agenda;
+      expect(savedAgenda.citas).toHaveLength(0);
+    });
+  });
+
   // -------------------------------------------------------------------------
   // Test 6: médico AMBIGUOUS en fallback → PENDING_REVIEW + PHYSICIAN_AMBIGUOUS
   // -------------------------------------------------------------------------
@@ -547,5 +601,275 @@ describe('BUG-2 regression — ALREADY_IMPORTED metrics invariant', () => {
     expect(result.metrics.receivedRecords).toBe(0);
     expect(result.metrics.receivedRecords).not.toBe(411);
     expect(result.outcome).toBe('ALREADY_IMPORTED');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// BUG-REIMPORT regression — fingerprint only registered when no rejected/pending
+//
+// Root cause: associateConfirmedImport() was called unconditionally, so an
+// import that produced only REJECTED records permanently blocked reimportation
+// of the same artifact (fingerprint found → ALREADY_IMPORTED on every retry).
+//
+// Fix: fingerprint is only registered when rejected=0 AND pendingReview=0.
+// ---------------------------------------------------------------------------
+
+// Helper: make a row that is missing required data (will be REJECTED)
+function makeRejectedRow(folio = 'FOLIO-REJ', pos = 1): ParsedAgendaRow {
+  return {
+    sourcePosition: pos,
+    originalValues: {
+      folio,
+      patientName: null,
+      expedienteReference: null,
+      beneficiaryType: null,
+      firstTimeMarker: null,
+      subsequentMarker: null,
+      agendaDate: null,
+      appointmentTime: null,
+      physicianEmployeeNumber: null,
+      physicianName: null,
+      serviceCode: null,
+      serviceName: null,
+    },
+    interpretedValues: {
+      folio: null,           // missing → REQUIRED_DATA_MISSING → REJECTED
+      agendaFecha: null,
+      beneficiaryType: null,
+      appointmentKind: null,
+      appointmentTime: null,
+      numeroEmpleado: null,
+      servicioEspecialidad: null,
+    },
+  };
+}
+
+describe('BUG-REIMPORT — fingerprint registration gated on zero rejected/pending', () => {
+
+  // ── Case A: 100% successful → reimportation returns ALREADY_IMPORTED ───────
+
+  it('Case A: 100% successful import registers fingerprint — reimport returns ALREADY_IMPORTED', async () => {
+    const { useCase, metadataRepository, tx } = makeMocks();
+
+    // First import: 1 valid row → succeeds
+    const result1 = await useCase.execute(makeInput({ idempotencyKey: 'key-a1' }));
+    expect(result1.outcome).toBe('IMPORTED');
+
+    // associateConfirmedImport WAS called (no rejections)
+    expect(
+      (tx.importArtifactMetadataRepository.associateConfirmedImport as ReturnType<typeof vi.fn>)
+        .mock.calls.length,
+    ).toBe(1);
+
+    // Second import: fingerprint found → ALREADY_IMPORTED
+    metadataRepository.findEquivalent.mockResolvedValue({
+      importacionId: ImportacionAgendaId.parse('88ec5220-0000-4000-8000-000000000001'),
+      agendaDate,
+      fingerprint: { value: 'fp-abc123' },
+    });
+    const result2 = await useCase.execute(makeInput({ idempotencyKey: 'key-a2' }));
+    expect(result2.outcome).toBe('ALREADY_IMPORTED');
+    expect(result2.metrics.receivedRecords).toBe(0);
+  });
+
+  // ── Case B: 100% rejected → fingerprint NOT registered → reimportable ──────
+
+  it('Case B: 100% rejected import does NOT register fingerprint', async () => {
+    const { useCase, tx } = makeMocks();
+
+    // Override interpreter to return only a rejected row
+    const mocks = makeMocks();
+    mocks.interpreter.interpret.mockResolvedValue({
+      fingerprint: { value: 'fp-all-rejected' },
+      layout: 'SIMEF_V1' as const,
+      agendaDate,
+      rows: [makeRejectedRow('REJ-001', 1)],
+    });
+
+    const result = await mocks.useCase.execute(makeInput({ idempotencyKey: 'key-b1' }));
+
+    // Import runs to completion
+    expect(result.outcome).toBe('IMPORTED');
+    expect(result.metrics.rejected).toBe(1);
+    expect(result.metrics.added).toBe(0);
+
+    // fingerprint must NOT be registered
+    expect(
+      (mocks.tx.importArtifactMetadataRepository.associateConfirmedImport as ReturnType<typeof vi.fn>)
+        .mock.calls.length,
+    ).toBe(0);
+    void tx; // suppress lint
+  });
+
+  it('Case B: after all-rejected import, same file can be reimported (no ALREADY_IMPORTED)', async () => {
+    const mocks = makeMocks();
+    mocks.interpreter.interpret.mockResolvedValue({
+      fingerprint: { value: 'fp-all-rejected-b2' },
+      layout: 'SIMEF_V1' as const,
+      agendaDate,
+      rows: [makeRejectedRow('REJ-002', 1)],
+    });
+
+    // First import: all rejected, fingerprint NOT registered
+    await mocks.useCase.execute(makeInput({ idempotencyKey: 'key-b2-first' }));
+
+    // metadataRepository.findEquivalent remains null (fingerprint not persisted)
+    // → second import proceeds normally (not ALREADY_IMPORTED)
+    const result2 = await mocks.useCase.execute(makeInput({ idempotencyKey: 'key-b2-second' }));
+    expect(result2.outcome).not.toBe('ALREADY_IMPORTED');
+    expect(result2.metrics.rejected).toBe(1); // still rejected (parser not fixed yet)
+  });
+
+  // ── Case C: partial (200 OK + 50 rejected) → fingerprint NOT registered ───
+
+  it('Case C: partial import (some rejected) does NOT register fingerprint', async () => {
+    const mocks = makeMocks();
+
+    // 2 valid + 1 rejected rows
+    mocks.interpreter.interpret.mockResolvedValue({
+      fingerprint: { value: 'fp-partial' },
+      layout: 'SIMEF_V1' as const,
+      agendaDate,
+      rows: [
+        makeValidRow('VALID-001', 1),
+        makeValidRow('VALID-002', 2),
+        makeRejectedRow('REJ-003', 3),
+      ],
+    });
+
+    const result = await mocks.useCase.execute(makeInput({ idempotencyKey: 'key-c1' }));
+
+    expect(result.metrics.added).toBe(2);
+    expect(result.metrics.rejected).toBe(1);
+
+    // fingerprint NOT registered because rejected > 0
+    expect(
+      (mocks.tx.importArtifactMetadataRepository.associateConfirmedImport as ReturnType<typeof vi.fn>)
+        .mock.calls.length,
+    ).toBe(0);
+  });
+
+  // ── Case C+: reimport partial → successful rows UNCHANGED, rejected reprocesable
+
+  it('Case C+: reimport of partial file — previously successful rows are UNCHANGED, rejected can recover', async () => {
+    const mocks = makeMocks();
+
+    const fp = 'fp-partial-reprocess';
+
+    // Simulate Agenda with existing citas for VALID-001 and VALID-002
+    const existingAgenda = Agenda.create({
+      fecha: agendaDate,
+      citasIniciales: [
+        Cita.create({
+          folio: FolioCita.parse('VALID-001'),
+          agendaFecha: agendaDate,
+          hora: HoraCita.parse('08:00'),
+          expedienteReference: null,
+          nombrePaciente: 'PACIENTE SINTETICO',
+          tipoDerechohabiente: 'PENSIONISTA',
+          tipoConsulta: 'FIRST_TIME',
+          medico: medicoResolved,
+          servicioEspecialidad: servicioDefault,
+        }),
+        Cita.create({
+          folio: FolioCita.parse('VALID-002'),
+          agendaFecha: agendaDate,
+          hora: HoraCita.parse('08:00'),
+          expedienteReference: null,
+          nombrePaciente: 'PACIENTE SINTETICO',
+          tipoDerechohabiente: 'PENSIONISTA',
+          tipoConsulta: 'FIRST_TIME',
+          medico: medicoResolved,
+          servicioEspecialidad: servicioDefault,
+        }),
+      ],
+    });
+    // Simulate: agenda already exists with VALID-001 and VALID-002 from the first import
+    mocks.tx.agendaRepository.findByFecha = vi.fn().mockResolvedValue(existingAgenda);
+
+    // Second import: all 3 rows (same file) — parser now fixes REJ-003
+    mocks.interpreter.interpret.mockResolvedValue({
+      fingerprint: { value: fp },
+      layout: 'SIMEF_V1' as const,
+      agendaDate,
+      rows: [
+        makeValidRow('VALID-001', 1),
+        makeValidRow('VALID-002', 2),
+        makeValidRow('REJ-003', 3),   // formerly rejected, now valid after parser fix
+      ],
+    });
+
+    const result = await mocks.useCase.execute(makeInput({ idempotencyKey: 'key-c-plus' }));
+
+    // VALID-001 and VALID-002 must NOT be re-added.
+    // They may show as UPDATED (expedienteReference resolved to a real object
+    // while the existing citas were seeded with null reference) — either
+    // UNCHANGED or UPDATED is correct; what matters is they are NOT re-ADDED.
+    expect(result.metrics.added).toBe(1);   // only REJ-003 (now valid) is new
+    expect(result.metrics.added + result.metrics.unchanged + result.metrics.updated).toBe(3); // all 3 accounted
+    expect(result.metrics.added).not.toBe(3); // VALID-001 / VALID-002 not re-added
+    expect(result.metrics.rejected).toBe(0);
+  });
+
+  // ── Case D: parser corrected → all valid → fingerprint registered ─────────
+
+  it('Case D: after parser fix all records valid → fingerprint IS registered', async () => {
+    const mocks = makeMocks();
+
+    mocks.interpreter.interpret.mockResolvedValue({
+      fingerprint: { value: 'fp-now-all-valid' },
+      layout: 'SIMEF_V1' as const,
+      agendaDate,
+      rows: [makeValidRow('NOW-VALID-001', 1)],
+    });
+
+    const result = await mocks.useCase.execute(makeInput({ idempotencyKey: 'key-d1' }));
+
+    expect(result.metrics.rejected).toBe(0);
+    expect(result.metrics.pendingReview).toBe(0);
+
+    // fingerprint IS registered when no rejections
+    expect(
+      (mocks.tx.importArtifactMetadataRepository.associateConfirmedImport as ReturnType<typeof vi.fn>)
+        .mock.calls.length,
+    ).toBe(1);
+  });
+
+  // ── Case E: after D, same file → ALREADY_IMPORTED ─────────────────────────
+
+  it('Case E: after fully successful import, same file returns ALREADY_IMPORTED', async () => {
+    const mocks = makeMocks();
+
+    // Simulate fingerprint already registered from Case D
+    mocks.metadataRepository.findEquivalent.mockResolvedValue({
+      importacionId: ImportacionAgendaId.parse('88ec5220-0000-4000-8000-000000000099'),
+      agendaDate,
+      fingerprint: { value: 'fp-now-all-valid' },
+    });
+
+    const result = await mocks.useCase.execute(makeInput({ idempotencyKey: 'key-e1' }));
+
+    expect(result.outcome).toBe('ALREADY_IMPORTED');
+    expect(result.metrics.receivedRecords).toBe(0); // no rows processed
+  });
+
+  // ── Regression: pendingReview also blocks fingerprint registration ─────────
+
+  it('Regression: pendingReview > 0 also prevents fingerprint registration', async () => {
+    const mocks = makeMocks();
+
+    // Médico not resolved → PENDING_REVIEW
+    mocks.medicoQuery.findByEmployeeNumber.mockResolvedValue({ kind: 'NOT_FOUND' });
+    mocks.medicoQuery.findControlledFallback.mockResolvedValue({ kind: 'NOT_FOUND' });
+
+    const result = await mocks.useCase.execute(makeInput({ idempotencyKey: 'key-pending' }));
+
+    expect(result.metrics.pendingReview).toBeGreaterThan(0);
+
+    // fingerprint NOT registered
+    expect(
+      (mocks.tx.importArtifactMetadataRepository.associateConfirmedImport as ReturnType<typeof vi.fn>)
+        .mock.calls.length,
+    ).toBe(0);
   });
 });

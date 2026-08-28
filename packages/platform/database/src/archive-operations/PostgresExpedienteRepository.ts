@@ -63,7 +63,9 @@ export class PostgresExpedienteRepository implements ExpedienteRepository {
   ): Promise<readonly Expediente[]> {
     return this.executor.execute(tenant, async ({ client }) => {
       const result = await client.query<ExpedienteRow>(
-        `${SELECT_EXPEDIENTE} WHERE e.expediente_numero_normalizado = $1 ORDER BY e.id`,
+        // Case-insensitive comparison: LOWER() on both sides.
+        // The stored value (PERR81060410) is never modified; only the search is normalised.
+        `${SELECT_EXPEDIENTE} WHERE LOWER(e.expediente_numero_normalizado) = LOWER($1) ORDER BY e.id`,
         [numero.toNormalized()],
       );
       return result.rows.map((row) => this.toDomain(row, tenant));

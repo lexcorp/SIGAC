@@ -354,10 +354,33 @@ export class ImportAgenda {
       // ----------------------------------------------------------------
       await tx.importacionAgendaRepository.save(importacion, tenant);
       await tx.agendaRepository.save(agenda, tenant);
-      await tx.importArtifactMetadataRepository.associateConfirmedImport(
-        { importacionId, agendaDate, fingerprint },
-        tenant,
-      );
+
+      // BUG-REIMPORT: Only register the fingerprint as "complete" when the import
+      // has no rejected or pending-review records.
+      //
+      // If rejected > 0 or pendingReview > 0 the file was NOT fully processed —
+      // registering the fingerprint would permanently block reimportation of the
+      // same artifact even after fixing the underlying issue (parser bug, missing
+      // reference data, etc.).
+      //
+      // When the fingerprint is NOT registered the next import of the same file
+      // will re-process ALL rows.  Rows that were previously successful are safe:
+      //   - reconcile() sees their folio in `citas` → UNCHANGED / UPDATED
+      //   - PostgresAgendaRepository.save() uses ON CONFLICT DO UPDATE (no duplicates)
+      //
+      // Once a reimport finally produces zero rejected/pending records the
+      // fingerprint IS registered and subsequent imports return ALREADY_IMPORTED.
+      const importMetrics = importacion.metrics!;
+      const hasIncompleteRecords =
+        importMetrics.rejected > 0 || importMetrics.pendingReview > 0;
+
+      if (!hasIncompleteRecords) {
+        await tx.importArtifactMetadataRepository.associateConfirmedImport(
+          { importacionId, agendaDate, fingerprint },
+          tenant,
+        );
+      }
+
       await tx.idempotencyKeyRepository.recordKey(input.idempotencyKey, importacionId, tenant);
 
       // ----------------------------------------------------------------

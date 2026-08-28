@@ -6,6 +6,9 @@
     "paths": {
       "@sigac/agenda-preparation": [
         "../../../dist/packages/modules/agenda-preparation/index.d.ts"
+      ],
+      "@sigac/vale-archivo": [
+        "../../../dist/packages/modules/vale-archivo/index.d.ts"
       ]
     }
   },

@@ -68,7 +68,7 @@ export function parsePaginationLimit(value: unknown, field = 'limit'): number {
 export function parseOptionalCursor(value: unknown): string | undefined {
   if (value === undefined || value === null || value === '') return undefined;
   if (typeof value !== 'string') throw new HttpValidationError('cursor', 'INVALID_TYPE');
-  return value;
+  return value as PreparationOrder;
 }
 
 // ---------------------------------------------------------------------------
@@ -76,11 +76,12 @@ export function parseOptionalCursor(value: unknown): string | undefined {
 // ---------------------------------------------------------------------------
 
 export function parsePreparationOrder(value: unknown): PreparationOrder {
-  if (value === undefined || value === null || value === '') return 'APPOINTMENT_TIME_ASC';
-  if (value !== 'APPOINTMENT_TIME_ASC' && value !== 'PATIENT_NAME_ASC') {
+  if (value === undefined || value === null || value === '') return 'SERVICE_MEDICO_HORA_ASC';
+  const validOrders = ['APPOINTMENT_TIME_ASC', 'PATIENT_NAME_ASC', 'SERVICE_MEDICO_HORA_ASC'];
+  if (!validOrders.includes(value as string)) {
     throw new HttpValidationError('order', 'INVALID_FORMAT');
   }
-  return value;
+  return value as PreparationOrder;
 }
 
 // ---------------------------------------------------------------------------

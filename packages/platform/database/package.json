@@ -14,9 +14,10 @@
   },
   "dependencies": {
     "@sigac/agenda-preparation": "workspace:*",
-    "@sigac/audit": "workspace:*",
     "@sigac/archive-operations": "workspace:*",
+    "@sigac/audit": "workspace:*",
     "@sigac/tenant": "workspace:*",
+    "@sigac/vale-archivo": "workspace:*",
     "drizzle-orm": "0.45.2",
     "pg": "latest"
   },

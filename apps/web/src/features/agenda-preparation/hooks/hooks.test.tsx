@@ -55,8 +55,9 @@ describe('useAgendaPreparationList', () => {
         useAgendaPreparationList(
           null,
           'APPOINTMENT_TIME_ASC',
-          25,
-          api as unknown as Parameters<typeof useAgendaPreparationList>[3],
+          50,
+          undefined,
+          api as unknown as Parameters<typeof useAgendaPreparationList>[4],
         ),
       { wrapper },
     );
@@ -73,8 +74,9 @@ describe('useAgendaPreparationList', () => {
         useAgendaPreparationList(
           '2026-08-25',
           'PATIENT_NAME_ASC',
-          25,
-          api as unknown as Parameters<typeof useAgendaPreparationList>[3],
+          50,
+          undefined,
+          api as unknown as Parameters<typeof useAgendaPreparationList>[4],
         ),
       { wrapper },
     );
@@ -82,10 +84,10 @@ describe('useAgendaPreparationList', () => {
     expect(api.getPreparationList).toHaveBeenCalledWith(
       '2026-08-25',
       'PATIENT_NAME_ASC',
-      25,
+      50,
       undefined,
     );
-    expect(result.current.data?.pages[0]?.items).toEqual([]);
+    expect(result.current.data?.items).toEqual([]);
   });
 });
 

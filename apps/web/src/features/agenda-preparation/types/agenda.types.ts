@@ -11,7 +11,7 @@ export type ImportIncident =
   | 'EXPEDIENT_NOT_RESOLVED' | 'REQUIRED_DATA_MISSING' | 'ROW_INCONSISTENT'
   | 'DUPLICATE_FOLIO_IN_SNAPSHOT';
 
-export type PreparationOrder = 'APPOINTMENT_TIME_ASC' | 'PATIENT_NAME_ASC';
+export type PreparationOrder = 'APPOINTMENT_TIME_ASC' | 'PATIENT_NAME_ASC' | 'SERVICE_MEDICO_HORA_ASC';
 
 export interface AgendaImportMetrics {
   readonly receivedRecords: number;

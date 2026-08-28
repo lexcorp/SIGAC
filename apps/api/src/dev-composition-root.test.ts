@@ -23,11 +23,13 @@ import { AgendaController } from './agenda/agenda.controller.js';
 import { HealthController } from './health.controller.js';
 import {
   devResolver,
+  devMedicoQuery,
   buildDemoRouter,
   buildExpedienteApiModule,
   buildAgendaApiModule,
 } from './dev-composition-root.js';
 import { GetSessionAuthorization } from '@sigac/archive-operations';
+import { NumeroEmpleado } from '@sigac/agenda-preparation';
 
 // ---------------------------------------------------------------------------
 // 1. AppModule (production) — still only mounts HealthController
@@ -208,6 +210,40 @@ describe('devResolver — tenant is always DEMO, never from HTTP input', () => {
   });
 });
 
+describe('devMedicoQuery — DEMO sin catálogo real', () => {
+  it('findByEmployeeNumber devuelve NOT_FOUND y no fabrica un nombre placeholder', async () => {
+    const result = await devMedicoQuery.findByEmployeeNumber(
+      NumeroEmpleado.parse('00437054'),
+    );
+
+    expect(result).toEqual({ kind: 'NOT_FOUND' });
+    expect(result).not.toHaveProperty('medico');
+  });
+
+  it('findControlledFallback conserva el nombre original válido del artefacto', async () => {
+    const context = await devResolver.resolve({ nativeRequest: {} });
+
+    const result = await devMedicoQuery.findControlledFallback(
+      '  GALVAN DOMINGUEZ MANUEL ALEJANDRO  ',
+      context.tenant,
+    );
+
+    expect(result.kind).toBe('RESOLVED');
+    if (result.kind === 'RESOLVED') {
+      expect(result.medico.nombre).toBe('GALVAN DOMINGUEZ MANUEL ALEJANDRO');
+      expect(result.medico.nombre).not.toBe('MÉDICO 00437054');
+    }
+  });
+
+  it('findControlledFallback no inventa médico cuando el nombre está ausente', async () => {
+    const context = await devResolver.resolve({ nativeRequest: {} });
+
+    const result = await devMedicoQuery.findControlledFallback('', context.tenant);
+
+    expect(result).toEqual({ kind: 'NOT_FOUND' });
+  });
+});
+
 // ---------------------------------------------------------------------------
 // 7. AppDevModule — module structure
 // ---------------------------------------------------------------------------
@@ -218,10 +254,11 @@ describe('AppDevModule.register — module structure', () => {
     expect(mod.controllers).toContain(HealthController);
   });
 
-  it('imports array contains ExpedienteApiModule and AgendaApiModule dynamic modules', () => {
+  it('imports array contains ExpedienteApiModule, AgendaApiModule and ValeArchivoApiModule dynamic modules', () => {
     const mod = AppDevModule.register();
     const imports = mod.imports ?? [];
-    expect(imports).toHaveLength(2);
+    // T-38: ValeArchivoApiModule added alongside existing modules
+    expect(imports).toHaveLength(3);
   });
 
   it('does not register fake providers', () => {
@@ -316,5 +353,57 @@ describe('buildAgendaApiModule — incidents adapter is real (BUG-1 regression)'
     expect(mod.providers).toHaveLength(10); // 9 tokens + AgendaApiProblemMapper (T-23)
     // The module must contain AgendaController (incidents endpoint is there)
     expect(mod.controllers).toContain(AgendaController);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Vale Archivo permissions — DEMO full actor (T-30..T-38)
+// Verifies GET /api/v1/session returns VA permissions for the default actor.
+// ---------------------------------------------------------------------------
+describe('devResolver — DEMO full actor includes Vale Archivo permissions (T-30)', () => {
+  it('session returns REQUEST_CREATE for full actor', async () => {
+    const context = await devResolver.resolve({ nativeRequest: {} });
+    const session = new GetSessionAuthorization().execute({ context });
+    expect(session.permissions).toContain('REQUEST_CREATE');
+  });
+
+  it('session returns ARCHIVE_REQUEST_VIEW for full actor', async () => {
+    const context = await devResolver.resolve({ nativeRequest: {} });
+    const session = new GetSessionAuthorization().execute({ context });
+    expect(session.permissions).toContain('ARCHIVE_REQUEST_VIEW');
+  });
+
+  it('session returns ARCHIVE_REQUEST_PROCESS for full actor', async () => {
+    const context = await devResolver.resolve({ nativeRequest: {} });
+    const session = new GetSessionAuthorization().execute({ context });
+    expect(session.permissions).toContain('ARCHIVE_REQUEST_PROCESS');
+  });
+
+  it('session returns ARCHIVE_REQUEST_DELIVER for full actor', async () => {
+    const context = await devResolver.resolve({ nativeRequest: {} });
+    const session = new GetSessionAuthorization().execute({ context });
+    expect(session.permissions).toContain('ARCHIVE_REQUEST_DELIVER');
+  });
+
+  it('ValeArchivoWorkspace guard passes: ARCHIVE_REQUEST_VIEW is present', async () => {
+    // The frontend checks: permissions.has('ARCHIVE_REQUEST_VIEW') || permissions.has('REQUEST_CREATE')
+    // Both must be present in the full DEMO actor.
+    const context = await devResolver.resolve({ nativeRequest: {} });
+    const session = new GetSessionAuthorization().execute({ context });
+    const canAccessValeArchivo =
+      session.permissions.includes('ARCHIVE_REQUEST_VIEW') ||
+      session.permissions.includes('REQUEST_CREATE');
+    expect(canAccessValeArchivo).toBe(true);
+  });
+
+  it('agendaView actor does NOT have Vale Archivo permissions (fail-closed)', async () => {
+    const context = await devResolver.resolve({
+      nativeRequest: { headers: { cookie: 'sigac_dev_actor=agendaView' } },
+    });
+    const session = new GetSessionAuthorization().execute({ context });
+    expect(session.permissions).not.toContain('ARCHIVE_REQUEST_VIEW');
+    expect(session.permissions).not.toContain('REQUEST_CREATE');
+    expect(session.permissions).not.toContain('ARCHIVE_REQUEST_PROCESS');
+    expect(session.permissions).not.toContain('ARCHIVE_REQUEST_DELIVER');
   });
 });

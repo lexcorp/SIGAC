@@ -47,7 +47,20 @@ import {
   PrintAgendaPreparationList,
   SimefAgendaParserAdapter,
 } from '@sigac/agenda-preparation';
-import { PDFKitPreparationReportGenerator } from '@sigac/pdf';
+import {
+  PDFKitPreparationReportGenerator,
+  PDFKitValeArchivoGenerator,
+} from '@sigac/pdf';
+import {
+  CerrarValeAdministrativo,
+  ConsultarVale,
+  GenerarPdfVale,
+  IniciarBusqueda,
+  ListarVales,
+  RegistrarEntrega,
+  RegistrarLocalizacion,
+  RegistrarVale,
+} from '@sigac/vale-archivo';
 import {
   PostgresAgendaPreparationUnitOfWork,
   PostgresAgendaDayQueryPort,
@@ -63,10 +76,13 @@ import {
   PostgresImportArtifactMetadataRepository,
   PostgresUbicacionesQueryPort,
   TenantDatabaseRouter,
+  PostgresValeArchivoRepository,
+  PostgresValeArchivoQueryAdapter,
 } from '@sigac/database';
 import type { RequestContext, TenantContext } from '@sigac/tenant';
 import type { AuthenticatedRequestContextResolver } from './expediente/expediente-api.contracts.js';
 import { AgendaApiModule } from './agenda/agenda-api.module.js';
+import { ValeArchivoApiModule } from './vale-archivo/vale-archivo-api.module.js';
 import { ExpedienteApiModule } from './expediente/expediente-api.module.js';
 
 // ---------------------------------------------------------------------------
@@ -99,7 +115,8 @@ const demoConnectionString =
 // Values: 'noAudit' | 'agendaView' | (default) 'full'
 //
 // The `full` actor includes every permission needed for all implemented
-// features, including the three Agenda permissions added in this fix.
+// features: Archive Operations, Agenda Preparation, Preparation Reports,
+// and Vale Archivo (T-30..T-38).
 // ---------------------------------------------------------------------------
 
 type ActorKey = 'full' | 'noAudit' | 'agendaView';
@@ -120,6 +137,12 @@ const DEMO_ACTORS: Record<ActorKey, DemoActor> = {
       'AGENDA_VIEW', 'AGENDA_IMPORT', 'AGENDA_INCIDENT_VIEW',
       // Preparation Reports — T-20 REQ-PR-005
       'AGENDA_PRINT',
+      // Vale Archivo — T-30 REQ-VA-001..REQ-VA-007, ADR-0033
+      // Required for ValeArchivoWorkspace and all VA use cases.
+      'REQUEST_CREATE',          // crear vale, ver detalle/PDF, cierre administrativo
+      'ARCHIVE_REQUEST_VIEW',    // listar, consultar detalle, descargar PDF SM 1-14
+      'ARCHIVE_REQUEST_PROCESS', // iniciar búsqueda, registrar localización
+      'ARCHIVE_REQUEST_DELIVER', // registrar entrega, cerrar ciclo
     ]),
   },
   noAudit: {
@@ -198,29 +221,37 @@ const nullExitEnablingSourceQuery: ExitEnablingSourceQueryPort = {
 // nullImportResultQuery replaced by real adapter when GetAgendaImportResult is implemented.
 const nullImportResultQuery  = { findById: async () => null };
 
-// Dev medico resolver — DEMO-only, no real physician directory.
-// Uses the SIMEF artifact data (employee number + original name) directly.
-// findByEmployeeNumber returns RESOLVED using the real employee number
-// from the parser so citas store the correct reference.
-// The name defaults to the original name from the artifact when available.
-//
 // NOTE: existing citas imported before this fix have 'DR DEMO SINTETICO'.
 // New imports after this fix will carry the real name from orig_physician_name.
-const devMedicoQuery = {
-  findByEmployeeNumber: async (n: NumeroEmpleado) => ({
-    kind: 'RESOLVED' as const,
-    medico: MedicoReferencia.create({
-      numeroEmpleado: n,
-      nombre: `MÉDICO ${n.value}`,  // placeholder; real name arrives via findControlledFallback
-    }),
+// DEMO physician resolver — no real physician directory is available in DEMO.
+//
+// findByEmployeeNumber returns NOT_FOUND so that processRows() falls through to
+// findControlledFallback(), which uses orig_physician_name from the SIMEF artifact.
+// This preserves the real physician name through the full import pipeline without
+// requiring a physician catalogue.
+//
+// If a real MedicoDirectoryQueryPort is wired in the future, replace this object
+// with a real adapter; findByEmployeeNumber should return RESOLVED with the
+// directory's authoritative name, and findControlledFallback should remain as a
+// fallback for employee numbers not found in the directory.
+//
+// T-P3 fix: previous version returned RESOLVED with 'MÉDICO {n.value}' which
+// caused processRows() to skip findControlledFallback entirely, storing a
+// synthetic placeholder instead of the real name from the Excel artifact.
+export const devMedicoQuery = {
+  findByEmployeeNumber: async (_n: NumeroEmpleado) => ({
+    // No real physician directory in DEMO — return NOT_FOUND so the real name
+    // from orig_physician_name is used via findControlledFallback below.
+    kind: 'NOT_FOUND' as const,
   }),
   findControlledFallback: async (nombreOriginal: string, _tenant: import('@sigac/tenant').TenantContext) => {
     if (nombreOriginal && nombreOriginal.trim().length > 0) {
       return {
         kind: 'RESOLVED' as const,
         medico: MedicoReferencia.create({
-          // Employee number is unknown in the fallback path; use placeholder.
-          // The original name from SIMEF is preserved in orig_physician_name.
+          // Employee number is unknown via the name-lookup path.
+          // The real number is already stored in interp_numero_empleado from
+          // the parsed row; this resolution only supplies the authoritative name.
           numeroEmpleado: NumeroEmpleado.parse('00000000'),
           nombre: nombreOriginal.trim(),
         }),
@@ -320,6 +351,28 @@ export function buildAgendaApiModule(router: TenantDatabaseRouter) {
     generatePreparationReport: new GeneratePreparationReport({
       preparationListQuery: preparationQueryPort,
       reportGenerator:      new PDFKitPreparationReportGenerator(),
+      auditWriter,
+    }),
+  });
+}
+
+export function buildValeArchivoApiModule(router: TenantDatabaseRouter) {
+  const auditWriter  = new PostgresAuditWriter(router);
+  const repository   = new PostgresValeArchivoRepository(router);
+  const queryAdapter = new PostgresValeArchivoQueryAdapter(router);
+
+  return ValeArchivoApiModule.register({
+    requestContextResolver: devResolver,
+    registrarVale:            new RegistrarVale({ repository, auditWriter }),
+    consultarVale:            new ConsultarVale({ queryPort: queryAdapter, auditWriter }),
+    listarVales:              new ListarVales({ queryPort: queryAdapter, auditWriter }),
+    iniciarBusqueda:          new IniciarBusqueda({ repository, auditWriter }),
+    registrarLocalizacion:    new RegistrarLocalizacion({ repository, auditWriter }),
+    registrarEntrega:         new RegistrarEntrega({ repository, auditWriter }),
+    cerrarValeAdministrativo: new CerrarValeAdministrativo({ repository, auditWriter }),
+    generarPdfVale:           new GenerarPdfVale({
+      queryPort:    queryAdapter,
+      pdfGenerator: new PDFKitValeArchivoGenerator(),
       auditWriter,
     }),
   });

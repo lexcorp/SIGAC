@@ -529,11 +529,11 @@ describe('AgendaController — T-13', () => {
       );
     });
 
-    it('order ausente usa APPOINTMENT_TIME_ASC por defecto', async () => {
+    it('order ausente usa SERVICE_MEDICO_HORA_ASC por defecto (T-28.1)', async () => {
       const { controller, getAgendaPreparationList } = setup();
       await controller.getAgendaPreparationList('2026-08-25', undefined, undefined, '10', {});
       expect(getAgendaPreparationList.execute).toHaveBeenCalledWith(
-        expect.objectContaining({ order: 'APPOINTMENT_TIME_ASC' }),
+        expect.objectContaining({ order: 'SERVICE_MEDICO_HORA_ASC' }),
       );
     });
 
@@ -586,7 +586,7 @@ describe('AgendaController — T-13', () => {
       expect(result).not.toHaveProperty('nextCursor');
       expect(printAgendaPreparationList.execute).toHaveBeenCalledWith({
         agendaDate: AgendaFecha.parse('2026-08-25'),
-        order: 'APPOINTMENT_TIME_ASC',
+        order: 'SERVICE_MEDICO_HORA_ASC',
         context: trustedContext,
       });
     });
@@ -841,6 +841,34 @@ describe('generatePreparationReport (POST /agendas/:date/preparation-report) —
       controller.generatePreparationReport('2026-08-25', undefined, undefined, {}, res as unknown as import('node:http').ServerResponse),
       401,
       'AUTHENTICATION_REQUIRED',
+    );
+  });
+});
+
+// ── T-28.1 Regressions: SERVICE_MEDICO_HORA_ASC order ────────────────────────
+
+describe('getAgendaPreparationList (T-28.1) — SERVICE_MEDICO_HORA_ASC', () => {
+  it('SERVICE_MEDICO_HORA_ASC order propagated to use case', async () => {
+    const { controller, getAgendaPreparationList } = setup();
+    await controller.getAgendaPreparationList('2026-08-26', 'SERVICE_MEDICO_HORA_ASC', undefined, '20', {});
+    expect(getAgendaPreparationList.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ order: 'SERVICE_MEDICO_HORA_ASC' }),
+    );
+  });
+
+  it('absent order param defaults to SERVICE_MEDICO_HORA_ASC', async () => {
+    const { controller, getAgendaPreparationList } = setup();
+    await controller.getAgendaPreparationList('2026-08-26', undefined, undefined, '20', {});
+    expect(getAgendaPreparationList.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ order: 'SERVICE_MEDICO_HORA_ASC' }),
+    );
+  });
+
+  it('invalid order value retorna 400 HTTP_VALIDATION_ERROR', async () => {
+    const { controller } = setup();
+    await expectProblem(
+      controller.getAgendaPreparationList('2026-08-26', 'INVALID_ORDER_T28', undefined, '20', {}),
+      400, 'HTTP_VALIDATION_ERROR',
     );
   });
 });

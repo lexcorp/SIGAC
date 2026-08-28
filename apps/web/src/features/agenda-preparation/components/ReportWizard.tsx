@@ -27,13 +27,27 @@ interface Props {
 
 type WizardState = 'idle' | 'generating' | 'done' | 'error';
 
-function triggerDownload(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob);
-  const a   = document.createElement('a');
-  a.href     = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
+/**
+ * T-28.3 — Preview PDF in a new browser tab (REQ-PR-002 v0.1.2).
+ * The browser renders the native PDF viewer. If popup is blocked, falls back
+ * to direct download. Object URL is revoked after a short delay to allow
+ * the new tab to load the document before the URL is invalidated.
+ */
+function previewOrDownloadPdf(blob: Blob, filename: string): void {
+  const url    = URL.createObjectURL(blob);
+  const newTab = window.open(url, '_blank');
+  if (newTab === null) {
+    // Popup blocked — fall back to direct download
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = filename;
+    a.click();
+    // Revoke immediately for download fallback
+    URL.revokeObjectURL(url);
+  } else {
+    // Revoke after tab has had time to load the document (~30 s)
+    setTimeout(() => URL.revokeObjectURL(url), 30_000);
+  }
 }
 
 function safeErrorMessage(err: unknown): string {
@@ -95,7 +109,7 @@ export function ReportWizard({ date, items, order, canPrint }: Props) {
         services: servicesForRequest,
         order,
       });
-      triggerDownload(blob, filename);
+      previewOrDownloadPdf(blob, filename);
       setWizardState('done');
     } catch (err: unknown) {
       setErrorMsg(safeErrorMessage(err));

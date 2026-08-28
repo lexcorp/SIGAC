@@ -22,11 +22,27 @@ export class PostgresImportArtifactMetadataRepository implements ImportArtifactM
     tenant: TenantContext,
   ): Promise<ImportEquivalentReference | null> {
     return this.executor.execute(tenant, async ({ client }) => {
+      // BUG-REIMPORT fix (DB layer): only consider the prior import "equivalent"
+      // if it completed with zero rejected and zero pending_review records.
+      //
+      // This covers both:
+      //   1. New imports after the ImportAgenda.ts fix (fingerprints are not
+      //      registered for incomplete imports going forward).
+      //   2. Historical fingerprints that were registered before the fix —
+      //      those point to imports with rejected > 0 and must not block
+      //      reimportation.
+      //
+      // The JOIN on agenda_imports allows us to inspect the outcome without
+      // changing the schema of agenda_artifact_metadata.
       const result = await client.query<{ importacion_id: string; imported_at: Date }>(
-        `SELECT importacion_id, imported_at
-         FROM agenda_artifact_metadata
-         WHERE agenda_date = $1 AND fingerprint = $2
-         ORDER BY imported_at DESC, importacion_id DESC
+        `SELECT am.importacion_id, am.imported_at
+         FROM agenda_artifact_metadata am
+         JOIN agenda_imports ai ON ai.id = am.importacion_id
+         WHERE am.agenda_date = $1
+           AND am.fingerprint = $2
+           AND ai.rejected       = 0
+           AND ai.pending_review = 0
+         ORDER BY am.imported_at DESC, am.importacion_id DESC
          LIMIT 1`,
         [input.agendaDate.value, input.fingerprint.value],
       );

@@ -19,6 +19,29 @@ export const PERMISSIONS = [
   // Does NOT grant AGENDA_VIEW by itself; both permissions are required AND-together.
   // Not derived automatically from any role.
   'AGENDA_PRINT',
+
+  // T-30 / vale-archivo — REQ-VA-003..REQ-VA-006, ADR-0033 v2
+  // Specific permissions for the Vale Archivo bounded context (SM 1-14 requests).
+  // These are DISTINCT from the general archive-operations permissions
+  // (SEARCH_MARK_LOCATED, SEARCH_MARK_NOT_LOCATED, CUSTODY_TRANSFER) to avoid
+  // coupling between bounded contexts.
+  //
+  // ARCHIVE_REQUEST_VIEW:    Consult the SM 1-14 vale list, view detail, generate PDF.
+  //                          Does NOT allow creating or modifying vales.
+  //                          Not derived automatically from any role.
+  'ARCHIVE_REQUEST_VIEW',
+  //
+  // ARCHIVE_REQUEST_PROCESS: Initiate the physical search and record item location
+  //                          (LOCALIZADO / NO_LOCALIZADO) for a vale SM 1-14.
+  //                          Does NOT grant ARCHIVE_REQUEST_VIEW implicitly.
+  //                          Not derived automatically from any role.
+  'ARCHIVE_REQUEST_PROCESS',
+  //
+  // ARCHIVE_REQUEST_DELIVER: Register expediente delivery and transition vale to
+  //                          ENTREGADA or CERRADA.
+  //                          Does NOT grant ARCHIVE_REQUEST_VIEW or ARCHIVE_REQUEST_PROCESS.
+  //                          Not derived automatically from any role.
+  'ARCHIVE_REQUEST_DELIVER',
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];

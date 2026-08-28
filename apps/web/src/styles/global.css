@@ -46,8 +46,58 @@ dt { font-weight: 700; } dd { margin: 4px 0 0; }
 [role="tab"][aria-selected="true"] { border-bottom: 3px solid var(--sigac-teal-500); font-weight: 700; }
 [role="tabpanel"] { padding: 18px 4px; }
 .timeline-list li { display: grid; gap: 4px; border-left: 3px solid var(--sigac-teal-500); padding: 10px 14px; }
+
+/* Agenda Preparation — tab bar + action layout */
+.agenda-toolbar { display: flex; flex-wrap: wrap; align-items: baseline; gap: 16px; margin-bottom: 8px; }
+.agenda-toolbar h1 { margin: 0; flex: 0 0 auto; }
+.date-selector { display: flex; align-items: center; gap: 8px; }
+.date-selector input { padding: 8px 10px; border: 1px solid var(--sigac-ice-200); border-radius: 8px; }
+
+/* Tab bar: flex row — <nav> grows, action button stays at end */
+.agenda-tab-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid var(--sigac-ice-200);
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+/* The nav fills available width and shows tabs in a row */
+.agenda-tab-bar > nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  flex: 1 1 auto;
+  border-bottom: none; /* parent handles the border */
+}
+/* Tab buttons — navigation-only, not generic action buttons */
+.tab {
+  background: transparent;
+  color: var(--sigac-text);
+  border: none;
+  border-radius: 6px 6px 0 0;
+  padding: 10px 14px;
+  cursor: pointer;
+  font: inherit;
+  border-bottom: 3px solid transparent;
+}
+.tab:hover { background: var(--sigac-cloud-050); }
+.tab.active, .tab[aria-current="page"] {
+  border-bottom: 3px solid var(--sigac-teal-500);
+  font-weight: 700;
+  color: var(--sigac-navy-900);
+}
+/* Action button next to tabs — keeps the navy style */
+.agenda-action-import {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
 @media (max-width: 900px) {
   .app-shell { grid-template-columns: 1fr; }
+  .agenda-tab-bar { flex-direction: column; align-items: stretch; }
+  .agenda-tab-bar > nav { justify-content: flex-start; }
+  .agenda-action-import { align-self: flex-start; }
   .sidebar { display: none; }
   .cards { grid-template-columns: 1fr; }
   .expediente-header { grid-template-columns: 1fr; }

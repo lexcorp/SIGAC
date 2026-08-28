@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { AgendaPreparationWorkspace } from '../features/agenda-preparation';
+import { ValeArchivoWorkspace } from '../features/vale-archivo';
 import { ExpedienteWorkspace, expedienteApi } from '../features/expediente-workspace';
 import { Dashboard } from './Dashboard';
 import { navigate, useRoute } from './useRoute';
@@ -56,6 +57,7 @@ export function App() {
           <NavLink href="/expedientes" active={route === 'expedientes'}>Expedientes</NavLink>
           <a href="/solicitudes">Solicitudes</a>
           <NavLink href="/preparacion" active={route === 'preparacion'}>Preparación</NavLink>
+          <NavLink href="/vale-archivo" active={route === 'vale-archivo'}>Solicitudes</NavLink>
           <a href="/prestamos">Préstamos</a>
           <a href="/devoluciones">Devoluciones</a>
           <a href="/incidencias">Incidencias</a>
@@ -77,6 +79,10 @@ export function App() {
 
         {route === 'preparacion' && (
           <AgendaPreparationWorkspace permissions={permissions} />
+        )}
+
+        {route === 'vale-archivo' && (
+          <ValeArchivoWorkspace permissions={permissions} />
         )}
 
         {route === 'not-found' && (

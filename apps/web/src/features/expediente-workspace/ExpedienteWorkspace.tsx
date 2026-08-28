@@ -41,7 +41,12 @@ export function ExpedienteWorkspace(props: {
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    setSelectedId(null);
+    // Only reset the selected expediente when the search term changes.
+    // If the user re-submits the same number, keep the current selection
+    // so the UI does not flicker or clear while React Query refetches.
+    if (numeroInput !== submittedNumero) {
+      setSelectedId(null);
+    }
     setSubmittedNumero(numeroInput);
   }
 

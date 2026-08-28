@@ -30,11 +30,13 @@ export interface PreparationItem {
 }
 
 // PREP-AP-002 — Agrupación y órdenes
+// T-28.1: SERVICE_MEDICO_HORA_ASC is the operational default (REQ-PR-001 v0.1.2).
 export type PreparationOrder =
   | 'APPOINTMENT_TIME_ASC'
-  | 'PATIENT_NAME_ASC';
+  | 'PATIENT_NAME_ASC'
+  | 'SERVICE_MEDICO_HORA_ASC';
 
-export const DEFAULT_PREPARATION_ORDER: PreparationOrder = 'APPOINTMENT_TIME_ASC';
+export const DEFAULT_PREPARATION_ORDER: PreparationOrder = 'SERVICE_MEDICO_HORA_ASC';
 
 // PREP-AP-003 — Screen query y cursor
 export interface PreparationPagination {
