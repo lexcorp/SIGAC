@@ -15,3 +15,4 @@ export * from './agenda-preparation/PostgresAgendaPreparationUnitOfWork.js';
 export * from './agenda-preparation/PostgresAgendaReadQueryPorts.js';
 export * from './vale-archivo/PostgresValeArchivoRepository.js';
 export * from './vale-archivo/PostgresValeArchivoQueryAdapter.js';
+export * from './vale-archivo/PostgresValeBatchUnitOfWork.js';

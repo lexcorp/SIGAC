@@ -15,14 +15,14 @@
 import type { ValeArchivo, ValeArchivoSnapshot } from '@sigac/vale-archivo';
 import type { ValeArchivoRepository } from '@sigac/vale-archivo';
 import type { TenantContext } from '@sigac/tenant';
-import type { TenantDatabaseRouter } from '../TenantDatabaseRouter.js';
+import type { TenantDatabaseRouter, TenantDatabaseSession } from '../TenantDatabaseRouter.js';
 import { TenantSessionExecutor } from '../internal/TenantSessionExecutor.js';
 
 export class PostgresValeArchivoRepository implements ValeArchivoRepository {
   private readonly executor: TenantSessionExecutor;
 
-  constructor(router: TenantDatabaseRouter) {
-    this.executor = new TenantSessionExecutor(router);
+  constructor(router: TenantDatabaseRouter, session?: TenantDatabaseSession) {
+    this.executor = new TenantSessionExecutor(router, session);
   }
 
   // ── save ──────────────────────────────────────────────────────────────────

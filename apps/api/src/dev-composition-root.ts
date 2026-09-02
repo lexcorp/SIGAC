@@ -55,6 +55,7 @@ import {
   CerrarValeAdministrativo,
   ConsultarVale,
   GenerarPdfVale,
+  GenerateValeBatch,
   IniciarBusqueda,
   ListarVales,
   RegistrarEntrega,
@@ -78,6 +79,7 @@ import {
   TenantDatabaseRouter,
   PostgresValeArchivoRepository,
   PostgresValeArchivoQueryAdapter,
+  PostgresValeBatchUnitOfWork,
 } from '@sigac/database';
 import type { RequestContext, TenantContext } from '@sigac/tenant';
 import type { AuthenticatedRequestContextResolver } from './expediente/expediente-api.contracts.js';
@@ -376,4 +378,29 @@ export function buildValeArchivoApiModule(router: TenantDatabaseRouter) {
       auditWriter,
     }),
   });
+}
+
+// ---------------------------------------------------------------------------
+// T-04 — Vale generation batch infrastructure
+//
+// PostgresValeBatchUnitOfWork wires:
+//   GenerateValeBatch → PostgresValeBatchUnitOfWork → PostgreSQL real
+//
+// GenerateValesFromAgenda (agenda-vale-integration) calls ValeGenerationAdapter
+// which calls GenerateValeBatch; this factory returns the use case ready for
+// injection into ValeGenerationAdapter.
+// ---------------------------------------------------------------------------
+
+export function buildGenerateValeBatch(router: TenantDatabaseRouter): GenerateValeBatch {
+  // auditWriter is shared; PostgresAuditWriter uses TenantSessionExecutor internally
+  // and will participate in the session opened by PostgresValeBatchUnitOfWork.
+  const auditWriter = new PostgresAuditWriter(router);
+  const unitOfWork  = new PostgresValeBatchUnitOfWork(
+    router,
+    // Session-scoped audit writer: session is available inside withTransaction;
+    // PostgresAuditWriter.append() obtains a connection via TenantSessionExecutor
+    // which checks for an open session and reuses it.
+    (_session) => auditWriter,
+  );
+  return new GenerateValeBatch({ unitOfWork, auditWriter });
 }
